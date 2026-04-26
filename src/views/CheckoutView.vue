@@ -1,0 +1,525 @@
+<template>
+  <div class="checkout-page">
+    <AppHeader :nav-links="navLinks" :cart-count="cartCount" />
+
+    <main class="checkout-main">
+      <div class="container">
+        <section class="checkout-head">
+          <h1>Secure Checkout</h1>
+
+          <div class="stepper">
+            <div class="step active">
+              <span>1</span>
+              <p>SHIPPING</p>
+            </div>
+            <div class="step">
+              <span>2</span>
+              <p>PAYMENT</p>
+            </div>
+            <div class="step">
+              <span>3</span>
+              <p>REVIEW</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="checkout-layout">
+          <div class="checkout-left">
+            <div class="panel shipping-panel">
+              <div class="panel-title">
+                <span class="panel-icon">📦</span>
+                <h2>Shipping Information</h2>
+              </div>
+
+              <form class="shipping-form" @submit.prevent="continueToPayment">
+                <div class="grid two">
+                  <div class="field">
+                    <label>FIRST NAME</label>
+                    <input v-model="shipping.firstName" type="text" placeholder="John" />
+                  </div>
+                  <div class="field">
+                    <label>LAST NAME</label>
+                    <input v-model="shipping.lastName" type="text" placeholder="Doe" />
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>STREET ADDRESS</label>
+                  <input v-model="shipping.address" type="text" placeholder="123 Luxury Lane" />
+                </div>
+
+                <div class="grid three">
+                  <div class="field">
+                    <label>CITY</label>
+                    <input v-model="shipping.city" type="text" placeholder="Manhattan" />
+                  </div>
+                  <div class="field">
+                    <label>STATE</label>
+                    <input v-model="shipping.state" type="text" placeholder="NY" />
+                  </div>
+                  <div class="field">
+                    <label>ZIP CODE</label>
+                    <input v-model="shipping.zipCode" type="text" placeholder="10001" />
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>PHONE NUMBER</label>
+                  <input v-model="shipping.phone" type="text" placeholder="+1 (555) 000-0000" />
+                </div>
+
+                <button type="submit" class="continue-btn">Continue to Payment →</button>
+              </form>
+            </div>
+
+            <div class="panel locked-panel">
+              <div class="locked-row">
+                <div class="locked-left">
+                  <span class="locked-number">2</span>
+                  <span>Payment Method</span>
+                </div>
+                <span class="lock-icon">🔒</span>
+              </div>
+            </div>
+
+            <div class="panel locked-panel">
+              <div class="locked-row">
+                <div class="locked-left">
+                  <span class="locked-number">3</span>
+                  <span>Order Review</span>
+                </div>
+                <span class="lock-icon">🔒</span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="summary-panel">
+            <div class="summary-card">
+              <h2>Order Summary</h2>
+
+              <div class="summary-items">
+                <article v-for="item in items" :key="item.id" class="summary-item">
+                  <img :src="item.image" :alt="item.name" class="summary-item-image" />
+                  <div class="summary-item-info">
+                    <h4>{{ item.name }}</h4>
+                    <p>{{ item.variant }}</p>
+                    <p>Qty: {{ item.quantity }}</p>
+                    <strong>{{ formatPrice(item.price * item.quantity) }}</strong>
+                  </div>
+                </article>
+              </div>
+
+              <div class="summary-breakdown">
+                <div class="summary-row">
+                  <span>Subtotal</span>
+                  <span>{{ formatPrice(subtotal) }}</span>
+                </div>
+                <div class="summary-row">
+                  <span>Shipping</span>
+                  <span class="free-text">Free</span>
+                </div>
+                <div class="summary-row">
+                  <span>Estimated Tax</span>
+                  <span>{{ formatPrice(estimatedTax) }}</span>
+                </div>
+              </div>
+
+              <div class="summary-total">
+                <span>Total</span>
+                <strong>{{ formatPrice(total) }}</strong>
+              </div>
+
+              <div class="summary-footer">
+                <span>🛡️ Secure Payment</span>
+                <span>🚚 Ships Tomorrow</span>
+              </div>
+            </div>
+          </aside>
+        </section>
+      </div>
+    </main>
+
+    <AppFooter :footer-columns="footerColumns" :social-links="socialLinks" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import AppHeader from '@/components/layout/AppHeader.vue'
+import AppFooter from '@/components/layout/AppFooter.vue'
+import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
+import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
+
+interface CartItem {
+  id: number
+  brand: string
+  name: string
+  variant: string
+  price: number
+  quantity: number
+  image: string
+}
+
+const router = useRouter()
+
+const navLinks = ref<NavLink[]>([])
+const footerColumns = ref<FooterColumn[]>([])
+const socialLinks = ref<SocialLink[]>([])
+const items = ref<CartItem[]>([])
+
+const shipping = ref({
+  firstName: '',
+  lastName: '',
+  address: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  phone: '',
+})
+
+function loadCart() {
+  const savedCart = localStorage.getItem('cartItems')
+  items.value = savedCart ? JSON.parse(savedCart) : []
+}
+
+const cartCount = computed(() => {
+  return items.value.reduce((sum, item) => sum + item.quantity, 0)
+})
+
+const subtotal = computed(() => {
+  return items.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+})
+
+const estimatedTax = computed(() => subtotal.value * 0.08)
+const total = computed(() => subtotal.value + estimatedTax.value)
+
+function formatPrice(value: number) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+  }).format(value)
+}
+
+function continueToPayment() {
+  localStorage.setItem('shippingInfo', JSON.stringify(shipping.value))
+  router.push('/payment')
+}
+
+onMounted(async () => {
+  loadCart()
+  navLinks.value = await getNavLinks()
+  footerColumns.value = await getFooterColumns()
+  socialLinks.value = await getSocialLinks()
+})
+</script>
+
+<style scoped>
+* {
+  box-sizing: border-box;
+}
+
+.checkout-page {
+  min-height: 100vh;
+  background: #f7f9fb;
+  color: #191c1e;
+  font-family: Inter, Arial, sans-serif;
+}
+
+.container {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.checkout-main {
+  padding: 40px 0 80px;
+}
+
+.checkout-head {
+  text-align: center;
+  margin-bottom: 34px;
+}
+
+.checkout-head h1 {
+  margin: 0 0 18px;
+  font-size: 54px;
+  line-height: 1.04;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+
+.stepper {
+  display: flex;
+  justify-content: center;
+  gap: 34px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.step span {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #e8ecf4;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.step p {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: #98a2b3;
+}
+
+.step.active span {
+  background: #3563e9;
+  color: #fff;
+}
+
+.step.active p {
+  color: #3563e9;
+}
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 26px;
+  align-items: start;
+}
+
+.checkout-left {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #eef2f6;
+  border-radius: 20px;
+  padding: 22px;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.panel-title h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.shipping-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+}
+
+.grid.two {
+  grid-template-columns: 1fr 1fr;
+}
+
+.grid.three {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #98a2b3;
+}
+
+.field input {
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: #f4f6f9;
+  padding: 0 14px;
+  outline: none;
+  color: #191c1e;
+}
+
+.continue-btn {
+  margin-top: 6px;
+  height: 48px;
+  border: 0;
+  border-radius: 14px;
+  background: #3563e9;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.locked-panel {
+  padding: 18px 22px;
+}
+
+.locked-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.locked-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #667085;
+}
+
+.locked-number {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #eef2f6;
+  font-size: 12px;
+}
+
+.summary-card {
+  background: #fff;
+  border: 1px solid #eef2f6;
+  border-radius: 20px;
+  padding: 22px;
+}
+
+.summary-card h2 {
+  margin: 0 0 18px;
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.summary-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.summary-item {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 12px;
+}
+
+.summary-item-image {
+  width: 70px;
+  height: 70px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #f4f6f9;
+}
+
+.summary-item-info h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.summary-item-info p {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #667085;
+}
+
+.summary-item-info strong {
+  font-size: 13px;
+  color: #191c1e;
+}
+
+.summary-breakdown {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e7ebf2;
+}
+
+.summary-row,
+.summary-total,
+.summary-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-row {
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: #667085;
+}
+
+.free-text {
+  color: #3563e9;
+  font-weight: 700;
+}
+
+.summary-total {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e7ebf2;
+}
+
+.summary-total strong {
+  font-size: 34px;
+  color: #191c1e;
+}
+
+.summary-footer {
+  margin-top: 18px;
+  font-size: 11px;
+  color: #7b8494;
+}
+
+@media (max-width: 1100px) {
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .checkout-head h1 {
+    font-size: 38px;
+  }
+
+  .grid.two,
+  .grid.three {
+    grid-template-columns: 1fr;
+  }
+
+  .stepper {
+    gap: 18px;
+  }
+
+  .summary-footer {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+}
+</style>
