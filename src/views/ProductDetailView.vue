@@ -86,6 +86,7 @@
 
               <button class="add-btn" type="button" @click="addToCart">🛒 ADD TO CART</button>
             </div>
+            <p v-if="addToCartError" class="field-error">{{ addToCartError }}</p>
 
             <button class="wishlist-btn" type="button">WISHLIST THIS PIECE</button>
 
@@ -184,6 +185,7 @@ import {
   getTrendingProducts,
 } from '@/services/homeService'
 import type { FooterColumn, NavLink, Product, SocialLink } from '@/types/home'
+import { readStorage, writeStorage } from '@/utils/storage'
 
 const route = useRoute()
 const router = useRouter()
@@ -198,6 +200,7 @@ const selectedSize = ref('')
 const activeImage = ref('')
 
 const cartItems = ref<any[]>([])
+const addToCartError = ref('')
 
 const productGallery = computed(() => product.value?.gallery ?? [])
 const productSizes = computed(() => product.value?.sizes ?? [])
@@ -235,10 +238,11 @@ function decreaseQty() {
 }
 
 function loadCart() {
-  cartItems.value = JSON.parse(localStorage.getItem('cartItems') || '[]')
+  cartItems.value = readStorage<any[]>('cartItems', [])
 }
 
 function addToCart() {
+  addToCartError.value = ''
   if (!product.value) return
 
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
@@ -248,25 +252,32 @@ function addToCart() {
     return
   }
 
-  const existing = cartItems.value.find((item) => item.id === product.value?.id)
+  if (productSizes.value.length && !selectedSize.value) {
+    addToCartError.value = 'Please select a size before adding this item to cart.'
+    return
+  }
+
+  const variant = `${product.value.colorLabel ?? 'Default'} | ${selectedSize.value || 'Default'}`
+  const existing = cartItems.value.find(
+    (item) => item.id === product.value?.id && item.variant === variant,
+  )
 
   if (existing) {
     existing.quantity += quantity.value
-    existing.size = selectedSize.value
   } else {
     cartItems.value.push({
       id: product.value.id,
       brand: product.value.maker,
       name: product.value.name,
-      variant: `${product.value.colorLabel ?? 'Default'} | ${selectedSize.value || 'Default'}`,
+      variant,
       price: product.value.price,
       quantity: quantity.value,
       image: product.value.image,
     })
   }
 
-  localStorage.setItem('cartItems', JSON.stringify(cartItems.value))
-  router.push('/')
+  writeStorage('cartItems', cartItems.value)
+  router.push('/card')
 }
 
 onMounted(async () => {
@@ -539,6 +550,12 @@ onMounted(async () => {
   color: #fff;
   font-weight: 700;
   cursor: pointer;
+}
+
+.field-error {
+  margin: 0 0 12px;
+  color: #d92d20;
+  font-size: 12px;
 }
 
 .wishlist-btn {

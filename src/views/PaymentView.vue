@@ -38,16 +38,19 @@
                 <div class="field">
                   <label>CARD NUMBER</label>
                   <input v-model="card.number" type="text" placeholder="0000 0000 0000 0000" />
+                  <p v-if="paymentErrors.number" class="field-error">{{ paymentErrors.number }}</p>
                 </div>
 
                 <div class="grid two">
                   <div class="field">
                     <label>EXPIRY DATE</label>
                     <input v-model="card.expiry" type="text" placeholder="MM / YY" />
+                    <p v-if="paymentErrors.expiry" class="field-error">{{ paymentErrors.expiry }}</p>
                   </div>
                   <div class="field">
                     <label>CVV</label>
                     <input v-model="card.cvv" type="text" placeholder="•••" />
+                    <p v-if="paymentErrors.cvv" class="field-error">{{ paymentErrors.cvv }}</p>
                   </div>
                 </div>
               </div>
@@ -78,6 +81,7 @@
 
               <button type="button" class="review-btn" @click="reviewOrder">REVIEW ORDER</button>
             </div>
+            <p v-if="formError" class="field-error">{{ formError }}</p>
           </div>
 
           <aside class="summary-panel">
@@ -137,6 +141,8 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
+import { readStorage, writeStorage } from '@/utils/storage'
+import { isValidCardNumber, isValidCvv, isValidExpiry } from '@/utils/validation'
 
 interface CartItem {
   id: number
@@ -162,10 +168,11 @@ const card = ref({
   expiry: '',
   cvv: '',
 })
+const paymentErrors = ref<Record<string, string>>({})
+const formError = ref('')
 
 function loadCart() {
-  const savedCart = localStorage.getItem('cartItems')
-  items.value = savedCart ? JSON.parse(savedCart) : []
+  items.value = readStorage<CartItem[]>('cartItems', [])
 }
 
 const cartCount = computed(() => {
@@ -192,13 +199,31 @@ function goBack() {
 }
 
 function reviewOrder() {
-  localStorage.setItem(
-    'paymentInfo',
-    JSON.stringify({
-      method: paymentMethod.value,
-      card: card.value,
-    }),
-  )
+  paymentErrors.value = {}
+  formError.value = ''
+
+  if (!items.value.length) {
+    formError.value = 'Your cart is empty. Add items before payment.'
+    return
+  }
+
+  const nextErrors: Record<string, string> = {}
+  if (paymentMethod.value === 'card') {
+    if (!card.value.number.trim()) nextErrors.number = 'Card number is required.'
+    else if (!isValidCardNumber(card.value.number)) nextErrors.number = 'Enter a valid 16-digit card number.'
+    if (!card.value.expiry.trim()) nextErrors.expiry = 'Expiry date is required.'
+    else if (!isValidExpiry(card.value.expiry)) nextErrors.expiry = 'Enter a valid expiry date (MM/YY).'
+    if (!card.value.cvv.trim()) nextErrors.cvv = 'CVV is required.'
+    else if (!isValidCvv(card.value.cvv)) nextErrors.cvv = 'Enter a valid CVV.'
+  }
+
+  paymentErrors.value = nextErrors
+  if (Object.keys(nextErrors).length > 0) return
+
+  writeStorage('paymentInfo', {
+    method: paymentMethod.value,
+    card: card.value,
+  })
 
   router.push('/review')
 }
@@ -331,6 +356,12 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.field-error {
+  margin: 0;
+  color: #d92d20;
+  font-size: 12px;
 }
 
 .field label {

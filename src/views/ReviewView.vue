@@ -84,6 +84,7 @@
                 </div>
 
                 <button type="button" class="place-btn" @click="placeOrder">PLACE ORDER</button>
+                <p v-if="checkoutError" class="field-error">{{ checkoutError }}</p>
 
                 <p class="terms">
                   BY PLACING YOUR ORDER, YOU AGREE TO OUR TERMS AND PRIVACY POLICY.
@@ -135,6 +136,7 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
+import { readStorage, writeStorage } from '@/utils/storage'
 
 interface CartItem {
   id: number
@@ -171,24 +173,20 @@ const paymentInfo = ref({
     cvv: '',
   },
 })
+const checkoutError = ref('')
 
 function loadCart() {
-  const savedCart = localStorage.getItem('cartItems')
-  items.value = savedCart ? JSON.parse(savedCart) : []
+  items.value = readStorage<CartItem[]>('cartItems', [])
 }
 
 function loadShipping() {
-  const savedShipping = localStorage.getItem('shippingInfo')
-  if (savedShipping) {
-    shippingInfo.value = JSON.parse(savedShipping)
-  }
+  const savedShipping = readStorage<typeof shippingInfo.value | null>('shippingInfo', null)
+  if (savedShipping) shippingInfo.value = savedShipping
 }
 
 function loadPayment() {
-  const savedPayment = localStorage.getItem('paymentInfo')
-  if (savedPayment) {
-    paymentInfo.value = JSON.parse(savedPayment)
-  }
+  const savedPayment = readStorage<typeof paymentInfo.value | null>('paymentInfo', null)
+  if (savedPayment) paymentInfo.value = savedPayment
 }
 
 const cartCount = computed(() => {
@@ -225,6 +223,20 @@ function goToPayment() {
 }
 
 function placeOrder() {
+  checkoutError.value = ''
+  if (!items.value.length) {
+    checkoutError.value = 'Your cart is empty. Add items before placing an order.'
+    return
+  }
+  if (!shippingInfo.value.firstName || !shippingInfo.value.address || !shippingInfo.value.phone) {
+    checkoutError.value = 'Shipping information is incomplete.'
+    return
+  }
+  if (!paymentInfo.value.method) {
+    checkoutError.value = 'Payment method is missing.'
+    return
+  }
+
   const orderNumber = `CLX-${Math.floor(1000000 + Math.random() * 9000000)}`
 
   const newOrder = {
@@ -235,18 +247,18 @@ function placeOrder() {
       day: 'numeric',
       year: 'numeric',
     }),
-    status: 'DELIVERED',
+    status: 'PLACED',
     total: total.value,
     items: items.value,
     shippingInfo: shippingInfo.value,
     paymentInfo: paymentInfo.value,
   }
 
-  const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]')
+  const existingOrders = readStorage<any[]>('orders', [])
   existingOrders.unshift(newOrder)
-  localStorage.setItem('orders', JSON.stringify(existingOrders))
+  writeStorage('orders', existingOrders)
 
-  localStorage.setItem('orderConfirmation', JSON.stringify(newOrder))
+  writeStorage('orderConfirmation', newOrder)
   localStorage.removeItem('cartItems')
 
   router.push('/order-confirm')
@@ -426,6 +438,12 @@ onMounted(async () => {
   font-weight: 700;
   cursor: pointer;
   margin-top: 18px;
+}
+
+.field-error {
+  margin: 10px 0 0;
+  color: #d92d20;
+  font-size: 12px;
 }
 
 .terms {

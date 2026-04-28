@@ -65,6 +65,7 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
+import { readStorage } from '@/utils/storage'
 
 interface CartItem {
   id: number
@@ -88,8 +89,11 @@ const navLinks = ref<NavLink[]>([])
 const footerColumns = ref<FooterColumn[]>([])
 const socialLinks = ref<SocialLink[]>([])
 const orders = ref<Order[]>([])
+const cartItems = ref<Array<{ id: number; quantity: number }>>([])
 
-const cartCount = computed(() => 0)
+const cartCount = computed(() => {
+  return cartItems.value.reduce((sum, item) => sum + item.quantity, 0)
+})
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('en-US', {
@@ -100,7 +104,8 @@ function formatPrice(value: number) {
 }
 
 onMounted(async () => {
-  orders.value = JSON.parse(localStorage.getItem('orders') || '[]')
+  orders.value = readStorage<Order[]>('orders', [])
+  cartItems.value = readStorage<Array<{ id: number; quantity: number }>>('cartItems', [])
   navLinks.value = await getNavLinks()
   footerColumns.value = await getFooterColumns()
   socialLinks.value = await getSocialLinks()

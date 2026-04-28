@@ -49,7 +49,9 @@
 </template>
 
 <script setup lang="ts">
-const transactions = [
+import { computed } from 'vue'
+
+const fallbackTransactions = [
   {
     id: '#CL-8902',
     initials: 'EM',
@@ -71,6 +73,23 @@ const transactions = [
     statusClass: 'blue',
   },
 ]
+
+const props = defineProps<{
+  rows?: Array<{
+    id: string
+    initials: string
+    customer: string
+    product: string
+    date: string
+    amount: string
+    status: string
+    statusClass: string
+  }>
+}>()
+
+const transactions = computed(() => {
+  return props.rows && props.rows.length ? props.rows : fallbackTransactions
+})
 </script>
 
 <style scoped>

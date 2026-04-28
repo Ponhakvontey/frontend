@@ -36,37 +36,49 @@
                   <div class="field">
                     <label>FIRST NAME</label>
                     <input v-model="shipping.firstName" type="text" placeholder="John" />
+                    <p v-if="shippingErrors.firstName" class="field-error">
+                      {{ shippingErrors.firstName }}
+                    </p>
                   </div>
                   <div class="field">
                     <label>LAST NAME</label>
                     <input v-model="shipping.lastName" type="text" placeholder="Doe" />
+                    <p v-if="shippingErrors.lastName" class="field-error">
+                      {{ shippingErrors.lastName }}
+                    </p>
                   </div>
                 </div>
 
                 <div class="field">
                   <label>STREET ADDRESS</label>
                   <input v-model="shipping.address" type="text" placeholder="123 Luxury Lane" />
+                  <p v-if="shippingErrors.address" class="field-error">{{ shippingErrors.address }}</p>
                 </div>
 
                 <div class="grid three">
                   <div class="field">
                     <label>CITY</label>
                     <input v-model="shipping.city" type="text" placeholder="Manhattan" />
+                    <p v-if="shippingErrors.city" class="field-error">{{ shippingErrors.city }}</p>
                   </div>
                   <div class="field">
                     <label>STATE</label>
                     <input v-model="shipping.state" type="text" placeholder="NY" />
+                    <p v-if="shippingErrors.state" class="field-error">{{ shippingErrors.state }}</p>
                   </div>
                   <div class="field">
                     <label>ZIP CODE</label>
                     <input v-model="shipping.zipCode" type="text" placeholder="10001" />
+                    <p v-if="shippingErrors.zipCode" class="field-error">{{ shippingErrors.zipCode }}</p>
                   </div>
                 </div>
 
                 <div class="field">
                   <label>PHONE NUMBER</label>
                   <input v-model="shipping.phone" type="text" placeholder="+1 (555) 000-0000" />
+                  <p v-if="shippingErrors.phone" class="field-error">{{ shippingErrors.phone }}</p>
                 </div>
+                <p v-if="formError" class="field-error">{{ formError }}</p>
 
                 <button type="submit" class="continue-btn">Continue to Payment →</button>
               </form>
@@ -150,6 +162,8 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
+import { readStorage, writeStorage } from '@/utils/storage'
+import { isValidPhone, isValidZipCode } from '@/utils/validation'
 
 interface CartItem {
   id: number
@@ -177,10 +191,18 @@ const shipping = ref({
   zipCode: '',
   phone: '',
 })
+const shippingErrors = ref<Record<string, string>>({})
+const formError = ref('')
 
 function loadCart() {
-  const savedCart = localStorage.getItem('cartItems')
-  items.value = savedCart ? JSON.parse(savedCart) : []
+  items.value = readStorage<CartItem[]>('cartItems', [])
+}
+
+function loadShipping() {
+  const existing = readStorage<typeof shipping.value | null>('shippingInfo', null)
+  if (existing) {
+    shipping.value = { ...shipping.value, ...existing }
+  }
 }
 
 const cartCount = computed(() => {
@@ -203,12 +225,35 @@ function formatPrice(value: number) {
 }
 
 function continueToPayment() {
-  localStorage.setItem('shippingInfo', JSON.stringify(shipping.value))
+  shippingErrors.value = {}
+  formError.value = ''
+
+  if (!items.value.length) {
+    formError.value = 'Your cart is empty. Add items before checkout.'
+    return
+  }
+
+  const nextErrors: Record<string, string> = {}
+  if (!shipping.value.firstName.trim()) nextErrors.firstName = 'First name is required.'
+  if (!shipping.value.lastName.trim()) nextErrors.lastName = 'Last name is required.'
+  if (!shipping.value.address.trim()) nextErrors.address = 'Street address is required.'
+  if (!shipping.value.city.trim()) nextErrors.city = 'City is required.'
+  if (!shipping.value.state.trim()) nextErrors.state = 'State is required.'
+  if (!shipping.value.zipCode.trim()) nextErrors.zipCode = 'Zip code is required.'
+  else if (!isValidZipCode(shipping.value.zipCode)) nextErrors.zipCode = 'Enter a valid zip code.'
+  if (!shipping.value.phone.trim()) nextErrors.phone = 'Phone number is required.'
+  else if (!isValidPhone(shipping.value.phone)) nextErrors.phone = 'Enter a valid phone number.'
+
+  shippingErrors.value = nextErrors
+  if (Object.keys(nextErrors).length > 0) return
+
+  writeStorage('shippingInfo', shipping.value)
   router.push('/payment')
 }
 
 onMounted(async () => {
   loadCart()
+  loadShipping()
   navLinks.value = await getNavLinks()
   footerColumns.value = await getFooterColumns()
   socialLinks.value = await getSocialLinks()
@@ -347,6 +392,12 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.field-error {
+  margin: 0;
+  color: #d92d20;
+  font-size: 12px;
 }
 
 .field label {

@@ -8,7 +8,7 @@
       <main class="dashboard-main">
         <DashboardHero />
         <StatsOverview />
-        <RecentTransactions />
+        <RecentTransactions :rows="transactions" />
       </main>
 
       <AdminFooter />
@@ -23,6 +23,14 @@ import AdminFooter from '@/components/admin/layout/AdminFooter.vue'
 import DashboardHero from '@/components/admin/dashboard/DashboardHero.vue'
 import StatsOverview from '@/components/admin/dashboard/StatsOverview.vue'
 import RecentTransactions from '@/components/admin/dashboard/RecentTransactions.vue'
+import { onMounted } from 'vue'
+import { useAdminDashboard } from '@/composables/useAdminDashboard'
+
+const { transactions, fetchDashboardData } = useAdminDashboard()
+
+onMounted(() => {
+  fetchDashboardData()
+})
 </script>
 
 <style scoped>

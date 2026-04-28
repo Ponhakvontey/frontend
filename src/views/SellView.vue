@@ -96,7 +96,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import {
@@ -106,6 +106,7 @@ import {
   getTrendingProducts,
 } from '@/services/homeService'
 import type { FooterColumn, NavLink, Product, SocialLink } from '@/types/home'
+import { readStorage } from '@/utils/storage'
 
 interface CartItem {
   id: number
@@ -120,22 +121,25 @@ const cartItems = ref<CartItem[]>([])
 
 const searchText = ref('')
 const route = useRoute()
+const router = useRouter()
 const sortBy = ref('Newest Arrivals')
-const selectedCategory = ref('Apparel')
+const selectedCategory = ref('All')
 const selectedDesigners = ref<string[]>([])
 
 const currentPage = ref(1)
 const itemsPerPage = ref(6)
 
-const categories = ['Apparel', 'Accessories', 'Footwear', 'Objects']
-const designers = ['Maison Margiela', 'Acne Studios', 'Jil Sander', 'Rick Owens']
+const categories = ['All', 'Apparel', 'Accessories', 'Footwear', 'Objects']
+const designers = computed(() => {
+  return [...new Set(products.value.map((item) => item.maker))]
+})
 
 watch([searchText, selectedCategory, selectedDesigners, sortBy], () => {
   currentPage.value = 1
 })
 
 function loadCart() {
-  cartItems.value = JSON.parse(localStorage.getItem('cartItems') || '[]')
+  cartItems.value = readStorage<CartItem[]>('cartItems', [])
 }
 
 const cartCount = computed(() => {
@@ -155,6 +159,17 @@ const filteredProducts = computed(() => {
 
   if (selectedDesigners.value.length) {
     result = result.filter((item) => selectedDesigners.value.includes(item.maker))
+  }
+
+  if (selectedCategory.value !== 'All') {
+    result = result.filter((item) => {
+      const name = `${item.name} ${item.slug}`.toLowerCase()
+      if (selectedCategory.value === 'Apparel') return name.includes('jacket')
+      if (selectedCategory.value === 'Accessories') return name.includes('diffuser') || name.includes('vase')
+      if (selectedCategory.value === 'Footwear') return name.includes('boot')
+      if (selectedCategory.value === 'Objects') return name.includes('lamp') || name.includes('stool')
+      return true
+    })
   }
 
   if (sortBy.value === 'Price: Low to High') {
@@ -239,6 +254,20 @@ onMounted(async () => {
 
   const queryKeyword = route.query.q?.toString() || ''
   searchText.value = queryKeyword
+})
+
+watch(
+  () => route.query.q,
+  (q) => {
+    searchText.value = q?.toString() || ''
+  },
+)
+
+watch(searchText, (value) => {
+  router.replace({
+    path: '/sell',
+    query: value.trim() ? { q: value.trim() } : {},
+  })
 })
 </script>
 

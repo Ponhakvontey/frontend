@@ -23,6 +23,7 @@
                     placeholder="E.g. Alexander Pierce"
                   />
                 </div>
+                <p v-if="errors.fullName" class="field-error">{{ errors.fullName }}</p>
               </div>
 
               <div class="form-group">
@@ -36,6 +37,7 @@
                     placeholder="name@scholar.com"
                   />
                 </div>
+                <p v-if="errors.email" class="field-error">{{ errors.email }}</p>
               </div>
 
               <div class="row">
@@ -51,6 +53,7 @@
                       autocomplete="new-password"
                     />
                   </div>
+                  <p v-if="errors.password" class="field-error">{{ errors.password }}</p>
                 </div>
 
                 <div class="form-group">
@@ -65,6 +68,9 @@
                       autocomplete="new-password"
                     />
                   </div>
+                  <p v-if="errors.confirmPassword" class="field-error">
+                    {{ errors.confirmPassword }}
+                  </p>
                 </div>
               </div>
 
@@ -75,6 +81,8 @@
                   <a href="#">Privacy Policy</a>.
                 </label>
               </div>
+              <p v-if="errors.agree" class="field-error">{{ errors.agree }}</p>
+              <p v-if="errors.general" class="form-error">{{ errors.general }}</p>
 
               <button class="create-btn" type="submit">Create Account</button>
 
@@ -106,6 +114,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { addStoredUser, getStoredUsers } from '@/utils/auth'
+import { isValidEmail } from '@/utils/validation'
 import confirmIcon from '../assets/confirm.png'
 import emailIcon from '../assets/message.png'
 import googleIcon from '../assets/google.png'
@@ -119,24 +129,55 @@ const password = ref('')
 const confirmPassword = ref('')
 const agree = ref(false)
 const router = useRouter()
+const errors = ref({
+  fullName: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  agree: '',
+  general: '',
+})
+
+function clearErrors() {
+  errors.value = {
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    agree: '',
+    general: '',
+  }
+}
 
 function handleRegister() {
-  if (!fullName.value || !email.value || !password.value || !confirmPassword.value) {
-    alert('Please complete all required fields.')
+  clearErrors()
+  const normalizedEmail = email.value.trim().toLowerCase()
+
+  if (!fullName.value.trim()) errors.value.fullName = 'Full name is required.'
+  if (!normalizedEmail) errors.value.email = 'Email is required.'
+  else if (!isValidEmail(normalizedEmail))
+    errors.value.email = 'Please enter a valid email address.'
+  if (!password.value) errors.value.password = 'Password is required.'
+  else if (password.value.length < 8)
+    errors.value.password = 'Password must be at least 8 characters.'
+  if (!confirmPassword.value) errors.value.confirmPassword = 'Please confirm your password.'
+  else if (confirmPassword.value !== password.value)
+    errors.value.confirmPassword = 'Passwords do not match.'
+  if (!agree.value) errors.value.agree = 'You must agree to continue.'
+
+  if (Object.values(errors.value).some(Boolean)) return
+
+  const users = getStoredUsers()
+  if (users.some((user) => user.email.toLowerCase() === normalizedEmail)) {
+    errors.value.general = 'An account with this email already exists.'
     return
   }
 
-  if (!agree.value) {
-    alert('Please agree to the Terms of Service and Privacy Policy.')
-    return
-  }
-
-  if (password.value !== confirmPassword.value) {
-    alert('Passwords do not match.')
-    return
-  }
-
-  alert('Register submitted!')
+  addStoredUser({
+    fullName: fullName.value.trim(),
+    email: normalizedEmail,
+    password: password.value,
+  })
   router.push('/login')
 }
 </script>
@@ -224,6 +265,19 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.field-error {
+  margin: 0;
+  color: #d92d20;
+  font-size: 12px;
+}
+
+.form-error {
+  margin: 0;
+  color: #d92d20;
+  font-size: 12px;
+  text-align: center;
 }
 
 .form-group label {

@@ -106,6 +106,7 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
+import { readStorage, writeStorage } from '@/utils/storage'
 
 interface CartItem {
   id: number
@@ -132,12 +133,11 @@ function goToCheckout() {
 }
 
 function loadCart() {
-  const savedCart = localStorage.getItem('cartItems')
-  items.value = savedCart ? JSON.parse(savedCart) : []
+  items.value = readStorage<CartItem[]>('cartItems', [])
 }
 
 function saveCart() {
-  localStorage.setItem('cartItems', JSON.stringify(items.value))
+  writeStorage('cartItems', items.value)
 }
 
 function increaseQty(id: number) {

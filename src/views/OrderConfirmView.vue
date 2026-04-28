@@ -56,7 +56,7 @@
             <button type="button" class="secondary-btn">View Full Invoice</button>
           </div>
 
-          <p class="email-note">A confirmation email has been sent to {{ fakeEmail }}</p>
+          <p class="email-note">A confirmation email has been sent to {{ confirmationEmail }}</p>
         </section>
       </div>
     </main>
@@ -72,6 +72,7 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
+import { readStorage } from '@/utils/storage'
 
 interface OrderItem {
   id: number
@@ -120,7 +121,7 @@ const orderData = ref<OrderConfirmation>({
   total: 0,
 })
 
-const fakeEmail = computed(() => 'jameson.s@design.com')
+const confirmationEmail = computed(() => localStorage.getItem('userEmail') || 'your account email')
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('en-US', {
@@ -135,10 +136,8 @@ function goHome() {
 }
 
 onMounted(async () => {
-  const savedOrder = localStorage.getItem('orderConfirmation')
-  if (savedOrder) {
-    orderData.value = JSON.parse(savedOrder)
-  }
+  const savedOrder = readStorage<OrderConfirmation | null>('orderConfirmation', null)
+  if (savedOrder) orderData.value = savedOrder
 
   navLinks.value = await getNavLinks()
   footerColumns.value = await getFooterColumns()

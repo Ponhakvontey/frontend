@@ -51,6 +51,7 @@ import type {
   JournalContent,
   SocialLink,
 } from '@/types/home'
+import { readStorage } from '@/utils/storage'
 
 interface CartItem {
   id: number
@@ -75,7 +76,7 @@ const cartCount = computed(() => {
 })
 
 function loadCart() {
-  cartItems.value = JSON.parse(localStorage.getItem('cartItems') || '[]')
+  cartItems.value = readStorage<CartItem[]>('cartItems', [])
 }
 
 function goToSellSearch() {

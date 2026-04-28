@@ -23,6 +23,7 @@
                     placeholder="scholar@institution.edu"
                   />
                 </div>
+                <p v-if="errors.email" class="field-error">{{ errors.email }}</p>
               </div>
 
               <div class="form-group">
@@ -42,7 +43,10 @@
                   />
                   <img :src="eyeIcon" alt="" class="icon eye" />
                 </div>
+                <p v-if="errors.password" class="field-error">{{ errors.password }}</p>
               </div>
+
+              <p v-if="errors.general" class="form-error">{{ errors.general }}</p>
 
               <button class="sign-in-btn" type="submit">Sign In →</button>
 
@@ -70,8 +74,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { getStoredUsers, setSession } from '@/utils/auth'
+import { isValidEmail } from '@/utils/validation'
 import eyeIcon from '../assets/confirm.png'
 import emailIcon from '../assets/message.png'
 import googleIcon from '../assets/google.png'
@@ -81,23 +87,45 @@ import passwordIcon from '../assets/password.png'
 const email = ref('')
 const password = ref('')
 const router = useRouter()
+const route = useRoute()
+const errors = ref({
+  email: '',
+  password: '',
+  general: '',
+})
+
+const redirectPath = computed(() => route.query.redirect?.toString() || '/')
+
+function resetErrors() {
+  errors.value = { email: '', password: '', general: '' }
+}
 
 function handleLogin() {
-  if (!email.value || !password.value) {
-    alert('Please enter email and password.')
+  resetErrors()
+  const normalizedEmail = email.value.trim().toLowerCase()
+
+  if (!normalizedEmail) errors.value.email = 'Email is required.'
+  else if (!isValidEmail(normalizedEmail)) errors.value.email = 'Please enter a valid email address.'
+  if (!password.value) errors.value.password = 'Password is required.'
+
+  if (errors.value.email || errors.value.password) return
+
+  if (normalizedEmail === 'admin@gmail.com' && password.value === 'admin123') {
+    setSession('admin', normalizedEmail)
+    router.push(redirectPath.value === '/admin' ? '/admin' : redirectPath.value || '/admin')
     return
   }
 
-  if (email.value === 'admin@gmail.com' && password.value === 'admin123') {
-    localStorage.setItem('isLoggedIn', 'true')
-    localStorage.setItem('userRole', 'admin')
-    router.push('/admin')
+  const users = getStoredUsers()
+  const matched = users.find((user) => user.email.toLowerCase() === normalizedEmail)
+
+  if (!matched || matched.password !== password.value) {
+    errors.value.general = 'Incorrect email or password. Please try again.'
     return
   }
 
-  localStorage.setItem('isLoggedIn', 'true')
-  localStorage.setItem('userRole', 'user')
-  router.push('/')
+  setSession('user', normalizedEmail)
+  router.push(redirectPath.value)
 }
 </script>
 
@@ -184,6 +212,19 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.field-error {
+  margin: 0;
+  color: #d92d20;
+  font-size: 12px;
+}
+
+.form-error {
+  margin: 0;
+  color: #d92d20;
+  font-size: 12px;
+  text-align: center;
 }
 
 .form-group label {

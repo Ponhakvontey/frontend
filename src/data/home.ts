@@ -32,8 +32,7 @@ import type {
 export const mockNavLinks: NavLink[] = [
   { id: 1, label: 'Home', slug: 'home', active: false },
   { id: 2, label: 'Sell', slug: 'sell', active: false },
-  { id: 3, label: 'Journal', slug: 'journal', active: false },
-  { id: 4, label: 'About', slug: 'about', active: false },
+  { id: 3, label: 'Orders', slug: 'order-history', active: false },
 ]
 
 export const mockBenefits: Benefit[] = [

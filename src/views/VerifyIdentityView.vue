@@ -20,8 +20,11 @@
             type="text"
             maxlength="1"
             inputmode="numeric"
+            @input="onDigitInput(index, $event)"
           />
         </div>
+        <p v-if="codeError" class="field-error">{{ codeError }}</p>
+        <p v-if="formMessage" class="success-message">{{ formMessage }}</p>
 
         <button type="submit" class="verify-btn">Verify &amp; Continue</button>
       </form>
@@ -46,28 +49,35 @@ const router = useRouter()
 const email = localStorage.getItem('resetEmail') || 'your@email.com'
 
 const code = ref(['', '', '', '', '', ''])
+const codeError = ref('')
+const formMessage = ref('')
 
 const maskedEmail = computed(() => {
-  const parts = email.split('@')
-  if (parts.length !== 2) return email
-
-  const name = parts[0]
-  const domain = parts[1]
+  const [name = '', domain = ''] = email.split('@')
+  if (!name || !domain) return email
 
   if (name.length <= 2) return `**@${domain}`
 
   return `${name.slice(0, 2)}***@${domain}`
 })
 
+function onDigitInput(index: number, event: Event) {
+  const target = event.target as HTMLInputElement
+  const normalized = target.value.replace(/[^0-9]/g, '')
+  code.value[index] = normalized
+}
+
 function handleVerify() {
+  codeError.value = ''
+  formMessage.value = ''
   const fullCode = code.value.join('')
 
-  if (fullCode.length !== 6) {
-    alert('Please enter the 6-digit code.')
+  if (!/^\d{6}$/.test(fullCode)) {
+    codeError.value = 'Please enter a valid 6-digit verification code.'
     return
   }
 
-  alert('Verification successful.')
+  formMessage.value = 'Verification successful. Redirecting to login...'
   router.push('/login')
 }
 </script>
@@ -137,6 +147,18 @@ h1 {
   display: flex;
   justify-content: center;
   gap: 10px;
+}
+
+.field-error {
+  margin: 0;
+  color: #d92d20;
+  font-size: 12px;
+}
+
+.success-message {
+  margin: 0;
+  color: #0f766e;
+  font-size: 12px;
 }
 
 .code-input {

@@ -17,7 +17,9 @@
             <span>✉</span>
             <input v-model="email" type="email" placeholder="name@university.edu" />
           </div>
+          <p v-if="emailError" class="field-error">{{ emailError }}</p>
         </div>
+        <p v-if="formMessage" class="field-error">{{ formMessage }}</p>
 
         <button type="submit" class="reset-btn">Reset Password</button>
       </form>
@@ -32,17 +34,36 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { getStoredUsers } from '@/utils/auth'
+import { isValidEmail } from '@/utils/validation'
 
 const router = useRouter()
 const email = ref('')
+const emailError = ref('')
+const formMessage = ref('')
 
 function handleReset() {
-  if (!email.value) {
-    alert('Please enter your email address.')
+  emailError.value = ''
+  formMessage.value = ''
+  const normalizedEmail = email.value.trim().toLowerCase()
+
+  if (!normalizedEmail) {
+    emailError.value = 'Email is required.'
     return
   }
 
-  localStorage.setItem('resetEmail', email.value)
+  if (!isValidEmail(normalizedEmail)) {
+    emailError.value = 'Please enter a valid email address.'
+    return
+  }
+
+  const exists = getStoredUsers().some((user) => user.email.toLowerCase() === normalizedEmail)
+  if (!exists) {
+    formMessage.value = 'No account found for this email.'
+    return
+  }
+
+  localStorage.setItem('resetEmail', normalizedEmail)
   router.push('/verify-identity')
 }
 </script>
@@ -116,6 +137,12 @@ h1 {
 
 .field {
   text-align: left;
+}
+
+.field-error {
+  margin: 8px 0 0;
+  color: #d92d20;
+  font-size: 12px;
 }
 
 .field label {

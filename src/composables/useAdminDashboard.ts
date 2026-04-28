@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { mockAdminDashboard } from '@/data/admin'
+import { getAdminDashboardData } from '@/services/adminDashboardService'
 
 export function useAdminDashboard() {
   const loading = ref(false)
@@ -19,10 +19,10 @@ export function useAdminDashboard() {
     error.value = null
 
     try {
-      // for now: mock data
-      adminName.value = mockAdminDashboard.adminName
-      stats.value = mockAdminDashboard.stats
-      transactions.value = mockAdminDashboard.transactions
+      const data = await getAdminDashboardData()
+      adminName.value = data.adminName
+      stats.value = data.stats
+      transactions.value = data.transactions
     } catch (err: any) {
       error.value = err?.message || 'Failed to load dashboard data'
     } finally {
