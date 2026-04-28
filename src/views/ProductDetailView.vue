@@ -397,6 +397,7 @@ onMounted(async () => {
   line-height: 1.05;
   font-weight: 400;
   letter-spacing: -0.03em;
+  padding-top: 110px;
 }
 
 .price-row {

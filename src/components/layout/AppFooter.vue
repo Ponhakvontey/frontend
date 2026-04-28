@@ -46,16 +46,22 @@ function getFooterPath(slug: string) {
 .site-footer {
   background: #10161d;
   color: #d7e1f2;
-  padding: 70px 70px 50px;
+  padding: 70px 32px 50px;
+  overflow-x: hidden;
 }
 
 .footer-inner {
+  max-width: 1440px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
-  gap: 60px;
+  align-items: flex-start;
+  gap: 40px;
+  flex-wrap: wrap;
 }
 
 .footer-brand {
+  flex: 1 1 320px;
   max-width: 420px;
 }
 
@@ -69,17 +75,22 @@ function getFooterPath(slug: string) {
   line-height: 2;
   letter-spacing: 0.08em;
   color: #9bb0d4;
+  word-break: break-word;
 }
 
 .footer-columns {
   display: flex;
-  gap: 80px;
+  gap: 60px;
+  flex-wrap: wrap;
+  flex: 1 1 500px;
+  justify-content: flex-end;
 }
 
 .footer-column {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 140px;
 }
 
 .footer-column h4 {
@@ -98,5 +109,26 @@ function getFooterPath(slug: string) {
 
 .footer-link:hover {
   color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .site-footer {
+    padding: 50px 20px 36px;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .footer-columns {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 32px;
+  }
+
+  .footer-column {
+    min-width: 120px;
+  }
 }
 </style>

@@ -209,7 +209,7 @@ onMounted(async () => {
 }
 
 .cart-main {
-  padding: 34px 0 70px;
+  padding: 70px 0 70px;
 }
 
 .cart-heading {

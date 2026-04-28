@@ -5,13 +5,15 @@
       @update:model-value="emit('update:searchText', $event)"
       @enter="emit('searchEnter')"
     />
+
     <button class="icon-btn" type="button">
       <img :src="uiAssets.heartIcon" alt="Wishlist" />
     </button>
 
-    <button class="icon-btn" type="button">
+    <RouterLink to="/card" class="icon-btn cart-btn">
       <img :src="uiAssets.cartIcon" alt="Cart" />
-    </button>
+      <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
+    </RouterLink>
 
     <button class="icon-btn" type="button">
       <img :src="uiAssets.userIcon" alt="Account" />
@@ -84,22 +86,5 @@ const emit = defineEmits<{
   text-align: center;
   font-weight: 700;
   padding: 0 4px;
-}
-
-.cart-btn.active img {
-  filter: brightness(0) saturate(100%) invert(38%) sepia(88%) saturate(2108%) hue-rotate(216deg)
-    brightness(95%) contrast(94%);
-}
-
-.cart-btn.active::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: -14px;
-  width: 22px;
-  height: 2px;
-  background: #3563e9;
-  border-radius: 999px;
 }
 </style>

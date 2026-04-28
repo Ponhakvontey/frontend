@@ -165,7 +165,7 @@ onMounted(async () => {
 }
 
 .confirm-main {
-  padding: 56px 0 80px;
+  padding: 70px 0 80px;
 }
 
 .confirm-section {

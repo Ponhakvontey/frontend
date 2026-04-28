@@ -252,6 +252,7 @@ onMounted(async () => {
   background: #f7f9fb;
   color: #191c1e;
   font-family: Inter, Arial, sans-serif;
+  padding: 50px 0 60px;
 }
 
 .container {

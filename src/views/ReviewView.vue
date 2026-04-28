@@ -282,7 +282,7 @@ onMounted(async () => {
 }
 
 .review-main {
-  padding: 40px 0 80px;
+  padding: 70px 0 80px;
 }
 
 .review-head {

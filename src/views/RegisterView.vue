@@ -1,101 +1,100 @@
 <template>
   <div class="register-page">
-    <div class="register-card">
-      <section class="left-panel">
-        <img :src="logo" alt="Ubuyee logo" class="logo" />
-      </section>
+    <div class="register-shell">
+      <div class="register-card">
+        <section class="left-panel">
+          <img :src="logo" alt="Ubuyee logo" class="logo" />
+        </section>
 
-      <section class="right-panel">
-        <div class="form-container">
-          <h1>Create Account</h1>
-          <p class="subtitle">Start your curated journey today.</p>
+        <section class="right-panel">
+          <div class="form-container">
+            <h1>Create Account</h1>
+            <p class="subtitle">Start your curated journey today.</p>
 
-          <form class="register-form" @submit.prevent="handleRegister">
-            <div class="form-group">
-              <label for="full-name">FULL NAME</label>
-              <div class="input-box">
-                <img :src="peopleIcon" alt="" class="icon" />
-                <input
-                  id="full-name"
-                  v-model.trim="fullName"
-                  type="text"
-                  placeholder="E.g. Alexander Pierce"
-                />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="email">EMAIL ADDRESS</label>
-              <div class="input-box">
-                <img :src="emailIcon" alt="" class="icon" />
-                <input
-                  id="email"
-                  v-model.trim="email"
-                  type="email"
-                  placeholder="name@scholar.com"
-                />
-              </div>
-            </div>
-
-            <div class="row">
+            <form class="register-form" @submit.prevent="handleRegister">
               <div class="form-group">
-                <label for="password">PASSWORD</label>
+                <label for="full-name">FULL NAME</label>
                 <div class="input-box">
-                  <img :src="passwordIcon" alt="" class="icon" />
+                  <img :src="peopleIcon" alt="" class="icon" />
                   <input
-                    id="password"
-                    v-model="password"
-                    type="password"
-                    placeholder="••••••••"
-                    autocomplete="new-password"
+                    id="full-name"
+                    v-model.trim="fullName"
+                    type="text"
+                    placeholder="E.g. Alexander Pierce"
                   />
                 </div>
               </div>
 
               <div class="form-group">
-                <label for="confirm-password">CONFIRM PASSWORD</label>
+                <label for="email">EMAIL ADDRESS</label>
                 <div class="input-box">
-                  <img :src="confirmIcon" alt="" class="icon" />
+                  <img :src="emailIcon" alt="" class="icon" />
                   <input
-                    id="confirm-password"
-                    v-model="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    autocomplete="new-password"
+                    id="email"
+                    v-model.trim="email"
+                    type="email"
+                    placeholder="name@scholar.com"
                   />
                 </div>
               </div>
-            </div>
 
-            <div class="checkbox-group">
-              <input id="agree" v-model="agree" type="checkbox" />
-              <label for="agree">
-                I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
-              </label>
-            </div>
+              <div class="row">
+                <div class="form-group">
+                  <label for="password">PASSWORD</label>
+                  <div class="input-box">
+                    <img :src="passwordIcon" alt="" class="icon" />
+                    <input
+                      id="password"
+                      v-model="password"
+                      type="password"
+                      placeholder="••••••••"
+                      autocomplete="new-password"
+                    />
+                  </div>
+                </div>
 
-            <button class="create-btn" type="submit">Create Account</button>
+                <div class="form-group">
+                  <label for="confirm-password">CONFIRM PASSWORD</label>
+                  <div class="input-box">
+                    <img :src="confirmIcon" alt="" class="icon" />
+                    <input
+                      id="confirm-password"
+                      v-model="confirmPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      autocomplete="new-password"
+                    />
+                  </div>
+                </div>
+              </div>
 
-            <p class="divider">OR JOIN WITH</p>
+              <div class="checkbox-group">
+                <input id="agree" v-model="agree" type="checkbox" />
+                <label for="agree">
+                  I agree to the <a href="#">Terms of Service</a> and
+                  <a href="#">Privacy Policy</a>.
+                </label>
+              </div>
 
-            <div class="social-row">
-              <button type="button" class="social-btn">
-                <img :src="googleIcon" alt="" class="icon" />
-                <span>Google</span>
-              </button>
-              <button type="button" class="social-btn">
-                <img :src="githubIcon" alt="" class="icon" />
-                <span>GitHub</span>
-              </button>
-            </div>
+              <button class="create-btn" type="submit">Create Account</button>
 
-            <p class="login-text">
-              Already have an account?
-              <RouterLink to="/login">Login</RouterLink>
-            </p>
-          </form>
-        </div>
-      </section>
+              <p class="divider">OR JOIN WITH</p>
+
+              <div class="social-row">
+                <button type="button" class="social-btn">
+                  <img :src="googleIcon" alt="" class="icon" />
+                  <span>Google</span>
+                </button>
+              </div>
+
+              <p class="login-text">
+                Already have an account?
+                <RouterLink to="/login">Login</RouterLink>
+              </p>
+            </form>
+          </div>
+        </section>
+      </div>
     </div>
 
     <p class="footer-text">
@@ -106,10 +105,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import confirmIcon from '../assets/confirm.png'
 import emailIcon from '../assets/message.png'
-import githubIcon from '../assets/git.png'
 import googleIcon from '../assets/google.png'
 import logo from '../assets/logo.png'
 import passwordIcon from '../assets/password.png'
@@ -120,6 +118,7 @@ const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const agree = ref(false)
+const router = useRouter()
 
 function handleRegister() {
   if (!fullName.value || !email.value || !password.value || !confirmPassword.value) {
@@ -138,6 +137,7 @@ function handleRegister() {
   }
 
   alert('Register submitted!')
+  router.push('/login')
 }
 </script>
 
@@ -149,23 +149,29 @@ function handleRegister() {
 .register-page {
   min-height: 100vh;
   background: #dfe1e5;
-  padding: 40px 16px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
+  padding: 24px 16px 20px;
   font-family: Inter, Arial, sans-serif;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.register-shell {
+  width: max-content;
+  min-width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .register-card {
-  width: min(100%, 1080px);
-  min-height: 710px;
+  width: 1280px;
+  min-width: 1280px;
+  min-height: 720px;
   border-radius: 12px;
   overflow: hidden;
   display: grid;
   grid-template-columns: 1fr 1fr;
   box-shadow: 0 30px 60px rgba(31, 41, 55, 0.08);
+  flex-shrink: 0;
 }
 
 .left-panel {
@@ -173,11 +179,11 @@ function handleRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 36px;
+  padding: 40px;
 }
 
 .logo {
-  width: min(72%, 290px);
+  width: 240px;
   object-fit: contain;
 }
 
@@ -346,33 +352,10 @@ h1 {
 }
 
 .footer-text {
-  margin: 0;
+  margin: 20px 0 0;
   text-align: center;
   font-size: 9px;
   letter-spacing: 0.16em;
   color: #97a0ac;
-}
-
-@media (max-width: 920px) {
-  .register-card {
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-
-  .left-panel {
-    min-height: 240px;
-  }
-
-  .right-panel {
-    padding: 32px 24px;
-  }
-
-  h1 {
-    font-size: 34px;
-  }
-
-  .row {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

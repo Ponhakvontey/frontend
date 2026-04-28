@@ -92,7 +92,7 @@ onBeforeUnmount(() => {
   width: min(1440px, 100%);
   margin: 0 auto;
   padding: 0 32px;
-  min-height: 84px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;

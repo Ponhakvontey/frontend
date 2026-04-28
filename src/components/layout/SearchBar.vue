@@ -44,7 +44,7 @@ function onEnter() {
 .search-box {
   background: #eceef0;
   border-radius: 16px;
-  height: 50px;
+  height: 40px;
   width: 248px;
   padding: 0 16px;
   display: flex;
