@@ -34,8 +34,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { getStoredUsers } from '@/utils/auth'
-import { isValidEmail } from '@/utils/validation'
+import { getStoredUsers, setResetEmail } from '@/utils/auth'
+import { validateEmail } from '@/utils/validation'
 
 const router = useRouter()
 const email = ref('')
@@ -47,13 +47,8 @@ function handleReset() {
   formMessage.value = ''
   const normalizedEmail = email.value.trim().toLowerCase()
 
-  if (!normalizedEmail) {
-    emailError.value = 'Email is required.'
-    return
-  }
-
-  if (!isValidEmail(normalizedEmail)) {
-    emailError.value = 'Please enter a valid email address.'
+  emailError.value = validateEmail(normalizedEmail)
+  if (emailError.value) {
     return
   }
 
@@ -63,7 +58,7 @@ function handleReset() {
     return
   }
 
-  localStorage.setItem('resetEmail', normalizedEmail)
+  setResetEmail(normalizedEmail)
   router.push('/verify-identity')
 }
 </script>

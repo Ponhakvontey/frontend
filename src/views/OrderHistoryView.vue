@@ -30,7 +30,7 @@
             <div class="order-items">
               <img
                 v-for="item in order.items.slice(0, 3)"
-                :key="item.id"
+                :key="item.lineId || item.id"
                 :src="item.image"
                 :alt="item.name"
                 class="order-thumb"
@@ -68,6 +68,7 @@ import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
 import { readStorage } from '@/utils/storage'
 
 interface CartItem {
+  lineId?: string
   id: number
   name: string
   variant: string
@@ -83,6 +84,7 @@ interface Order {
   status: string
   total: number
   items: CartItem[]
+  email?: string
 }
 
 const navLinks = ref<NavLink[]>([])
@@ -104,7 +106,9 @@ function formatPrice(value: number) {
 }
 
 onMounted(async () => {
-  orders.value = readStorage<Order[]>('orders', [])
+  const currentEmail = (localStorage.getItem('userEmail') || '').toLowerCase()
+  const allOrders = readStorage<Order[]>('orders', [])
+  orders.value = allOrders.filter((order) => !currentEmail || (order.email || '').toLowerCase() === currentEmail)
   cartItems.value = readStorage<Array<{ id: number; quantity: number }>>('cartItems', [])
   navLinks.value = await getNavLinks()
   footerColumns.value = await getFooterColumns()

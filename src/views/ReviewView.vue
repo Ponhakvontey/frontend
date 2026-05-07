@@ -101,7 +101,7 @@
             <section class="selected-items">
               <p class="section-label">SELECTED ITEMS</p>
 
-              <article v-for="item in items" :key="item.id" class="review-item">
+              <article v-for="item in items" :key="item.lineId" class="review-item">
                 <img :src="item.image" :alt="item.name" class="review-item-image" />
 
                 <div class="review-item-info">
@@ -137,16 +137,7 @@ import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
 import { readStorage, writeStorage } from '@/utils/storage'
-
-interface CartItem {
-  id: number
-  brand: string
-  name: string
-  variant: string
-  price: number
-  quantity: number
-  image: string
-}
+import { loadCartItems, type CartItem } from '@/utils/commerce'
 
 const router = useRouter()
 
@@ -167,16 +158,12 @@ const shippingInfo = ref({
 
 const paymentInfo = ref({
   method: '',
-  card: {
-    number: '',
-    expiry: '',
-    cvv: '',
-  },
+  cardLast4: '',
 })
 const checkoutError = ref('')
 
 function loadCart() {
-  items.value = readStorage<CartItem[]>('cartItems', [])
+  items.value = loadCartItems()
 }
 
 function loadShipping() {
@@ -201,9 +188,7 @@ const estimatedTax = computed(() => subtotal.value * 0.08)
 const total = computed(() => subtotal.value + estimatedTax.value)
 
 const last4Digits = computed(() => {
-  const number = paymentInfo.value.card?.number || ''
-  const cleaned = number.replace(/\s/g, '')
-  return cleaned.slice(-4) || '0000'
+  return paymentInfo.value.cardLast4 || '0000'
 })
 
 function formatPrice(value: number) {
@@ -228,7 +213,15 @@ function placeOrder() {
     checkoutError.value = 'Your cart is empty. Add items before placing an order.'
     return
   }
-  if (!shippingInfo.value.firstName || !shippingInfo.value.address || !shippingInfo.value.phone) {
+  if (
+    !shippingInfo.value.firstName ||
+    !shippingInfo.value.lastName ||
+    !shippingInfo.value.address ||
+    !shippingInfo.value.city ||
+    !shippingInfo.value.state ||
+    !shippingInfo.value.zipCode ||
+    !shippingInfo.value.phone
+  ) {
     checkoutError.value = 'Shipping information is incomplete.'
     return
   }
@@ -252,6 +245,7 @@ function placeOrder() {
     items: items.value,
     shippingInfo: shippingInfo.value,
     paymentInfo: paymentInfo.value,
+    email: localStorage.getItem('userEmail') || '',
   }
 
   const existingOrders = readStorage<any[]>('orders', [])
@@ -260,6 +254,8 @@ function placeOrder() {
 
   writeStorage('orderConfirmation', newOrder)
   localStorage.removeItem('cartItems')
+  localStorage.removeItem('shippingInfo')
+  localStorage.removeItem('paymentInfo')
 
   router.push('/order-confirm')
 }

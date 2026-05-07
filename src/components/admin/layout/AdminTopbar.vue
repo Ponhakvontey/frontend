@@ -50,10 +50,12 @@ import peopleIcon from '@/assets/admin/people.png'
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .search-box {
   width: 240px;
+  max-width: 100%;
   height: 38px;
   background: #f4f6fa;
   border-radius: 999px;

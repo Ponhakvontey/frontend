@@ -115,7 +115,7 @@
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { addStoredUser, getStoredUsers } from '@/utils/auth'
-import { isValidEmail } from '@/utils/validation'
+import { validateConfirmPassword, validateEmail, validatePassword, validateRequired } from '@/utils/validation'
 import confirmIcon from '../assets/confirm.png'
 import emailIcon from '../assets/message.png'
 import googleIcon from '../assets/google.png'
@@ -153,16 +153,10 @@ function handleRegister() {
   clearErrors()
   const normalizedEmail = email.value.trim().toLowerCase()
 
-  if (!fullName.value.trim()) errors.value.fullName = 'Full name is required.'
-  if (!normalizedEmail) errors.value.email = 'Email is required.'
-  else if (!isValidEmail(normalizedEmail))
-    errors.value.email = 'Please enter a valid email address.'
-  if (!password.value) errors.value.password = 'Password is required.'
-  else if (password.value.length < 8)
-    errors.value.password = 'Password must be at least 8 characters.'
-  if (!confirmPassword.value) errors.value.confirmPassword = 'Please confirm your password.'
-  else if (confirmPassword.value !== password.value)
-    errors.value.confirmPassword = 'Passwords do not match.'
+  errors.value.fullName = validateRequired(fullName.value, 'Full name')
+  errors.value.email = validateEmail(normalizedEmail)
+  errors.value.password = validatePassword(password.value)
+  errors.value.confirmPassword = validateConfirmPassword(password.value, confirmPassword.value)
   if (!agree.value) errors.value.agree = 'You must agree to continue.'
 
   if (Object.values(errors.value).some(Boolean)) return

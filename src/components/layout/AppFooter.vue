@@ -37,7 +37,8 @@ defineProps<{
 }>()
 
 function getFooterPath(slug: string) {
-  const normalized = slug.startsWith('/') ? slug : `/${slug}`
+  const mappedSlug = slug === 'orders' ? 'order-history' : slug
+  const normalized = mappedSlug.startsWith('/') ? mappedSlug : `/${mappedSlug}`
   const supportedPaths = new Set([
     '/',
     '/home',

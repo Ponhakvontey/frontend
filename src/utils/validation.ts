@@ -4,6 +4,30 @@ export function isValidEmail(email: string) {
   return emailPattern.test(email.trim())
 }
 
+export function validateRequired(value: string, fieldLabel: string) {
+  if (!value.trim()) return `${fieldLabel} is required.`
+  return ''
+}
+
+export function validateEmail(value: string) {
+  const requiredError = validateRequired(value, 'Email')
+  if (requiredError) return requiredError
+  if (!isValidEmail(value)) return 'Please enter a valid email address.'
+  return ''
+}
+
+export function validatePassword(value: string) {
+  if (!value) return 'Password is required.'
+  if (value.length < 8) return 'Password must be at least 8 characters.'
+  return ''
+}
+
+export function validateConfirmPassword(password: string, confirmPassword: string) {
+  if (!confirmPassword) return 'Please confirm your password.'
+  if (confirmPassword !== password) return 'Passwords do not match.'
+  return ''
+}
+
 export function isValidPhone(phone: string) {
   const digits = phone.replace(/\D/g, '')
   return digits.length >= 10

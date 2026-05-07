@@ -89,7 +89,7 @@
               <h2>Order Summary</h2>
 
               <div class="summary-items">
-                <article v-for="item in items" :key="item.id" class="summary-item">
+                <article v-for="item in items" :key="item.lineId" class="summary-item">
                   <img :src="item.image" :alt="item.name" class="summary-item-image" />
                   <div class="summary-item-info">
                     <h4>{{ item.name }}</h4>
@@ -143,16 +143,7 @@ import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeSe
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
 import { readStorage, writeStorage } from '@/utils/storage'
 import { isValidCardNumber, isValidCvv, isValidExpiry } from '@/utils/validation'
-
-interface CartItem {
-  id: number
-  brand: string
-  name: string
-  variant: string
-  price: number
-  quantity: number
-  image: string
-}
+import { loadCartItems, type CartItem } from '@/utils/commerce'
 
 const router = useRouter()
 
@@ -172,7 +163,13 @@ const paymentErrors = ref<Record<string, string>>({})
 const formError = ref('')
 
 function loadCart() {
-  items.value = readStorage<CartItem[]>('cartItems', [])
+  items.value = loadCartItems()
+}
+
+function loadPayment() {
+  const savedPayment = readStorage<{ method?: string; cardLast4?: string } | null>('paymentInfo', null)
+  if (!savedPayment) return
+  paymentMethod.value = savedPayment.method || 'card'
 }
 
 const cartCount = computed(() => {
@@ -222,7 +219,7 @@ function reviewOrder() {
 
   writeStorage('paymentInfo', {
     method: paymentMethod.value,
-    card: card.value,
+    cardLast4: paymentMethod.value === 'card' ? card.value.number.replace(/\s/g, '').slice(-4) : '',
   })
 
   router.push('/review')
@@ -230,6 +227,7 @@ function reviewOrder() {
 
 onMounted(async () => {
   loadCart()
+  loadPayment()
   navLinks.value = await getNavLinks()
   footerColumns.value = await getFooterColumns()
   socialLinks.value = await getSocialLinks()

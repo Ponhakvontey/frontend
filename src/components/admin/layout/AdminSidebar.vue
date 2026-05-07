@@ -8,26 +8,25 @@
     </div>
 
     <nav class="sidebar-nav">
-      <button class="nav-item active" type="button">
+      <RouterLink to="/admin" class="nav-item" active-class="active" exact>
         <img :src="dashboardIcon" alt="" class="nav-icon" />
         <span>Dashboard</span>
-      </button>
+      </RouterLink>
 
-      <button class="nav-item" type="button">
+      <RouterLink to="/admin/orders" class="nav-item" active-class="active">
         <img :src="ordersIcon" alt="" class="nav-icon" />
         <span>Orders</span>
-      </button>
+      </RouterLink>
 
-      <button class="nav-item" type="button">
-        <img :src="analyticsIcon" alt="" class="nav-icon" />
-        <span>Analytics</span>
-      </button>
-
-      <button class="nav-item" type="button">
-        <img :src="securityIcon" alt="" class="nav-icon" />
-        <span>Security</span>
-      </button>
+      <RouterLink to="/admin/users" class="nav-item" active-class="active">
+        <img :src="userIcon" alt="" class="nav-icon" />
+        <span>Users</span>
+      </RouterLink>
     </nav>
+
+    <div class="sidebar-actions">
+      <button class="report-btn" type="button">Generate Report</button>
+    </div>
 
     <div class="sidebar-user">
       <div class="avatar">A</div>
@@ -40,10 +39,10 @@
 </template>
 
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import dashboardIcon from '@/assets/admin/DashBoard.png'
 import ordersIcon from '@/assets/admin/Orders.png'
-import analyticsIcon from '@/assets/admin/Analytics.png'
-import securityIcon from '@/assets/admin/Security.png'
+import userIcon from '@/assets/admin/User.png'
 </script>
 
 <style scoped>
@@ -53,6 +52,9 @@ import securityIcon from '@/assets/admin/Security.png'
   padding: 18px 14px;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
 }
 
 .sidebar-top {
@@ -63,6 +65,7 @@ import securityIcon from '@/assets/admin/Security.png'
   margin: 0;
   font-size: 16px;
   color: #202636;
+  font-weight: 600;
 }
 
 .sidebar-subtitle {
@@ -81,7 +84,6 @@ import securityIcon from '@/assets/admin/Security.png'
 
 .nav-item {
   height: 42px;
-  border: 0;
   border-radius: 12px;
   background: transparent;
   color: #4b5563;
@@ -91,6 +93,7 @@ import securityIcon from '@/assets/admin/Security.png'
   padding: 0 12px;
   cursor: pointer;
   text-align: left;
+  text-decoration: none;
 }
 
 .nav-item.active {
@@ -105,8 +108,24 @@ import securityIcon from '@/assets/admin/Security.png'
   object-fit: contain;
 }
 
-.sidebar-user {
+.sidebar-actions {
   margin-top: auto;
+  padding: 18px 6px 10px;
+}
+
+.report-btn {
+  width: 100%;
+  height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: #3563e9;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sidebar-user {
   display: flex;
   align-items: center;
   gap: 10px;

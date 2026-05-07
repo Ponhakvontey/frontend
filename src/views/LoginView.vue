@@ -76,8 +76,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { getStoredUsers, setSession } from '@/utils/auth'
-import { isValidEmail } from '@/utils/validation'
+import { getStoredUsers, isUserBlocked, markUserLoggedIn, setSession } from '@/utils/auth'
+import { validateEmail, validatePassword } from '@/utils/validation'
 import eyeIcon from '../assets/confirm.png'
 import emailIcon from '../assets/message.png'
 import googleIcon from '../assets/google.png'
@@ -104,17 +104,22 @@ function handleLogin() {
   resetErrors()
   const normalizedEmail = email.value.trim().toLowerCase()
 
-  if (!normalizedEmail) errors.value.email = 'Email is required.'
-  else if (!isValidEmail(normalizedEmail)) errors.value.email = 'Please enter a valid email address.'
-  if (!password.value) errors.value.password = 'Password is required.'
+  errors.value.email = validateEmail(normalizedEmail)
+  errors.value.password = password.value ? '' : validatePassword(password.value)
 
   if (errors.value.email || errors.value.password) return
 
   if (normalizedEmail === 'admin@gmail.com' && password.value === 'admin123') {
+    markUserLoggedIn(normalizedEmail)
     setSession('admin', normalizedEmail)
-    router.push(redirectPath.value === '/admin' ? '/admin' : redirectPath.value || '/admin')
+    router.push('/admin')
     return
   }
+  if (isUserBlocked(normalizedEmail)) {
+    errors.value.general = 'This account is blocked. Please contact support.'
+    return
+  }
+
 
   const users = getStoredUsers()
   const matched = users.find((user) => user.email.toLowerCase() === normalizedEmail)
@@ -124,8 +129,10 @@ function handleLogin() {
     return
   }
 
-  setSession('user', normalizedEmail)
-  router.push(redirectPath.value)
+  markUserLoggedIn(normalizedEmail)
+  setSession('customer', normalizedEmail)
+  const safeRedirect = redirectPath.value.startsWith('/admin') ? '/' : redirectPath.value || '/'
+  router.push(safeRedirect)
 }
 </script>
 

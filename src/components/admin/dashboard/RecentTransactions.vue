@@ -124,12 +124,14 @@ const transactions = computed(() => {
   background: #fff;
   border-radius: 20px;
   border: 1px solid #edf1f6;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 860px;
 }
 
 thead th {

@@ -185,7 +185,8 @@ import {
   getTrendingProducts,
 } from '@/services/homeService'
 import type { FooterColumn, NavLink, Product, SocialLink } from '@/types/home'
-import { readStorage, writeStorage } from '@/utils/storage'
+import { isLoggedIn } from '@/utils/auth'
+import { loadCartItems, saveCartItems, toLineId, type CartItem } from '@/utils/commerce'
 
 const route = useRoute()
 const router = useRouter()
@@ -199,7 +200,7 @@ const quantity = ref(1)
 const selectedSize = ref('')
 const activeImage = ref('')
 
-const cartItems = ref<any[]>([])
+const cartItems = ref<CartItem[]>([])
 const addToCartError = ref('')
 
 const productGallery = computed(() => product.value?.gallery ?? [])
@@ -238,16 +239,14 @@ function decreaseQty() {
 }
 
 function loadCart() {
-  cartItems.value = readStorage<any[]>('cartItems', [])
+  cartItems.value = loadCartItems()
 }
 
 function addToCart() {
   addToCartError.value = ''
   if (!product.value) return
 
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-
-  if (!isLoggedIn) {
+  if (!isLoggedIn()) {
     router.push(`/login?redirect=/product/${product.value.id}`)
     return
   }
@@ -258,14 +257,16 @@ function addToCart() {
   }
 
   const variant = `${product.value.colorLabel ?? 'Default'} | ${selectedSize.value || 'Default'}`
+  const lineId = toLineId(product.value.id, variant)
   const existing = cartItems.value.find(
-    (item) => item.id === product.value?.id && item.variant === variant,
+    (item) => item.lineId === lineId,
   )
 
   if (existing) {
     existing.quantity += quantity.value
   } else {
     cartItems.value.push({
+      lineId,
       id: product.value.id,
       brand: product.value.maker,
       name: product.value.name,
@@ -276,8 +277,8 @@ function addToCart() {
     })
   }
 
-  writeStorage('cartItems', cartItems.value)
-  router.push('/card')
+  saveCartItems(cartItems.value)
+  router.push('/cart')
 }
 
 onMounted(async () => {

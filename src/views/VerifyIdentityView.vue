@@ -44,9 +44,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { getResetEmail } from '@/utils/auth'
 
 const router = useRouter()
-const email = localStorage.getItem('resetEmail') || 'your@email.com'
+const email = getResetEmail() || 'your@email.com'
+
+if (!getResetEmail()) {
+  router.replace('/forgot-password')
+}
 
 const code = ref(['', '', '', '', '', ''])
 const codeError = ref('')
@@ -77,8 +82,8 @@ function handleVerify() {
     return
   }
 
-  formMessage.value = 'Verification successful. Redirecting to login...'
-  router.push('/login')
+  formMessage.value = 'Verification successful. Redirecting to reset password...'
+  router.push('/reset-password')
 }
 </script>
 

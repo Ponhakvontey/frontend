@@ -137,7 +137,7 @@ export const mockFooterColumns: FooterColumn[] = [
     links: [
       { label: 'Login', slug: 'login' },
       { label: 'Register', slug: 'register' },
-      { label: 'Order History', slug: 'orders' },
+      { label: 'Order History', slug: 'order-history' },
     ],
   },
 ]

@@ -37,7 +37,8 @@ onMounted(() => {
 .admin-page {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 250px 1fr;
+  grid-template-columns: 250px minmax(0, 1fr);
+  min-width: 1180px;
   background: #f6f8fb;
 }
 
@@ -45,15 +46,10 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 100vh;
 }
 
 .dashboard-main {
   padding: 28px;
-}
-
-@media (max-width: 1200px) {
-  .admin-page {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

@@ -19,7 +19,7 @@
             <div class="summary-card">
               <p class="card-label">SHIPMENT SUMMARY</p>
 
-              <article v-for="item in orderData.items" :key="item.id" class="summary-item">
+              <article v-for="item in orderData.items" :key="item.lineId || item.id" class="summary-item">
                 <img :src="item.image" :alt="item.name" class="summary-item-image" />
 
                 <div class="summary-item-info">
@@ -75,6 +75,7 @@ import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
 import { readStorage } from '@/utils/storage'
 
 interface OrderItem {
+  lineId?: string
   id: number
   name: string
   variant: string
@@ -98,6 +99,7 @@ interface OrderConfirmation {
   items: OrderItem[]
   shippingInfo: ShippingInfo
   total: number
+  email?: string
 }
 
 const router = useRouter()
@@ -121,7 +123,7 @@ const orderData = ref<OrderConfirmation>({
   total: 0,
 })
 
-const confirmationEmail = computed(() => localStorage.getItem('userEmail') || 'your account email')
+const confirmationEmail = computed(() => orderData.value.email || localStorage.getItem('userEmail') || 'your account email')
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('en-US', {
@@ -138,6 +140,7 @@ function goHome() {
 onMounted(async () => {
   const savedOrder = readStorage<OrderConfirmation | null>('orderConfirmation', null)
   if (savedOrder) orderData.value = savedOrder
+  else router.replace('/order-history')
 
   navLinks.value = await getNavLinks()
   footerColumns.value = await getFooterColumns()

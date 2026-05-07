@@ -11,7 +11,7 @@
 
         <section v-if="items.length > 0" class="cart-layout">
           <div class="cart-list">
-            <article v-for="item in items" :key="item.id" class="cart-item">
+            <article v-for="item in items" :key="item.lineId" class="cart-item">
               <div class="item-image-wrap">
                 <img :src="item.image" :alt="item.name" class="item-image" />
               </div>
@@ -29,12 +29,12 @@
 
                 <div class="item-actions">
                   <div class="qty-control">
-                    <button type="button" @click="decreaseQty(item.id)">−</button>
+                    <button type="button" @click="decreaseQty(item.lineId)">−</button>
                     <span>{{ item.quantity.toString().padStart(2, '0') }}</span>
-                    <button type="button" @click="increaseQty(item.id)">+</button>
+                    <button type="button" @click="increaseQty(item.lineId)">+</button>
                   </div>
 
-                  <button type="button" class="remove-btn" @click="removeItem(item.id)">
+                  <button type="button" class="remove-btn" @click="removeItem(item.lineId)">
                     REMOVE
                   </button>
                 </div>
@@ -106,17 +106,7 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
-import { readStorage, writeStorage } from '@/utils/storage'
-
-interface CartItem {
-  id: number
-  brand: string
-  name: string
-  variant: string
-  price: number
-  quantity: number
-  image: string
-}
+import { loadCartItems, saveCartItems, type CartItem } from '@/utils/commerce'
 
 const navLinks = ref<NavLink[]>([])
 const footerColumns = ref<FooterColumn[]>([])
@@ -133,29 +123,29 @@ function goToCheckout() {
 }
 
 function loadCart() {
-  items.value = readStorage<CartItem[]>('cartItems', [])
+  items.value = loadCartItems()
 }
 
 function saveCart() {
-  writeStorage('cartItems', items.value)
+  saveCartItems(items.value)
 }
 
-function increaseQty(id: number) {
-  const item = items.value.find((product) => product.id === id)
+function increaseQty(lineId: string) {
+  const item = items.value.find((product) => product.lineId === lineId)
   if (!item) return
   item.quantity++
   saveCart()
 }
 
-function decreaseQty(id: number) {
-  const item = items.value.find((product) => product.id === id)
+function decreaseQty(lineId: string) {
+  const item = items.value.find((product) => product.lineId === lineId)
   if (!item || item.quantity <= 1) return
   item.quantity--
   saveCart()
 }
 
-function removeItem(id: number) {
-  items.value = items.value.filter((product) => product.id !== id)
+function removeItem(lineId: string) {
+  items.value = items.value.filter((product) => product.lineId !== lineId)
   saveCart()
 }
 

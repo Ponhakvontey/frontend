@@ -10,7 +10,7 @@
       <img :src="uiAssets.heartIcon" alt="Wishlist" />
     </button>
 
-    <RouterLink to="/card" class="icon-btn cart-btn">
+    <RouterLink to="/cart" class="icon-btn cart-btn">
       <img :src="uiAssets.cartIcon" alt="Cart" />
       <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
     </RouterLink>
