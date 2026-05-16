@@ -12,7 +12,10 @@
         <img :src="dashboardIcon" alt="" class="nav-icon" />
         <span>Dashboard</span>
       </RouterLink>
-
+      <RouterLink to="/admin/inventory" class="nav-item" active-class="active">
+        <img :src="inventoryIcon" alt="" class="nav-icon" />
+        <span>Inventory</span>
+      </RouterLink>
       <RouterLink to="/admin/orders" class="nav-item" active-class="active">
         <img :src="ordersIcon" alt="" class="nav-icon" />
         <span>Orders</span>
@@ -43,6 +46,7 @@ import { RouterLink } from 'vue-router'
 import dashboardIcon from '@/assets/admin/DashBoard.png'
 import ordersIcon from '@/assets/admin/Orders.png'
 import userIcon from '@/assets/admin/User.png'
+import inventoryIcon from '@/assets/admin/inventory.png'
 </script>
 
 <style scoped>

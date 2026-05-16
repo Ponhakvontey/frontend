@@ -122,36 +122,10 @@
                 class="page-arrow"
                 :disabled="currentPage === totalPages"
                 @click="currentPage++"
-              >
-                ›
-              </button>
+              ></button>
             </div>
           </div>
         </section>
-
-        <section class="bottom-grid">
-          <article class="forecast-card">
-            <div class="forecast-content">
-              <h2>Global Shipping Forecast</h2>
-              <p>
-                Expect a 12% increase in logistics volume across the North-East corridor. Optimize
-                fleet routes to maintain fulfillment speeds.
-              </p>
-              <button type="button" class="forecast-btn">VIEW LOGISTICS MAP</button>
-            </div>
-
-            <div class="forecast-graphic"></div>
-          </article>
-
-          <article class="bulk-card">
-            <div class="bulk-icon">⚡</div>
-            <h3>Bulk Processing</h3>
-            <p>
-              Select orders to run batch fulfillment operations and generate automated invoices.
-            </p>
-          </article>
-        </section>
-
         <button type="button" class="new-order-btn">+ New Order</button>
       </main>
 

@@ -92,7 +92,7 @@ export interface ProductPairing {
 }
 
 export interface Product {
-  id: number
+  id: number | string
   name: string
   maker: string
   price: number

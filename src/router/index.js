@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+﻿import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
@@ -13,6 +13,8 @@ import OrderHistoryView from '../views/OrderHistoryView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminOrdersView from '../views/AdminOrdersView.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
+import AdminInventoryView from '../views/AdminInventoryView.vue'
+import AdminProductFormView from '../views/AdminProductFormView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import VerifyIdentityView from '../views/VerifyIdentityView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
@@ -64,6 +66,24 @@ const router = createRouter({
       path: '/admin/users',
       name: 'admin-users',
       component: AdminUsersView,
+      meta: { requiresAdmin: true },
+    },
+    {
+      path: '/admin/inventory',
+      name: 'admin-inventory',
+      component: AdminInventoryView,
+      meta: { requiresAdmin: true },
+    },
+    {
+      path: '/admin/inventory/new',
+      name: 'admin-product-new',
+      component: AdminProductFormView,
+      meta: { requiresAdmin: true },
+    },
+    {
+      path: '/admin/inventory/:id/edit',
+      name: 'admin-product-edit',
+      component: AdminProductFormView,
       meta: { requiresAdmin: true },
     },
 
@@ -119,3 +139,4 @@ router.beforeEach((to) => {
 })
 
 export default router
+

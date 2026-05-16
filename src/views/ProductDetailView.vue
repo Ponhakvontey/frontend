@@ -289,8 +289,8 @@ onMounted(async () => {
   socialLinks.value = await getSocialLinks()
 
   const products = await getTrendingProducts()
-  const productId = Number(route.params.id)
-  product.value = products.find((item) => item.id === productId) || null
+  const productId = String(route.params.id)
+  product.value = products.find((item) => String(item.id) === productId) || null
 
   const firstGalleryImage = product.value?.gallery?.[0]?.url
 

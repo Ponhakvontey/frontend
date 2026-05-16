@@ -2,7 +2,7 @@ import { readStorage, writeStorage } from '@/utils/storage'
 
 export interface CartItem {
   lineId: string
-  id: number
+  id: number | string
   brand: string
   name: string
   variant: string
@@ -27,7 +27,7 @@ export interface PaymentInfo {
 }
 
 export interface OrderRecord {
-  id: number
+  id: number | string
   orderNumber: string
   placedDate: string
   status: string
@@ -38,7 +38,7 @@ export interface OrderRecord {
   email?: string
 }
 
-export function toLineId(productId: number, variant: string) {
+export function toLineId(productId: number | string, variant: string) {
   return `${productId}:${variant}`
 }
 
