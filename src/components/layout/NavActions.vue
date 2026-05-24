@@ -61,7 +61,7 @@ function goToSearch() {
 
 .icon-btn i {
   font-size: 16px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.88);
   transition: color 0.18s;
 }
 

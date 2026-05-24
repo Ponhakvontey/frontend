@@ -41,7 +41,7 @@ function isActive(slug: string) {
 
 .menu-link {
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.88);
   font-size: 15px;
   line-height: 24px;
   border-bottom: 2px solid transparent;
@@ -54,7 +54,7 @@ function isActive(slug: string) {
 }
 
 .menu-link.active {
-  color: var(--clr-sky);
+  color: #fff;
   border-bottom-color: var(--clr-plum);
 }
 

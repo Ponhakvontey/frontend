@@ -7,9 +7,8 @@
     <main>
       <HeroSection v-if="hero" :content="hero" />
       <NewArrivalsSection />
-      <CategorySection :categories="categories" />
-      <TrendingSection :products="products" />
-      <JournalSection v-if="journal" :content="journal" :social-links="socialLinks" />
+      <TopSellingSection />
+      <DressStyleSection />
     </main>
 
     <AppFooter :footer-columns="footerColumns" :social-links="socialLinks" />
@@ -22,27 +21,20 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import HeroSection from '@/components/home/HeroSection.vue'
 import NewArrivalsSection from '@/components/home/NewArrivalsSection.vue'
-import CategorySection from '@/components/home/CategorySection.vue'
-import TrendingSection from '@/components/home/TrendingSection.vue'
-import JournalSection from '@/components/home/JournalSection.vue'
+import TopSellingSection from '@/components/home/TopSellingSection.vue'
+import DressStyleSection from '@/components/home/DressStyleSection.vue'
 
 import {
   getNavLinks,
-  getCategories,
-  getTrendingProducts,
   getFooterColumns,
   getHeroContent,
-  getJournalContent,
   getSocialLinks,
 } from '@/services/homeService'
 
 import type {
   NavLink,
-  Category,
-  Product,
   FooterColumn,
   HeroContent,
-  JournalContent,
   SocialLink,
 } from '@/types/home'
 import { readStorage } from '@/utils/storage'
@@ -53,13 +45,9 @@ interface CartItem {
 }
 
 const navLinks = ref<NavLink[]>([])
-const categories = ref<Category[]>([])
-const products = ref<Product[]>([])
 const footerColumns = ref<FooterColumn[]>([])
 const hero = ref<HeroContent | null>(null)
-const journal = ref<JournalContent | null>(null)
 const socialLinks = ref<SocialLink[]>([])
-
 const cartItems = ref<CartItem[]>([])
 
 const cartCount = computed(() => {
@@ -70,26 +58,19 @@ function loadCart() {
   cartItems.value = readStorage<CartItem[]>('cartItems', [])
 }
 
-
 onMounted(async () => {
   loadCart()
 
-  const [nav, cat, prod, footer, heroData, journalData, social] = await Promise.all([
+  const [nav, footer, heroData, social] = await Promise.all([
     getNavLinks(),
-    getCategories(),
-    getTrendingProducts(),
     getFooterColumns(),
     getHeroContent(),
-    getJournalContent(),
     getSocialLinks(),
   ])
 
   navLinks.value = nav
-  categories.value = cat
-  products.value = prod
   footerColumns.value = footer
   hero.value = heroData
-  journal.value = journalData
   socialLinks.value = social
 })
 </script>
@@ -100,7 +81,7 @@ onMounted(async () => {
 }
 
 .home-page {
-  background: #f7f9fb;
+  background: #fff;
   color: #191c1e;
   font-family: Inter, Arial, sans-serif;
 }
