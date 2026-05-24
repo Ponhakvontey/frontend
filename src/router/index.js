@@ -18,7 +18,7 @@ import AdminProductFormView from '../views/AdminProductFormView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import VerifyIdentityView from '../views/VerifyIdentityView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
-import { isAdmin, isLoggedIn } from '@/utils/auth'
+import { isAdmin, isLoggedIn } from '@/services/apiClient'
 import { readStorage } from '@/utils/storage'
 
 const router = createRouter({

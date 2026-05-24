@@ -16,9 +16,16 @@ export function validateEmail(value: string) {
   return ''
 }
 
+// Must match the backend RegisterRequest @Pattern exactly
+const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/
+
 export function validatePassword(value: string) {
   if (!value) return 'Password is required.'
   if (value.length < 8) return 'Password must be at least 8 characters.'
+  if (!/[A-Z]/.test(value)) return 'Password must include at least one uppercase letter.'
+  if (!/[a-z]/.test(value)) return 'Password must include at least one lowercase letter.'
+  if (!/\d/.test(value)) return 'Password must include at least one number.'
+  if (!passwordPattern.test(value)) return 'Password must include at least one special character (e.g. !@#$%).'
   return ''
 }
 

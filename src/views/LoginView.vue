@@ -88,7 +88,9 @@
 
           <p v-if="loginErrors.general" class="general-err">{{ loginErrors.general }}</p>
 
-          <button type="submit" class="submit-btn">Sign In</button>
+          <button type="submit" class="submit-btn" :disabled="loginLoading">
+            {{ loginLoading ? 'Signing in…' : 'Sign In' }}
+          </button>
 
           <p class="switch-text">
             Don't have an account?
@@ -206,7 +208,9 @@
 
           <p v-if="regErrors.general" class="general-err">{{ regErrors.general }}</p>
 
-          <button type="submit" class="submit-btn">Create Account</button>
+          <button type="submit" class="submit-btn" :disabled="regLoading">
+            {{ regLoading ? 'Creating account…' : 'Create Account' }}
+          </button>
 
           <p class="switch-text">
             Already have an account?
@@ -221,13 +225,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import {
-  addStoredUser,
-  getStoredUsers,
-  isUserBlocked,
-  markUserLoggedIn,
-  setSession,
-} from '@/utils/auth'
+import { login, register } from '@/services/authService'
 import {
   validateConfirmPassword,
   validateEmail,
@@ -264,40 +262,30 @@ const loginEmail = ref('')
 const loginPassword = ref('')
 const showLoginPw = ref(false)
 const loginErrors = ref({ email: '', password: '', general: '' })
+const loginLoading = ref(false)
 
-function handleLogin() {
+async function handleLogin() {
   loginErrors.value = { email: '', password: '', general: '' }
   const email = loginEmail.value.trim().toLowerCase()
 
   loginErrors.value.email = validateEmail(email)
-  loginErrors.value.password = loginPassword.value ? '' : validatePassword(loginPassword.value)
+  loginErrors.value.password = loginPassword.value ? '' : 'Password is required'
 
   if (loginErrors.value.email || loginErrors.value.password) return
 
-  if (email === 'admin@gmail.com' && loginPassword.value === 'admin123') {
-    markUserLoggedIn(email)
-    setSession('admin', email)
-    router.push('/admin')
-    return
+  loginLoading.value = true
+  try {
+    const data = await login({ username: email, password: loginPassword.value })
+    const isAdminUser = data.roles.includes('ROLE_ADMIN')
+    const dest = isAdminUser
+      ? '/admin'
+      : redirectPath.value.startsWith('/admin') ? '/' : redirectPath.value || '/'
+    router.push(dest)
+  } catch (err: any) {
+    loginErrors.value.general = err?.message ?? 'Incorrect credentials. Please try again.'
+  } finally {
+    loginLoading.value = false
   }
-
-  if (isUserBlocked(email)) {
-    loginErrors.value.general = 'This account is blocked. Please contact support.'
-    return
-  }
-
-  const users = getStoredUsers()
-  const matched = users.find((u) => u.email.toLowerCase() === email)
-
-  if (!matched || matched.password !== loginPassword.value) {
-    loginErrors.value.general = 'Incorrect email or password. Please try again.'
-    return
-  }
-
-  markUserLoggedIn(email)
-  setSession('customer', email)
-  const safe = redirectPath.value.startsWith('/admin') ? '/' : redirectPath.value || '/'
-  router.push(safe)
 }
 
 // ── Register state ──
@@ -308,6 +296,7 @@ const regConfirm = ref('')
 const regAgree = ref(false)
 const showRegPw = ref(false)
 const showRegConfirm = ref(false)
+const regLoading = ref(false)
 const regErrors = ref({
   fullName: '',
   email: '',
@@ -317,7 +306,7 @@ const regErrors = ref({
   general: '',
 })
 
-function handleRegister() {
+async function handleRegister() {
   regErrors.value = { fullName: '', email: '', password: '', confirmPassword: '', agree: '', general: '' }
   const email = regEmail.value.trim().toLowerCase()
 
@@ -329,14 +318,21 @@ function handleRegister() {
 
   if (Object.values(regErrors.value).some(Boolean)) return
 
-  const users = getStoredUsers()
-  if (users.some((u) => u.email.toLowerCase() === email)) {
-    regErrors.value.general = 'An account with this email already exists.'
-    return
+  regLoading.value = true
+  try {
+    // Backend username = email; fullName is sent separately
+    await register({
+      username: email,
+      email,
+      password: regPassword.value,
+      fullName: regFullName.value.trim(),
+    })
+    switchMode('login')
+  } catch (err: any) {
+    regErrors.value.general = err?.message ?? 'Registration failed. Please try again.'
+  } finally {
+    regLoading.value = false
   }
-
-  addStoredUser({ fullName: regFullName.value.trim(), email, password: regPassword.value })
-  switchMode('login')
 }
 </script>
 

@@ -22,8 +22,10 @@ import {
 import { getInventoryProducts } from '@/services/adminInventoryService'
 import type { InventoryProduct } from '@/types/inventory'
 
+// Static/CMS content has no backend endpoint — always use mock
+// Only products & categories hit the real Spring Boot API
 const USE_MOCK = true
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'https://api.ubuyee.com'
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 
 function toProductId(id: string): number | string {
   const numericId = id.match(/^prod-(\d+)$/)?.[1]
@@ -93,21 +95,29 @@ export async function getBenefits(): Promise<Benefit[]> {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  if (USE_MOCK) return mockCategories
-  const res = await fetch(`${API_BASE}/categories`)
-  return res.json()
+  try {
+    const res = await fetch(`${API_BASE}/api/categories`)
+    if (!res.ok) throw new Error()
+    return res.json()
+  } catch {
+    return mockCategories
+  }
 }
 
 export async function getTrendingProducts(): Promise<Product[]> {
-  if (USE_MOCK) {
+  try {
+    const res = await fetch(`${API_BASE}/api/products?page=0&size=4`)
+    if (!res.ok) throw new Error()
+    const data = await res.json()
+    // Backend returns a Page object; extract the content array
+    return (data.content ?? data).map(inventoryToStorefrontProduct)
+  } catch {
+    // Fallback to local inventory if backend is unreachable
     const inventoryProducts = await getInventoryProducts()
     return inventoryProducts
       .filter((product) => product.status === 'active')
       .map(inventoryToStorefrontProduct)
   }
-
-  const res = await fetch(`${API_BASE}/products?trending=true&limit=4`)
-  return res.json()
 }
 
 export async function getFooterColumns(): Promise<FooterColumn[]> {
