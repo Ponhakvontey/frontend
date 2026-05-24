@@ -97,9 +97,10 @@ export const mockJournalContent: JournalContent = {
 }
 
 export const mockSocialLinks: SocialLink[] = [
-  { id: 1, platform: 'facebook', icon: 'fa-brands fa-facebook-f', href: '#' },
-  { id: 2, platform: 'instagram', icon: 'fa-brands fa-instagram', href: '#' },
-  { id: 3, platform: 'x', icon: 'fa-brands fa-x-twitter', href: '#' },
+  { id: 1, platform: 'x',         icon: 'fa-brands fa-x-twitter',  href: '#' },
+  { id: 2, platform: 'facebook',  icon: 'fa-brands fa-facebook-f',  href: '#' },
+  { id: 3, platform: 'instagram', icon: 'fa-brands fa-instagram',   href: '#' },
+  { id: 4, platform: 'github',    icon: 'fa-brands fa-github',      href: '#' },
 ]
 
 export const mockFooterColumns: FooterColumn[] = [
@@ -107,27 +108,30 @@ export const mockFooterColumns: FooterColumn[] = [
     id: 1,
     title: 'Company',
     links: [
-      { label: 'About', slug: '/about' },
-      { label: 'Journal', slug: '/journal' },
-      { label: 'Careers', slug: '/careers' },
+      { label: 'About',    slug: '/about' },
+      { label: 'Features', slug: '/features' },
+      { label: 'Works',    slug: '/works' },
+      { label: 'Career',   slug: '/careers' },
     ],
   },
   {
     id: 2,
-    title: 'Support',
+    title: 'Help',
     links: [
-      { label: 'Shipping', slug: '/shipping' },
-      { label: 'Returns', slug: '/returns' },
-      { label: 'Contact', slug: '/contact' },
+      { label: 'Customer Support',   slug: '/contact' },
+      { label: 'Delivery Details',   slug: '/shipping' },
+      { label: 'Terms & Conditions', slug: '/terms' },
+      { label: 'Privacy Policy',     slug: '/privacy' },
     ],
   },
   {
     id: 3,
-    title: 'Account',
+    title: 'FAQ',
     links: [
-      { label: 'Login', slug: 'login' },
-      { label: 'Register', slug: 'register' },
-      { label: 'Order History', slug: 'order-history' },
+      { label: 'Account',            slug: 'login' },
+      { label: 'Manage Deliveries',  slug: '/shipping' },
+      { label: 'Orders',             slug: 'order-history' },
+      { label: 'Payments',           slug: '/payments' },
     ],
   },
 ]
