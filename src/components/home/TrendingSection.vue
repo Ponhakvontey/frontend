@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="section-alt trending">
     <div class="container">
       <div class="trending-head">
@@ -40,7 +40,7 @@ defineProps<{
   font-size: 11px;
   line-height: 16.5px;
   letter-spacing: 0.2em;
-  color: #004ac6;
+  color: #513B3C;
 }
 .trending-head {
   text-align: center;

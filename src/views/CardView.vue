@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="cart-page">
     <AppHeader :nav-links="navLinks" :cart-count="cartCount" />
 
@@ -282,7 +282,7 @@ onMounted(async () => {
   font-size: 10px;
   line-height: 1.4;
   letter-spacing: 0.16em;
-  color: #3563e9;
+  color: #513B3C;
   font-weight: 700;
 }
 
@@ -391,7 +391,7 @@ onMounted(async () => {
 }
 
 .summary-accent {
-  color: #3563e9;
+  color: #513B3C;
   font-weight: 700;
 }
 
@@ -412,7 +412,7 @@ onMounted(async () => {
   margin-top: 20px;
   border: 0;
   border-radius: 14px;
-  background: #3563e9;
+  background: #513B3C;
   color: #ffffff;
   font-weight: 700;
   cursor: pointer;
@@ -459,7 +459,7 @@ onMounted(async () => {
   border: 0;
   border-radius: 999px;
   padding: 0 18px;
-  background: #dfe7ff;
+  background: #ede6e7;
   color: #495467;
   cursor: pointer;
 }
@@ -488,7 +488,7 @@ onMounted(async () => {
   height: 46px;
   padding: 0 18px;
   border-radius: 14px;
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
   text-decoration: none;
   font-weight: 700;

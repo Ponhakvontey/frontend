@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="verify-page">
     <div class="verify-card">
       <div class="icon-wrap">🛡️</div>
@@ -119,8 +119,8 @@ function handleVerify() {
   height: 42px;
   margin: 0 auto 18px;
   border-radius: 999px;
-  background: #eef3ff;
-  color: #3563e9;
+  background: #f0eaeb;
+  color: #513B3C;
   display: grid;
   place-items: center;
   font-size: 20px;
@@ -183,7 +183,7 @@ h1 {
   height: 46px;
   border: 0;
   border-radius: 10px;
-  background: #3563e9;
+  background: #513B3C;
   color: #ffffff;
   font-weight: 700;
   cursor: pointer;
@@ -203,7 +203,7 @@ h1 {
 .resend-btn {
   border: 0;
   background: transparent;
-  color: #3563e9;
+  color: #513B3C;
   font-weight: 600;
   cursor: pointer;
 }

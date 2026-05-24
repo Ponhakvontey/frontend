@@ -306,7 +306,7 @@ function formatPrice(value: number) {
 .tool-btn.active,
 .filter-chip.active {
   background: #e8efff;
-  color: #3563e9;
+  color: #513B3C;
 }
 
 .filter-panel {

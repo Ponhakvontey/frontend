@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="confirm-page">
     <AppHeader :nav-links="navLinks" :cart-count="0" />
 
@@ -217,7 +217,7 @@ onMounted(async () => {
 }
 
 .order-pill strong {
-  color: #3563e9;
+  color: #513B3C;
   font-size: 18px;
 }
 
@@ -299,7 +299,7 @@ onMounted(async () => {
 }
 
 .arrival-box strong {
-  color: #3563e9;
+  color: #513B3C;
   font-size: 22px;
 }
 
@@ -322,13 +322,13 @@ onMounted(async () => {
 
 .primary-btn {
   border: 0;
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
 }
 
 .secondary-btn {
   border: 0;
-  background: #dfe7ff;
+  background: #ede6e7;
   color: #495467;
 }
 

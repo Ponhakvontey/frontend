@@ -200,7 +200,7 @@ async function saveProduct() {
 .back-link {
   display: inline-flex;
   margin-bottom: 14px;
-  color: #3563e9;
+  color: #513B3C;
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;

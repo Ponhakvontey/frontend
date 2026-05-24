@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <aside class="sidebar">
     <div class="sidebar-top">
       <div>
@@ -98,7 +98,7 @@ import { RouterLink } from 'vue-router'
 
 .nav-item.active {
   background: #f1f5ff;
-  color: #3563e9;
+  color: #513B3C;
   font-weight: 600;
 }
 
@@ -119,7 +119,7 @@ import { RouterLink } from 'vue-router'
   height: 42px;
   border: 0;
   border-radius: 12px;
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
   font-size: 13px;
   font-weight: 600;

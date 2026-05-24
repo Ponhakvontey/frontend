@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <article class="card revenue-card">
     <div class="card-top">
       <span class="mini-icon">💳</span>
@@ -39,7 +39,7 @@
   margin: 10px 0 18px;
   font-size: 56px;
   line-height: 1;
-  color: #3563e9;
+  color: #513B3C;
   font-weight: 500;
 }
 
@@ -55,7 +55,7 @@
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: #eef3ff;
+  background: #f0eaeb;
 }
 
 .growth-badge {
@@ -90,7 +90,7 @@
 .progress-fill {
   width: 75%;
   height: 100%;
-  background: #3563e9;
+  background: #513B3C;
 }
 
 .revenue-footer {
@@ -129,7 +129,7 @@
 .text-link {
   border: 0;
   background: transparent;
-  color: #3563e9;
+  color: #513B3C;
   cursor: pointer;
   font-size: 12px;
 }

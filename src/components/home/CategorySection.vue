@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="section categories">
     <div class="container">
       <div class="section-head">
@@ -47,7 +47,7 @@ defineProps<{
   font-size: 11px;
   line-height: 16.5px;
   letter-spacing: 0.2em;
-  color: #004ac6;
+  color: #513B3C;
 }
 .section-head {
   display: flex;
@@ -64,7 +64,7 @@ defineProps<{
 .head-link {
   font-size: 14px;
   line-height: 20px;
-  color: #004ac6;
+  color: #513B3C;
   text-decoration: none;
   border-bottom: 2px solid #dbe1ff;
   padding-bottom: 6px;

@@ -21,7 +21,7 @@ import type {
 
 export const mockNavLinks: NavLink[] = [
   { id: 1, label: 'Home', slug: 'home', active: false },
-  { id: 2, label: 'Sell', slug: 'sell', active: false },
+  { id: 2, label: 'Shop', slug: 'sell', active: false },
   { id: 3, label: 'Orders', slug: 'order-history', active: false },
 ]
 
@@ -77,14 +77,14 @@ export const mockCategories: Category[] = [
 ]
 
 export const mockHeroContent: HeroContent = {
-  eyebrow: 'NEW ARRIVAL',
-  headingLine1: 'Curated Living',
-  headingLine2: 'For Contemporary Homes',
-  description: 'Discover editorial pieces that blend craft, comfort, and timeless design language.',
+  eyebrow: 'New Collection',
+  headingLine1: 'Elevate Your',
+  headingLine2: 'Everyday Style',
+  description: 'Premium shirts, trousers and more — crafted for the modern wardrobe.',
   primaryCta: 'Shop Collection',
-  secondaryCta: 'View Journal',
+  secondaryCta: 'View Lookbook',
   image: bed1Img,
-  designerLabel: 'Featured Designer',
+  designerLabel: 'Featured Brand',
   designerName: 'Studio Atelier',
 }
 

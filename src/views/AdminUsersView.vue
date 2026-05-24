@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="admin-page">
     <AdminSidebar />
 
@@ -397,7 +397,7 @@ function toggleBlocked(id: string) {
 }
 
 .tab-btn.active {
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
 }
 
@@ -432,7 +432,7 @@ function toggleBlocked(id: string) {
   place-items: center;
   font-size: 11px;
   font-weight: 700;
-  color: #3563e9;
+  color: #513B3C;
   background: #e8efff;
 }
 
@@ -457,7 +457,7 @@ function toggleBlocked(id: string) {
 }
 
 .type-pill.admin {
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
 }
 

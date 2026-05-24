@@ -3,12 +3,7 @@
     <div class="container nav-inner">
       <img :src="uiAssets.logo" alt="Ubuyee" class="brand" />
       <NavMenu :nav-links="navLinks" />
-      <NavActions
-        :cart-count="cartCount"
-        :search-text="searchText"
-        @update:search-text="emit('update:searchText', $event)"
-        @search-enter="emit('searchEnter')"
-      />
+      <NavActions :cart-count="cartCount" />
     </div>
   </header>
 </template>
@@ -24,18 +19,11 @@ withDefaults(
   defineProps<{
     navLinks: NavLink[]
     cartCount?: number
-    searchText?: string
   }>(),
   {
     cartCount: 0,
-    searchText: '',
   },
 )
-
-const emit = defineEmits<{
-  (e: 'update:searchText', value: string): void
-  (e: 'searchEnter'): void
-}>()
 
 const isHeaderHidden = ref(false)
 let lastScrollY = 0
@@ -75,9 +63,9 @@ onBeforeUnmount(() => {
   left: 0;
   width: 100%;
   z-index: 1000;
-  background: rgba(247, 249, 251, 0.96);
-  border-bottom: 1px solid #edf0f3;
-  backdrop-filter: blur(10px);
+  background: rgba(7, 7, 7, 0.96);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
   transform: translateY(0);
   transition:
     transform 0.28s ease,
@@ -103,5 +91,6 @@ onBeforeUnmount(() => {
   width: 120px;
   height: 42px;
   object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 </style>

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="orders-page">
     <AppHeader :nav-links="navLinks" :cart-count="cartCount" />
 
@@ -210,7 +210,7 @@ onMounted(async () => {
   padding: 6px 10px;
   border-radius: 999px;
   background: #eef4ff;
-  color: #3563e9;
+  color: #513B3C;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -263,20 +263,20 @@ onMounted(async () => {
 
 .primary-btn {
   border: 0;
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
 }
 
 .secondary-btn {
   border: 0;
-  background: #dfe7ff;
+  background: #ede6e7;
   color: #495467;
 }
 
 .link-btn {
   border: 0;
   background: transparent;
-  color: #3563e9;
+  color: #513B3C;
 }
 
 .empty-state {

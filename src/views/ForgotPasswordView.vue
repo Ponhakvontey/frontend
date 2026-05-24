@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="forgot-page">
     <div class="forgot-card">
       <div class="top-line"></div>
@@ -93,7 +93,7 @@ function handleReset() {
 
 .top-line {
   height: 3px;
-  background: #3563e9;
+  background: #513B3C;
   border-radius: 14px 14px 0 0;
   margin: 0 -22px 22px;
 }
@@ -103,8 +103,8 @@ function handleReset() {
   height: 44px;
   margin: 0 auto 18px;
   border-radius: 999px;
-  background: #eef3ff;
-  color: #3563e9;
+  background: #f0eaeb;
+  color: #513B3C;
   display: grid;
   place-items: center;
   font-size: 22px;
@@ -175,7 +175,7 @@ h1 {
   height: 46px;
   border: 0;
   border-radius: 10px;
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
   font-weight: 600;
   cursor: pointer;
@@ -184,7 +184,7 @@ h1 {
 .back-link {
   display: inline-block;
   margin-top: 18px;
-  color: #3563e9;
+  color: #513B3C;
   text-decoration: none;
   font-size: 14px;
 }

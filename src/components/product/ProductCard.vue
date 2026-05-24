@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <RouterLink :to="`/product/${product.id}`" class="product-link">
     <article class="product-card">
       <div class="image-wrap">
@@ -63,7 +63,7 @@ const formattedPrice = computed(() => {
   position: absolute;
   top: 16px;
   left: 16px;
-  background: #2563eb;
+  background: #513B3C;
   color: #eeefff;
   border-radius: 999px;
   padding: 4px 12px;
@@ -90,6 +90,6 @@ const formattedPrice = computed(() => {
   margin: 0;
   font-size: 16px;
   line-height: 24px;
-  color: #004ac6;
+  color: #513B3C;
 }
 </style>

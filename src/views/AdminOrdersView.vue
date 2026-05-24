@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="admin-page">
     <AdminSidebar />
 
@@ -347,7 +347,7 @@ function formatPrice(value: number) {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.22em;
-  color: #3563e9;
+  color: #513B3C;
 }
 
 .orders-header h1 {
@@ -423,7 +423,7 @@ function formatPrice(value: number) {
 
 .tab-btn.active {
   background: #edf3ff;
-  color: #3563e9;
+  color: #513B3C;
 }
 
 .toolbar-actions {
@@ -438,7 +438,7 @@ function formatPrice(value: number) {
 }
 
 .print-btn {
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
   box-shadow: 0 8px 18px rgba(53, 99, 233, 0.22);
 }
@@ -474,7 +474,7 @@ function formatPrice(value: number) {
 }
 
 .order-id {
-  color: #3563e9;
+  color: #513B3C;
   font-weight: 700;
 }
 
@@ -497,7 +497,7 @@ function formatPrice(value: number) {
   place-items: center;
   font-size: 11px;
   font-weight: 700;
-  color: #3563e9;
+  color: #513B3C;
 }
 
 .customer-meta {
@@ -540,8 +540,8 @@ function formatPrice(value: number) {
 }
 
 .status-pill.processing {
-  background: #eef3ff;
-  color: #3563e9;
+  background: #f0eaeb;
+  color: #513B3C;
 }
 
 .status-pill.shipped {
@@ -596,7 +596,7 @@ function formatPrice(value: number) {
 }
 
 .page-number.active {
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
 }
 
@@ -614,7 +614,7 @@ function formatPrice(value: number) {
 
 .forecast-card {
   border-radius: 20px;
-  background: linear-gradient(135deg, #3563e9 0%, #2350d8 100%);
+  background: #513B3C;
   min-height: 136px;
   padding: 24px 20px;
   display: flex;
@@ -649,7 +649,7 @@ function formatPrice(value: number) {
   border-radius: 999px;
   padding: 0 18px;
   background: #ffffff;
-  color: #3563e9;
+  color: #513B3C;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -681,8 +681,8 @@ function formatPrice(value: number) {
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: #eef3ff;
-  color: #3563e9;
+  background: #f0eaeb;
+  color: #513B3C;
   font-size: 20px;
 }
 
@@ -708,7 +708,7 @@ function formatPrice(value: number) {
   border: 0;
   border-radius: 999px;
   padding: 0 18px;
-  background: #3563e9;
+  background: #513B3C;
   color: #ffffff;
   font-size: 14px;
   font-weight: 700;

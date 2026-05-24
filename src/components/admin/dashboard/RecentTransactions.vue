@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="table-section">
     <div class="table-head">
       <div>
@@ -186,6 +186,6 @@ tbody td {
 
 .status-pill.blue {
   background: #e8efff;
-  color: #3563e9;
+  color: #513B3C;
 }
 </style>

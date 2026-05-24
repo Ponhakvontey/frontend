@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="reset-page">
     <div class="reset-card">
       <div class="icon-wrap">🔐</div>
@@ -70,7 +70,7 @@ function handleSubmit() {
 <style scoped>
 .reset-page { min-height: 100vh; display: grid; place-items: center; background: #f4f6fb; padding: 20px; }
 .reset-card { width: 100%; max-width: 420px; background: #fff; border-radius: 14px; padding: 28px 24px; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06); }
-.icon-wrap { width: 44px; height: 44px; border-radius: 999px; background: #eef3ff; color: #3563e9; display: grid; place-items: center; margin: 0 auto 14px; }
+.icon-wrap { width: 44px; height: 44px; border-radius: 999px; background: #f0eaeb; color: #513B3C; display: grid; place-items: center; margin: 0 auto 14px; }
 h1 { margin: 0 0 8px; text-align: center; font-size: 30px; }
 .subtitle { margin: 0 0 20px; text-align: center; color: #6b7280; font-size: 14px; }
 .reset-form { display: flex; flex-direction: column; gap: 14px; }
@@ -78,5 +78,5 @@ h1 { margin: 0 0 8px; text-align: center; font-size: 30px; }
 .field label { font-size: 10px; letter-spacing: 0.1em; color: #6b7280; }
 .field input { height: 44px; border: 0; border-radius: 10px; background: #f3f4f6; padding: 0 12px; }
 .field-error { margin: 0; color: #d92d20; font-size: 12px; }
-.reset-btn { height: 46px; border: 0; border-radius: 10px; background: #3563e9; color: #fff; font-weight: 600; cursor: pointer; }
+.reset-btn { height: 46px; border: 0; border-radius: 10px; background: #513B3C; color: #fff; font-weight: 600; cursor: pointer; }
 </style>

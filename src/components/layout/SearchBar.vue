@@ -40,29 +40,42 @@ function onEnter() {
 
 <style scoped>
 .search-box {
-  background: #eceef0;
-  border-radius: 16px;
-  height: 40px;
-  width: 248px;
-  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  height: 38px;
+  width: 240px;
+  padding: 0 14px;
   display: flex;
   align-items: center;
   gap: 10px;
   cursor: text;
+  transition: border-color 0.18s, background 0.18s;
 }
+
+.search-box:focus-within {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
 .search-icon {
-  font-size: 14px;
-  color: #9ca3af;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.35);
   flex-shrink: 0;
 }
+
 .search-box input {
   border: 0;
   background: transparent;
   width: 100%;
-  font-size: 14px;
-  color: #6b7280;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
   outline: none;
   font-family: inherit;
+}
+
+.search-box input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
 }
 @media (max-width: 760px) {
   .search-box {

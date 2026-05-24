@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="payment-page">
     <AppHeader :nav-links="navLinks" :cart-count="cartCount" />
 
@@ -302,12 +302,12 @@ onMounted(async () => {
 }
 
 .step.active span {
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
 }
 
 .step.active p {
-  color: #3563e9;
+  color: #513B3C;
 }
 
 .payment-layout {
@@ -397,7 +397,7 @@ onMounted(async () => {
 .back-btn {
   border: 0;
   background: transparent;
-  color: #3563e9;
+  color: #513B3C;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -408,7 +408,7 @@ onMounted(async () => {
   height: 48px;
   border: 0;
   border-radius: 14px;
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
   font-weight: 700;
   cursor: pointer;
@@ -486,7 +486,7 @@ onMounted(async () => {
 }
 
 .free-text {
-  color: #3563e9;
+  color: #513B3C;
   font-weight: 700;
 }
 

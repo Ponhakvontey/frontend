@@ -41,16 +41,21 @@ function isActive(slug: string) {
 
 .menu-link {
   text-decoration: none;
-  color: #64748b;
-  font-size: 16px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 15px;
   line-height: 24px;
   border-bottom: 2px solid transparent;
   padding-bottom: 2px;
+  transition: color 0.18s;
+}
+
+.menu-link:hover {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .menu-link.active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
+  color: var(--clr-sky);
+  border-bottom-color: var(--clr-plum);
 }
 
 @media (max-width: 760px) {

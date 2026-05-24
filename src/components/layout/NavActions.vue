@@ -1,10 +1,12 @@
 <template>
   <div class="nav-actions">
-    <SearchBar
-      :model-value="searchText"
-      @update:model-value="emit('update:searchText', $event)"
-      @enter="emit('searchEnter')"
-    />
+    <button class="icon-btn" type="button" aria-label="Search" @click="goToSearch">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </button>
+
+    <button class="icon-btn" type="button" aria-label="Account">
+      <i class="fa-regular fa-user"></i>
+    </button>
 
     <button class="icon-btn" type="button" aria-label="Wishlist">
       <i class="fa-regular fa-heart"></i>
@@ -14,45 +16,38 @@
       <i class="fa-solid fa-cart-shopping"></i>
       <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
     </RouterLink>
-
-    <button class="icon-btn" type="button" aria-label="Account">
-      <i class="fa-regular fa-user"></i>
-    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import SearchBar from '@/components/layout/SearchBar.vue'
+import { RouterLink, useRouter } from 'vue-router'
 
 withDefaults(
   defineProps<{
     cartCount?: number
-    searchText?: string
   }>(),
   {
     cartCount: 0,
-    searchText: '',
   },
 )
 
-const emit = defineEmits<{
-  (e: 'update:searchText', value: string): void
-  (e: 'searchEnter'): void
-}>()
+const router = useRouter()
+
+function goToSearch() {
+  router.push('/sell')
+}
 </script>
 
 <style scoped>
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 22px;
 }
 
 .icon-btn {
   border: 0;
   background: transparent;
-  width: 22px;
-  height: 22px;
   padding: 0;
   cursor: pointer;
   position: relative;
@@ -60,11 +55,18 @@ const emit = defineEmits<{
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  width: 20px;
+  height: 20px;
 }
 
 .icon-btn i {
-  font-size: 18px;
-  color: #374151;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.18s;
+}
+
+.icon-btn:hover i {
+  color: #fff;
 }
 
 .cart-btn {
@@ -73,17 +75,17 @@ const emit = defineEmits<{
 
 .cart-badge {
   position: absolute;
-  top: -9px;
-  right: -10px;
-  min-width: 18px;
-  height: 18px;
+  top: -7px;
+  right: -9px;
+  min-width: 15px;
+  height: 15px;
   border-radius: 999px;
-  background: #3563e9;
+  background: var(--clr-black);
   color: #fff;
-  font-size: 10px;
-  line-height: 18px;
+  font-size: 9px;
+  line-height: 15px;
   text-align: center;
   font-weight: 700;
-  padding: 0 4px;
+  padding: 0 3px;
 }
 </style>

@@ -55,7 +55,7 @@ function getFooterPath(slug: string) {
 
 <style scoped>
 .site-footer {
-  background: #10161d;
+  background: var(--clr-carbon);
   color: #d7e1f2;
   padding: 70px 32px 50px;
   overflow-x: hidden;

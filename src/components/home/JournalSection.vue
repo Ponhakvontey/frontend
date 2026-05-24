@@ -78,13 +78,21 @@ defineProps<{
 }
 .newsletter button {
   border: 0;
-  border-radius: 16px;
-  background: #004ac6;
+  border-radius: 4px;
+  background: var(--clr-plum);
   color: #fff;
   padding: 16px 32px;
-  font-size: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
   font-family: inherit;
+  transition: background 0.2s;
+}
+
+.newsletter button:hover {
+  background: var(--clr-taupe);
 }
 @media (max-width: 1100px) {
   .journal-grid {

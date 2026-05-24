@@ -53,7 +53,7 @@ defineProps<{
 }
 .benefit-icon i {
   font-size: 20px;
-  color: #3563e9;
+  color: var(--clr-plum);
 }
 .benefit-item h4 {
   margin: 0 0 2px;

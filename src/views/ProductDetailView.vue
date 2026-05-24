@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="detail-page">
     <AppHeader :nav-links="navLinks" :cart-count="cartCount" />
 
@@ -364,7 +364,7 @@ onMounted(async () => {
 }
 
 .thumb-btn.active {
-  border-color: #3563e9;
+  border-color: #513B3C;
   box-shadow: 0 0 0 2px rgba(53, 99, 233, 0.12);
 }
 
@@ -421,7 +421,7 @@ onMounted(async () => {
 
 .price {
   margin: 0;
-  color: #2563eb;
+  color: #513B3C;
   font-size: 32px;
   font-weight: 700;
 }
@@ -461,7 +461,7 @@ onMounted(async () => {
 .size-guide {
   border: 0;
   background: transparent;
-  color: #2563eb;
+  color: #513B3C;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -509,9 +509,9 @@ onMounted(async () => {
 }
 
 .size-btn.active {
-  border-color: #3563e9;
-  color: #3563e9;
-  box-shadow: 0 0 0 1px #3563e9 inset;
+  border-color: #513B3C;
+  color: #513B3C;
+  box-shadow: 0 0 0 1px #513B3C inset;
 }
 
 .size-btn.disabled {
@@ -547,7 +547,7 @@ onMounted(async () => {
   height: 52px;
   border: 0;
   border-radius: 14px;
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
   font-weight: 700;
   cursor: pointer;

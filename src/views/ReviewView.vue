@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="review-page">
     <AppHeader :nav-links="navLinks" :cart-count="cartCount" />
 
@@ -339,12 +339,12 @@ onMounted(async () => {
 }
 
 .step.active span {
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
 }
 
 .step.active p {
-  color: #3563e9;
+  color: #513B3C;
 }
 
 .info-grid {
@@ -380,7 +380,7 @@ onMounted(async () => {
 .info-head button {
   border: 0;
   background: transparent;
-  color: #3563e9;
+  color: #513B3C;
   font-weight: 700;
   cursor: pointer;
   font-size: 11px;
@@ -421,7 +421,7 @@ onMounted(async () => {
 
 .summary-total strong {
   font-size: 34px;
-  color: #3563e9;
+  color: #513B3C;
 }
 
 .place-btn {
@@ -429,7 +429,7 @@ onMounted(async () => {
   height: 48px;
   border: 0;
   border-radius: 14px;
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
   font-weight: 700;
   cursor: pointer;

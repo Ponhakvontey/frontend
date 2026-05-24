@@ -1,10 +1,8 @@
-<template>
+﻿<template>
   <div class="sell-page">
     <AppHeader
       :nav-links="navLinks"
       :cart-count="cartCount"
-      :search-text="searchText"
-      @update:search-text="searchText = $event"
     />
     <main class="sell-main">
       <div class="container">
@@ -414,7 +412,7 @@ watch(searchText, (value) => {
 }
 
 .product-meta strong {
-  color: #3563e9;
+  color: #513B3C;
   font-size: 14px;
   white-space: nowrap;
 }
@@ -438,7 +436,7 @@ watch(searchText, (value) => {
 }
 
 .pagination button.active {
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
 }
 

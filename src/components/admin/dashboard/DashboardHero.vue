@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="hero-row">
     <div>
       <h1>Morning, Alex.</h1>
@@ -50,7 +50,7 @@
 }
 
 .primary-btn {
-  background: #3563e9;
+  background: #513B3C;
   color: #fff;
 }
 
