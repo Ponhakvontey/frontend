@@ -8,16 +8,16 @@
         <input type="text" placeholder="Search analytics..." />
       </div>
 
-      <button class="icon-btn" type="button">
-        <img :src="bellIcon" alt="Notifications" class="top-icon" />
+      <button class="icon-btn" type="button" aria-label="Notifications">
+        <i class="fa-regular fa-bell top-icon"></i>
       </button>
 
-      <button class="icon-btn" type="button">
-        <img :src="settingIcon" alt="Settings" class="top-icon" />
+      <button class="icon-btn" type="button" aria-label="Settings">
+        <i class="fa-solid fa-gear top-icon"></i>
       </button>
 
-      <button class="icon-btn" type="button">
-        <img :src="peopleIcon" alt="Profile" class="top-icon" />
+      <button class="icon-btn" type="button" aria-label="Profile">
+        <i class="fa-regular fa-circle-user top-icon"></i>
       </button>
     </div>
   </header>
@@ -25,9 +25,6 @@
 
 <script setup lang="ts">
 import logoSrc from '@/assets/home/logo1.png'
-import bellIcon from '@/assets/admin/Bell.png'
-import settingIcon from '@/assets/admin/setting.png'
-import peopleIcon from '@/assets/admin/people.png'
 </script>
 
 <style scoped>
@@ -81,8 +78,7 @@ import peopleIcon from '@/assets/admin/people.png'
 }
 
 .top-icon {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
+  font-size: 17px;
+  color: #667085;
 }
 </style>

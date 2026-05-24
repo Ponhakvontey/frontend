@@ -1,22 +1,12 @@
 import bed1Img from '@/assets/home/bed1.png'
 import bed2Img from '@/assets/home/bed2.png'
-import benefitQualityImg from '@/assets/home/benefit-quality.png'
-import benefitShippingImg from '@/assets/home/benefit-shipping.png'
-import benefitSupportImg from '@/assets/home/benefit-support.png'
-import cartIconImg from '@/assets/home/card.png'
 import diffuserImg from '@/assets/home/diffuser.png'
-import heartIconImg from '@/assets/home/heart.png'
 import lampImg from '@/assets/home/lamp.png'
 import lightingImg from '@/assets/home/ligthing.png'
 import logoImg from '@/assets/home/logo1.png'
 import objectsImg from '@/assets/home/ligth2.png'
-import socialFbImg from '@/assets/home/social-fb.png'
-import socialIgImg from '@/assets/home/social-ig.png'
-import socialXImg from '@/assets/home/social-x.png'
-import searchIconImg from '@/assets/home/search.png'
 import stoolImg from '@/assets/home/stool.png'
 import textilesImg from '@/assets/home/textiles.png'
-import userIconImg from '@/assets/home/people.png'
 import vaseImg from '@/assets/home/vase1.png'
 import type {
   Benefit,
@@ -38,19 +28,19 @@ export const mockNavLinks: NavLink[] = [
 export const mockBenefits: Benefit[] = [
   {
     id: 1,
-    icon: benefitShippingImg,
+    icon: 'fa-solid fa-truck',
     title: 'Complimentary Shipping',
     description: 'Free tracked delivery on qualifying orders worldwide.',
   },
   {
     id: 2,
-    icon: benefitQualityImg,
+    icon: 'fa-solid fa-gem',
     title: 'Curated Quality',
     description: 'Every item is hand-checked before it reaches you.',
   },
   {
     id: 3,
-    icon: benefitSupportImg,
+    icon: 'fa-solid fa-headset',
     title: 'Concierge Support',
     description: 'Get styling and product guidance from our support team.',
   },
@@ -107,9 +97,9 @@ export const mockJournalContent: JournalContent = {
 }
 
 export const mockSocialLinks: SocialLink[] = [
-  { id: 1, platform: 'facebook', icon: socialFbImg, href: '#' },
-  { id: 2, platform: 'instagram', icon: socialIgImg, href: '#' },
-  { id: 3, platform: 'x', icon: socialXImg, href: '#' },
+  { id: 1, platform: 'facebook', icon: 'fa-brands fa-facebook-f', href: '#' },
+  { id: 2, platform: 'instagram', icon: 'fa-brands fa-instagram', href: '#' },
+  { id: 3, platform: 'x', icon: 'fa-brands fa-x-twitter', href: '#' },
 ]
 
 export const mockFooterColumns: FooterColumn[] = [
@@ -144,10 +134,6 @@ export const mockFooterColumns: FooterColumn[] = [
 
 export const uiAssets = {
   logo: logoImg,
-  searchIcon: searchIconImg,
-  heartIcon: heartIconImg,
-  cartIcon: cartIconImg,
-  userIcon: userIconImg,
 }
 
 export const mockProducts: Product[] = [

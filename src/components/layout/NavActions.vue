@@ -6,24 +6,23 @@
       @enter="emit('searchEnter')"
     />
 
-    <button class="icon-btn" type="button">
-      <img :src="uiAssets.heartIcon" alt="Wishlist" />
+    <button class="icon-btn" type="button" aria-label="Wishlist">
+      <i class="fa-regular fa-heart"></i>
     </button>
 
-    <RouterLink to="/cart" class="icon-btn cart-btn">
-      <img :src="uiAssets.cartIcon" alt="Cart" />
+    <RouterLink to="/cart" class="icon-btn cart-btn" aria-label="Cart">
+      <i class="fa-solid fa-cart-shopping"></i>
       <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
     </RouterLink>
 
-    <button class="icon-btn" type="button">
-      <img :src="uiAssets.userIcon" alt="Account" />
+    <button class="icon-btn" type="button" aria-label="Account">
+      <i class="fa-regular fa-user"></i>
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import SearchBar from '@/components/layout/SearchBar.vue'
-import { uiAssets } from '@/data/home'
 
 withDefaults(
   defineProps<{
@@ -63,9 +62,9 @@ const emit = defineEmits<{
   text-decoration: none;
 }
 
-.icon-btn img {
-  width: 100%;
-  height: 100%;
+.icon-btn i {
+  font-size: 18px;
+  color: #374151;
 }
 
 .cart-btn {

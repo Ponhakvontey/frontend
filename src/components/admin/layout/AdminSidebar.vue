@@ -9,20 +9,20 @@
 
     <nav class="sidebar-nav">
       <RouterLink to="/admin" class="nav-item" active-class="active" exact>
-        <img :src="dashboardIcon" alt="" class="nav-icon" />
+        <i class="fa-solid fa-gauge-high nav-icon"></i>
         <span>Dashboard</span>
       </RouterLink>
       <RouterLink to="/admin/inventory" class="nav-item" active-class="active">
-        <img :src="inventoryIcon" alt="" class="nav-icon" />
+        <i class="fa-solid fa-boxes-stacked nav-icon"></i>
         <span>Inventory</span>
       </RouterLink>
       <RouterLink to="/admin/orders" class="nav-item" active-class="active">
-        <img :src="ordersIcon" alt="" class="nav-icon" />
+        <i class="fa-solid fa-clipboard-list nav-icon"></i>
         <span>Orders</span>
       </RouterLink>
 
       <RouterLink to="/admin/users" class="nav-item" active-class="active">
-        <img :src="userIcon" alt="" class="nav-icon" />
+        <i class="fa-solid fa-users nav-icon"></i>
         <span>Users</span>
       </RouterLink>
     </nav>
@@ -43,10 +43,6 @@
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import dashboardIcon from '@/assets/admin/DashBoard.png'
-import ordersIcon from '@/assets/admin/Orders.png'
-import userIcon from '@/assets/admin/User.png'
-import inventoryIcon from '@/assets/admin/inventory.png'
 </script>
 
 <style scoped>
@@ -107,9 +103,10 @@ import inventoryIcon from '@/assets/admin/inventory.png'
 }
 
 .nav-icon {
+  font-size: 15px;
   width: 16px;
-  height: 16px;
-  object-fit: contain;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .sidebar-actions {

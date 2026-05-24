@@ -3,7 +3,7 @@
     <div class="container benefit-grid">
       <article v-for="item in benefits" :key="item.id" class="benefit-item">
         <span class="benefit-icon">
-          <img :src="item.icon" alt="" />
+          <i :class="item.icon"></i>
         </span>
         <div>
           <h4>{{ item.title }}</h4>
@@ -51,9 +51,9 @@ defineProps<{
   place-items: center;
   flex-shrink: 0;
 }
-.benefit-icon img {
-  width: 22px;
-  height: 22px;
+.benefit-icon i {
+  font-size: 20px;
+  color: #3563e9;
 }
 .benefit-item h4 {
   margin: 0 0 2px;

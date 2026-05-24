@@ -1,6 +1,6 @@
 <template>
   <label class="search-box">
-    <img :src="uiAssets.searchIcon" alt="" />
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
     <input
       :value="modelValue"
       type="text"
@@ -12,8 +12,6 @@
 </template>
 
 <script setup lang="ts">
-import { uiAssets } from '@/data/home'
-
 withDefaults(
   defineProps<{
     placeholder?: string
@@ -52,9 +50,10 @@ function onEnter() {
   gap: 10px;
   cursor: text;
 }
-.search-box img {
-  width: 18px;
-  height: 11px;
+.search-icon {
+  font-size: 14px;
+  color: #9ca3af;
+  flex-shrink: 0;
 }
 .search-box input {
   border: 0;
