@@ -1,51 +1,48 @@
-<script setup lang="ts">
-import { uiAssets } from '@/data/home'
-</script>
-
 <template>
   <footer class="dashboard-footer">
-    <div class="footer-brand">
-      <img :src="uiAssets.logo" alt="Ubuyee" class="brand-logo" />
-    </div>
-
-    <div class="footer-links">
-      <span>PRIVACY POLICY</span>
-      <span>TERMS OF SERVICE</span>
-      <span>SHIPPING & RETURNS</span>
-      <span>CONTACT US</span>
-    </div>
+    <span class="footer-copy">
+      <i class="fa-regular fa-copyright"></i>
+      {{ year }} Ubuyee. All rights reserved.
+    </span>
+    <span class="footer-env">
+      <i class="fa-solid fa-circle env-dot"></i>
+      Admin Console
+    </span>
   </footer>
 </template>
 
+<script setup lang="ts">
+const year = new Date().getFullYear()
+</script>
+
 <style scoped>
 .dashboard-footer {
-  margin-top: auto;
-  background: #10161d;
-  color: #dce5f3;
+  background: #0f172a;
+  color: #64748b;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
-  padding: 26px 28px;
-}
-
-.footer-links {
-  display: flex;
-  gap: 22px;
-  flex-wrap: wrap;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: #9bb0d4;
+  padding: 16px 28px;
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 12px;
+  flex-shrink: 0;
 }
 
 .footer-copy {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: #9bb0d4;
-  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.brand-logo {
-  width: 120px;
-  margin-bottom: 28px;
+
+.footer-env {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.env-dot {
+  font-size: 8px;
+  color: #16a34a;
 }
 </style>

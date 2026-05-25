@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="admin-page">
     <AdminSidebar />
 
@@ -6,136 +6,206 @@
       <AdminTopbar />
 
       <main class="users-main">
-        <section class="users-header">
-          <div class="users-header-left">
-            <h1>User Directory</h1>
-            <p class="header-text">Manage and review your platform users.</p>
-          </div>
-
-          <div class="header-actions">
-            <button type="button" class="filter-btn">Filters</button>
+        <!-- Header -->
+        <section class="page-header">
+          <div>
+            <h1><i class="fa-solid fa-users title-icon"></i> User Management</h1>
+            <p>Manage accounts, roles, and access control across your platform.</p>
           </div>
         </section>
 
+        <!-- Error -->
+        <div v-if="error" class="error-banner">
+          <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
+        </div>
+
+        <!-- Stats -->
         <section class="stats-grid">
           <article class="stat-card">
-            <div class="stat-top">
-              <span class="stat-icon blue">👥</span>
-              <span class="stat-badge green">+12%</span>
+            <div class="stat-icon-wrap blue">
+              <i class="fa-solid fa-users"></i>
             </div>
-            <p class="stat-label">TOTAL USERS</p>
-            <h2>{{ stats.totalUsers }}</h2>
+            <div class="stat-body">
+              <p class="stat-label">TOTAL USERS</p>
+              <h2>{{ loading ? '—' : stats.total }}</h2>
+            </div>
           </article>
 
           <article class="stat-card">
-            <div class="stat-top">
-              <span class="stat-icon gray">🛡️</span>
-              <span class="stat-badge neutral">Stable</span>
+            <div class="stat-icon-wrap purple">
+              <i class="fa-solid fa-shield-halved"></i>
             </div>
-            <p class="stat-label">ADMINS</p>
-            <h2>{{ stats.admins }}</h2>
+            <div class="stat-body">
+              <p class="stat-label">ADMINS</p>
+              <h2>{{ loading ? '—' : stats.admins }}</h2>
+            </div>
           </article>
 
           <article class="stat-card">
-            <div class="stat-top">
-              <span class="stat-icon orange">📈</span>
-              <span class="stat-badge green">New</span>
+            <div class="stat-icon-wrap amber">
+              <i class="fa-solid fa-store"></i>
             </div>
-            <p class="stat-label">NEW TODAY</p>
-            <h2>{{ stats.newToday }}</h2>
+            <div class="stat-body">
+              <p class="stat-label">SELLERS</p>
+              <h2>{{ loading ? '—' : stats.sellers }}</h2>
+            </div>
           </article>
 
           <article class="stat-card">
-            <div class="stat-top">
-              <span class="stat-icon red">🚫</span>
-              <span class="stat-badge red">Flagged</span>
+            <div class="stat-icon-wrap red">
+              <i class="fa-solid fa-ban"></i>
             </div>
-            <p class="stat-label">BLOCKED</p>
-            <h2>{{ stats.blocked }}</h2>
+            <div class="stat-body">
+              <p class="stat-label">BANNED</p>
+              <h2>{{ loading ? '—' : stats.banned }}</h2>
+            </div>
           </article>
         </section>
 
-        <section class="users-table-card">
-          <div class="users-table-top">
-            <div class="table-tabs">
+        <!-- Table Card -->
+        <section class="table-card">
+          <!-- Toolbar -->
+          <div class="toolbar">
+            <div class="tab-row">
               <button
-                v-for="tab in tabs"
+                v-for="tab in TABS"
                 :key="tab.value"
                 type="button"
                 class="tab-btn"
                 :class="{ active: activeTab === tab.value }"
-                @click="setActiveTab(tab.value)"
+                @click="setTab(tab.value)"
               >
                 {{ tab.label }}
+                <span v-if="tab.count !== undefined" class="tab-count">{{ tab.count }}</span>
               </button>
             </div>
 
-            <p class="viewing-text">
-              Viewing {{ startItem }}-{{ endItem }} of {{ filteredUsers.length }}
-            </p>
+            <div class="search-wrap">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input
+                v-model="search"
+                type="text"
+                class="search-input"
+                placeholder="Search username or email…"
+                @input="currentPage = 1"
+              />
+            </div>
           </div>
 
+          <!-- Table -->
           <div class="table-scroll">
-            <table class="users-table">
+            <div v-if="loading" class="table-empty">
+              <i class="fa-solid fa-spinner fa-spin"></i> Loading users…
+            </div>
+            <div v-else-if="!filtered.length" class="table-empty">
+              <i class="fa-regular fa-folder-open"></i> No users found.
+            </div>
+            <table v-else>
               <thead>
                 <tr>
-                  <th>USER</th>
-                  <th>ACCOUNT TYPE</th>
-                  <th>JOIN DATE</th>
-                  <th>STATUS</th>
-                  <th>ACTIONS</th>
+                  <th><i class="fa-solid fa-user col-icon"></i> User</th>
+                  <th><i class="fa-solid fa-id-badge col-icon"></i> Role</th>
+                  <th><i class="fa-solid fa-circle-half-stroke col-icon"></i> Status</th>
+                  <th><i class="fa-solid fa-ellipsis col-icon"></i> Actions</th>
                 </tr>
               </thead>
-
               <tbody>
-                <tr v-for="user in paginatedUsers" :key="user.id">
+                <tr v-for="u in paginated" :key="u.id">
+                  <!-- User cell -->
                   <td>
                     <div class="user-cell">
-                      <div class="user-avatar initials">{{ user.initials }}</div>
-
+                      <span class="avatar">{{ initials(u) }}</span>
                       <div class="user-meta">
-                        <p class="user-name">{{ user.fullName }}</p>
-                        <p class="user-email">{{ user.email }}</p>
+                        <span class="user-name">{{ u.username }}</span>
+                        <span class="user-email">{{ u.email }}</span>
                       </div>
                     </div>
                   </td>
 
+                  <!-- Role pill(s) -->
                   <td>
-                    <span class="type-pill" :class="user.role">{{ user.roleLabel }}</span>
+                    <div class="role-pills">
+                      <span v-if="hasRole(u, 'ROLE_ADMIN')" class="pill pill-admin">
+                        <i class="fa-solid fa-shield-halved"></i> Admin
+                      </span>
+                      <span v-if="hasRole(u, 'ROLE_SELLER')" class="pill pill-seller">
+                        <i class="fa-solid fa-store"></i> Seller
+                      </span>
+                      <span v-if="hasRole(u, 'ROLE_USER') && !hasRole(u, 'ROLE_ADMIN') && !hasRole(u, 'ROLE_SELLER')" class="pill pill-customer">
+                        <i class="fa-solid fa-user"></i> Customer
+                      </span>
+                    </div>
                   </td>
 
-                  <td class="join-date">{{ user.joinDate }}</td>
-
+                  <!-- Status -->
                   <td>
-                    <span class="status-text" :class="user.statusClass">
-                      <span class="status-dot"></span>
-                      {{ user.statusLabel }}
+                    <span class="status-chip" :class="u.enabled ? 'active' : 'banned'">
+                      <i :class="u.enabled ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark'"></i>
+                      {{ u.enabled ? 'Active' : 'Banned' }}
                     </span>
                   </td>
 
+                  <!-- Actions -->
                   <td>
-                    <button
-                      type="button"
-                      class="block-btn"
-                      :class="{ unblock: user.status === 'blocked' }"
-                      @click="toggleBlocked(user.id)"
-                    >
-                      {{ user.status === 'blocked' ? 'Unblock' : 'Block' }}
-                    </button>
+                    <div class="action-row">
+                      <button
+                        v-if="u.enabled"
+                        type="button"
+                        class="action-btn ban"
+                        :disabled="actionLoading === u.id"
+                        @click="ban(u.id)"
+                      >
+                        <i class="fa-solid fa-ban"></i> Ban
+                      </button>
+                      <button
+                        v-else
+                        type="button"
+                        class="action-btn unban"
+                        :disabled="actionLoading === u.id"
+                        @click="unban(u.id)"
+                      >
+                        <i class="fa-solid fa-circle-check"></i> Unban
+                      </button>
+
+                      <button
+                        v-if="hasRole(u, 'ROLE_SELLER') && !hasRole(u, 'ROLE_ADMIN')"
+                        type="button"
+                        class="action-btn revoke"
+                        :disabled="actionLoading === u.id"
+                        @click="revokeSeller(u.id)"
+                      >
+                        <i class="fa-solid fa-store-slash"></i> Revoke Seller
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
+          <!-- Pagination -->
           <div class="table-footer">
-            <div class="rows-per-page">
-              <span>Rows per page:</span>
-              <button type="button" class="rows-btn">{{ pageSize }}</button>
-            </div>
-
+            <span class="count-text">
+              {{ filtered.length ? `${startItem}–${endItem} of ${filtered.length} users` : '0 users' }}
+            </span>
             <div class="pagination">
-              <span>Page {{ currentPage }} of {{ totalPages }}</span>
+              <button
+                type="button"
+                class="page-btn"
+                :disabled="currentPage <= 1"
+                @click="currentPage--"
+              >
+                <i class="fa-solid fa-chevron-left"></i>
+              </button>
+              <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+              <button
+                type="button"
+                class="page-btn"
+                :disabled="currentPage >= totalPages"
+                @click="currentPage++"
+              >
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
             </div>
           </div>
         </section>
@@ -147,120 +217,166 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import AdminSidebar from '@/components/admin/layout/AdminSidebar.vue'
 import AdminTopbar from '@/components/admin/layout/AdminTopbar.vue'
 import AdminFooter from '@/components/admin/layout/AdminFooter.vue'
-import { getStoredUsers } from '@/utils/auth'
-import { readStorage, writeStorage } from '@/utils/storage'
+import { api } from '@/services/apiClient'
 
-type UserRow = {
-  id: string
-  fullName: string
+interface BackendUser {
+  id: number
+  username: string
   email: string
-  joinDate: string
-  role: 'customer' | 'admin'
-  roleLabel: string
-  status: 'active' | 'blocked'
-  statusLabel: string
-  statusClass: 'active' | 'blocked'
-  initials: string
-  avatar?: string
-  lastLoginAt: string | null
+  fullName: string | null
+  phone: string | null
+  profilePicture: string | null
+  enabled: boolean
+  roles: string[]
 }
 
-const tabs = [
-  { label: 'All Users', value: 'all' },
-  { label: 'Customers', value: 'customer' },
-  { label: 'Administrators', value: 'admin' },
-] as const
+interface PagedResponse<T> {
+  content: T[]
+  totalElements: number
+}
 
-const activeTab = ref<'all' | 'customer' | 'admin'>('all')
+// ── State ────────────────────────────────────────────────────────────────────
+
+const users       = ref<BackendUser[]>([])
+const loading     = ref(true)
+const error       = ref('')
+const actionLoading = ref<number | null>(null)
+
+const activeTab   = ref<'all' | 'admins' | 'sellers' | 'customers' | 'banned'>('all')
+const search      = ref('')
 const currentPage = ref(1)
-const pageSize = 4
+const PAGE_SIZE   = 10
 
-const blockedEmails = ref<string[]>(readStorage<string[]>('blockedUsers', []))
+// ── Load ─────────────────────────────────────────────────────────────────────
 
-const users = computed<UserRow[]>(() => {
-  const storedUsers = getStoredUsers()
-  return storedUsers.map((user, index) => {
-    const fullName = (user.fullName || `User ${index + 1}`).trim()
-    const email = user.email.trim().toLowerCase()
-    const role = user.role === 'admin' ? 'admin' : 'customer'
-    const isBlocked = blockedEmails.value.includes(email)
-
-    const nameParts = fullName.split(' ')
-    const first = nameParts[0] || 'U'
-    const last = nameParts[1] || 'S'
-
-    return {
-      id: user.id || `user-${index + 1}`,
-      fullName,
-      email,
-      joinDate: user.joinDate || 'Apr 23, 2026',
-      role,
-      roleLabel: role === 'admin' ? 'ADMIN' : 'CUSTOMER',
-      status: isBlocked ? 'blocked' : 'active',
-      statusLabel: isBlocked ? 'Blocked' : 'Active',
-      statusClass: isBlocked ? 'blocked' : 'active',
-      initials: `${first.charAt(0)}${last.charAt(0)}`.toUpperCase(),
-      avatar: '',
-      lastLoginAt: user.lastLoginAt ?? null,
-    }
-  })
-})
-
-const filteredUsers = computed(() => {
-  if (activeTab.value === 'all') return users.value
-  return users.value.filter((user) => user.role === activeTab.value)
-})
-
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredUsers.value.length / pageSize)))
-
-const paginatedUsers = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return filteredUsers.value.slice(start, start + pageSize)
-})
-
-const startItem = computed(() => {
-  if (!filteredUsers.value.length) return 0
-  return (currentPage.value - 1) * pageSize + 1
-})
-
-const endItem = computed(() => Math.min(currentPage.value * pageSize, filteredUsers.value.length))
-
-const stats = computed(() => {
-  const totalUsers = users.value.length
-  const admins = users.value.filter((user) => user.role === 'admin').length
-  const blocked = users.value.filter((user) => user.status === 'blocked').length
-
-  return {
-    totalUsers,
-    admins,
-    newToday: totalUsers,
-    blocked,
+async function fetchUsers() {
+  loading.value = true
+  error.value = ''
+  try {
+    const res = await api.get<PagedResponse<BackendUser>>(
+      '/api/admin/users?page=0&size=100',
+    )
+    users.value = res.content ?? []
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to load users.'
+  } finally {
+    loading.value = false
   }
-})
+}
 
-function setActiveTab(tab: 'all' | 'customer' | 'admin') {
-  activeTab.value = tab
+onMounted(fetchUsers)
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function hasRole(u: BackendUser, role: string) {
+  return u.roles?.includes(role) ?? false
+}
+
+function initials(u: BackendUser) {
+  const name = u.fullName?.trim() || u.username || '?'
+  const parts = name.split(' ')
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return name.slice(0, 2).toUpperCase()
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+
+const stats = computed(() => ({
+  total:   users.value.length,
+  admins:  users.value.filter(u => hasRole(u, 'ROLE_ADMIN')).length,
+  sellers: users.value.filter(u => hasRole(u, 'ROLE_SELLER') && !hasRole(u, 'ROLE_ADMIN')).length,
+  banned:  users.value.filter(u => !u.enabled).length,
+}))
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
+const TABS = computed(() => [
+  { label: 'All',       value: 'all',       count: users.value.length },
+  { label: 'Admins',    value: 'admins',    count: stats.value.admins },
+  { label: 'Sellers',   value: 'sellers',   count: stats.value.sellers },
+  { label: 'Customers', value: 'customers', count: users.value.filter(u => hasRole(u, 'ROLE_USER') && !hasRole(u, 'ROLE_ADMIN') && !hasRole(u, 'ROLE_SELLER')).length },
+  { label: 'Banned',    value: 'banned',    count: stats.value.banned },
+] as const)
+
+function setTab(v: typeof activeTab.value) {
+  activeTab.value = v
   currentPage.value = 1
 }
 
-function toggleBlocked(id: string) {
-  const targetUser = users.value.find((user) => user.id === id)
-  if (!targetUser) return
+// ── Filter + search ───────────────────────────────────────────────────────────
 
-  const email = targetUser.email.toLowerCase()
-  const exists = blockedEmails.value.includes(email)
+const filtered = computed(() => {
+  let list = users.value
 
-  if (exists) {
-    blockedEmails.value = blockedEmails.value.filter((item) => item !== email)
-  } else {
-    blockedEmails.value = [...blockedEmails.value, email]
+  if (activeTab.value === 'admins')    list = list.filter(u => hasRole(u, 'ROLE_ADMIN'))
+  else if (activeTab.value === 'sellers')   list = list.filter(u => hasRole(u, 'ROLE_SELLER') && !hasRole(u, 'ROLE_ADMIN'))
+  else if (activeTab.value === 'customers') list = list.filter(u => hasRole(u, 'ROLE_USER') && !hasRole(u, 'ROLE_ADMIN') && !hasRole(u, 'ROLE_SELLER'))
+  else if (activeTab.value === 'banned')    list = list.filter(u => !u.enabled)
+
+  const q = search.value.trim().toLowerCase()
+  if (q) list = list.filter(u =>
+    u.username?.toLowerCase().includes(q) ||
+    u.email?.toLowerCase().includes(q),
+  )
+
+  return list
+})
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / PAGE_SIZE)))
+const paginated  = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE
+  return filtered.value.slice(start, start + PAGE_SIZE)
+})
+const startItem  = computed(() => filtered.value.length ? (currentPage.value - 1) * PAGE_SIZE + 1 : 0)
+const endItem    = computed(() => Math.min(currentPage.value * PAGE_SIZE, filtered.value.length))
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+
+async function ban(id: number) {
+  actionLoading.value = id
+  try {
+    const updated = await api.post<BackendUser>(`/api/admin/users/${id}/ban`, {})
+    updateUser(updated)
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to ban user.'
+  } finally {
+    actionLoading.value = null
   }
+}
 
-  writeStorage('blockedUsers', blockedEmails.value)
+async function unban(id: number) {
+  actionLoading.value = id
+  try {
+    const updated = await api.post<BackendUser>(`/api/admin/users/${id}/unban`, {})
+    updateUser(updated)
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to unban user.'
+  } finally {
+    actionLoading.value = null
+  }
+}
+
+async function revokeSeller(id: number) {
+  actionLoading.value = id
+  try {
+    const updated = await api.post<BackendUser>(`/api/admin/users/${id}/revoke-seller`, {})
+    updateUser(updated)
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to revoke seller role.'
+  } finally {
+    actionLoading.value = null
+  }
+}
+
+function updateUser(updated: BackendUser) {
+  const idx = users.value.findIndex(u => u.id === updated.id)
+  if (idx !== -1) users.value[idx] = updated
 }
 </script>
 
@@ -268,9 +384,8 @@ function toggleBlocked(id: string) {
 .admin-page {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
-  min-width: 1240px;
-  background: #f6f8fb;
+  grid-template-columns: 230px minmax(0, 1fr);
+  background: #f8fafc;
 }
 
 .main-shell {
@@ -281,106 +396,124 @@ function toggleBlocked(id: string) {
 }
 
 .users-main {
-  padding: 22px 28px 34px;
-  background: #f6f8fb;
-  min-width: 0;
+  flex: 1;
+  padding: 28px 32px;
+  overflow-x: auto;
+  font-family: 'Inter', Arial, sans-serif;
 }
 
-.users-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 20px;
+/* ── Header ── */
+.page-header {
+  margin-bottom: 24px;
 }
 
-.users-header h1 {
-  margin: 0 0 8px;
-  font-size: 48px;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: #1b2233;
-}
-
-.header-text {
-  margin: 0;
-  font-size: 15px;
-  color: #667085;
-}
-
-.header-actions {
+.page-header h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.filter-btn {
-  height: 40px;
-  border: 0;
-  border-radius: 14px;
-  padding: 0 18px;
+.title-icon { color: #94a3b8; font-size: 18px; }
+
+.page-header p {
+  margin: 0;
   font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  background: #edf2ff;
-  color: #62719a;
+  color: #94a3b8;
 }
 
+/* ── Error ── */
+.error-banner {
+  background: #fff1f2;
+  border: 1px solid #fecaca;
+  color: #be123c;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Stats ── */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
 .stat-card {
   background: #fff;
-  border-radius: 20px;
-  padding: 18px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  border-radius: 16px;
+  border: 1px solid #e9eef5;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-.stat-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+.stat-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  flex-shrink: 0;
 }
+
+.stat-icon-wrap.blue   { background: #eff6ff; color: #2563eb; }
+.stat-icon-wrap.purple { background: #f5f3ff; color: #7c3aed; }
+.stat-icon-wrap.amber  { background: #fffbeb; color: #d97706; }
+.stat-icon-wrap.red    { background: #fff1f2; color: #be123c; }
+
+.stat-body { min-width: 0; }
 
 .stat-label {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   font-size: 10px;
-  letter-spacing: 0.18em;
-  color: #98a2b3;
-  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .stat-card h2 {
   margin: 0;
-  font-size: 38px;
+  font-size: 30px;
+  font-weight: 700;
+  color: #0f172a;
   line-height: 1;
-  color: #1b2233;
 }
 
-.users-table-card {
+/* ── Table card ── */
+.table-card {
   background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  border-radius: 16px;
+  border: 1px solid #e9eef5;
   overflow: hidden;
-  margin-bottom: 22px;
 }
 
-.users-table-top,
-.table-footer {
+/* ── Toolbar ── */
+.toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px;
+  padding: 16px 18px 14px;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.table-tabs {
+.tab-row {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -388,12 +521,16 @@ function toggleBlocked(id: string) {
   height: 30px;
   border: 0;
   border-radius: 999px;
-  padding: 0 14px;
+  padding: 0 12px;
   background: transparent;
-  color: #667085;
-  font-size: 11px;
-  font-weight: 700;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Inter', Arial, sans-serif;
 }
 
 .tab-btn.active {
@@ -401,100 +538,233 @@ function toggleBlocked(id: string) {
   color: #fff;
 }
 
-.users-table {
+.tab-count {
+  background: rgba(0,0,0,0.08);
+  color: inherit;
+  border-radius: 999px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.tab-btn.active .tab-count { background: rgba(255,255,255,0.2); }
+
+.search-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.search-input {
+  height: 34px;
+  width: 240px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0 12px 0 30px;
+  font-size: 13px;
+  color: #334155;
+  outline: none;
+  font-family: 'Inter', Arial, sans-serif;
+  background: #f8fafc;
+}
+
+.search-input:focus { border-color: #513B3C; background: #fff; }
+
+/* ── Table ── */
+.table-scroll { overflow-x: auto; }
+
+.table-empty {
+  padding: 48px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 700px;
+  min-width: 680px;
 }
 
-.table-scroll {
-  overflow-x: auto;
-}
-
-.users-table th,
-.users-table td {
-  padding: 14px 18px;
-  border-top: 1px solid #eef2f6;
+thead th {
   text-align: left;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  padding: 12px 18px 10px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
+.col-icon { margin-right: 4px; font-size: 10px; }
+
+tbody tr { border-top: 1px solid #f1f5f9; }
+tbody tr:hover { background: #fafbfc; }
+
+tbody td {
+  padding: 12px 18px;
+  font-size: 13.5px;
+  color: #334155;
+  vertical-align: middle;
+}
+
+/* ── User cell ── */
 .user-cell {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.user-avatar.initials {
+.avatar {
   width: 32px;
   height: 32px;
-  border-radius: 999px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  color: #4338ca;
   display: grid;
   place-items: center;
   font-size: 11px;
   font-weight: 700;
-  color: #513B3C;
-  background: #e8efff;
+  flex-shrink: 0;
 }
 
-.user-name,
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 13.5px;
+}
+
 .user-email {
-  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
 }
 
-.type-pill {
+/* ── Role pills ── */
+.role-pills {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.pill {
   display: inline-flex;
   align-items: center;
-  height: 20px;
+  gap: 4px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.pill-admin    { background: #513B3C; color: #fff; }
+.pill-seller   { background: #fffbeb; color: #d97706; }
+.pill-customer { background: #eff6ff; color: #2563eb; }
+
+/* ── Status chip ── */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
   padding: 0 10px;
   border-radius: 999px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
-.type-pill.customer {
-  background: #eef2ff;
-  color: #7b8ab8;
+.status-chip.active { background: #f0fdf4; color: #16a34a; }
+.status-chip.banned { background: #fff1f2; color: #be123c; }
+
+/* ── Actions ── */
+.action-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.type-pill.admin {
-  background: #513B3C;
-  color: #fff;
-}
-
-.status-text {
+.action-btn {
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
   display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Inter', Arial, sans-serif;
+  transition: opacity 0.15s;
+}
+
+.action-btn:disabled { opacity: 0.5; cursor: default; }
+
+.action-btn.ban    { background: #fff1f2; color: #be123c; }
+.action-btn.unban  { background: #f0fdf4; color: #16a34a; }
+.action-btn.revoke { background: #fffbeb; color: #d97706; }
+
+/* ── Footer ── */
+.table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.count-text {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.pagination {
+  display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-}
-
-.status-text.active .status-dot {
-  background: #22c55e;
-}
-
-.status-text.blocked .status-dot {
-  background: #dc2626;
-}
-
-.block-btn {
+.page-btn {
+  width: 30px;
   height: 30px;
-  border: 0;
-  border-radius: 999px;
-  padding: 0 14px;
-  background: #ffe9e9;
-  color: #dc2626;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #64748b;
   font-size: 11px;
-  font-weight: 700;
   cursor: pointer;
+  display: grid;
+  place-items: center;
 }
 
-.block-btn.unblock {
-  background: #eaf8ef;
-  color: #16a34a;
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+.page-btn:not(:disabled):hover { border-color: #513B3C; color: #513B3C; }
+
+.page-info {
+  font-size: 12px;
+  color: #64748b;
+  min-width: 48px;
+  text-align: center;
 }
 </style>

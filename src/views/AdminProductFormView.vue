@@ -1,99 +1,97 @@
-﻿<template>
+<template>
   <div class="admin-page">
     <AdminSidebar />
 
     <div class="main-shell">
       <AdminTopbar />
 
-      <main class="product-main">
-        <section class="form-header">
+      <main class="page-body">
+
+        <!-- Header -->
+        <div class="page-header">
           <div>
-            <RouterLink to="/admin/inventory" class="back-link">Back to Inventory</RouterLink>
-            <h1>{{ isEditing ? 'Edit Product' : 'Add New Product' }}</h1>
-            <p>{{ isEditing ? 'Update inventory details and stock rules.' : 'Create a product record ready for your future API.' }}</p>
+            <RouterLink to="/admin/inventory" class="back-link">
+              <i class="fa-solid fa-arrow-left"></i> Back to Inventory
+            </RouterLink>
+            <h1>{{ isEditing ? 'Edit Product' : 'Add Product' }}</h1>
           </div>
-
           <div class="header-actions">
-            <RouterLink to="/admin/inventory" class="secondary-btn">Cancel</RouterLink>
-            <button type="submit" form="product-form" class="primary-btn">{{ isEditing ? 'Save Changes' : 'Create Product' }}</button>
+            <RouterLink to="/admin/inventory" class="cancel-btn">Cancel</RouterLink>
+            <button type="submit" form="product-form" class="save-btn" :disabled="saving">
+              <i class="fa-solid fa-floppy-disk"></i>
+              {{ saving ? 'Saving…' : (isEditing ? 'Save Changes' : 'Create Product') }}
+            </button>
           </div>
-        </section>
+        </div>
 
-        <form id="product-form" class="product-form" @submit.prevent="saveProduct">
-          <section class="form-panel main-panel">
-            <h2>Product Details</h2>
+        <!-- Error -->
+        <div v-if="error" class="error-banner">
+          <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
+        </div>
 
-            <div class="form-grid two-columns">
-              <label>
-                <span>Product Name</span>
-                <input v-model.trim="form.name" type="text" required placeholder="Arches Ceramic Vase" />
+        <form id="product-form" class="form-layout" @submit.prevent="saveProduct">
+
+          <!-- Left: main fields -->
+          <div class="panel">
+            <h2><i class="fa-solid fa-pen-to-square panel-icon"></i> Product Details</h2>
+
+            <label class="field">
+              <span>Product Name <em class="req">*</em></span>
+              <input v-model.trim="form.name" type="text" maxlength="100" placeholder="e.g. Wireless Keyboard" required />
+            </label>
+
+            <label class="field">
+              <span>Description</span>
+              <textarea v-model.trim="form.description" rows="4" placeholder="Short product description…"></textarea>
+            </label>
+
+            <div class="two-col">
+              <label class="field">
+                <span>Price (USD) <em class="req">*</em></span>
+                <input v-model.number="form.price" type="number" min="0.01" step="0.01" required />
               </label>
 
-              <label>
-                <span>Maker</span>
-                <input v-model.trim="form.maker" type="text" required placeholder="Curator House" />
-              </label>
-
-              <label>
-                <span>SKU</span>
-                <input v-model.trim="form.sku" type="text" required placeholder="HOME-AV-WH" />
-              </label>
-
-              <label>
-                <span>Category</span>
-                <select v-model="form.category" required>
-                  <option value="Exclusive Design">Exclusive Design</option>
-                  <option value="Signature Lighting">Signature Lighting</option>
-                  <option value="Handcrafted Woodwork">Handcrafted Woodwork</option>
-                  <option value="Atmospheric Object">Atmospheric Object</option>
-                  <option value="Home Decor">Home Decor</option>
-                </select>
-              </label>
-
-              <label>
-                <span>Price</span>
-                <input v-model.number="form.price" type="number" min="0" step="0.01" required />
-              </label>
-
-              <label>
-                <span>Stock</span>
+              <label class="field">
+                <span>Stock Quantity <em class="req">*</em></span>
                 <input v-model.number="form.stock" type="number" min="0" step="1" required />
               </label>
             </div>
 
-            <label class="full-field">
-              <span>Description</span>
-              <textarea v-model.trim="form.description" rows="5" placeholder="Short admin-facing product note"></textarea>
-            </label>
-          </section>
-
-          <aside class="form-panel side-panel">
-            <h2>Publishing</h2>
-
-            <label>
-              <span>Status</span>
-              <select v-model="form.status">
-                <option value="active">Active</option>
-                <option value="draft">Draft</option>
-                <option value="archived">Archived</option>
+            <label class="field">
+              <span>Category</span>
+              <select v-model="form.categoryId">
+                <option :value="null">— No category —</option>
+                <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
               </select>
             </label>
+          </div>
 
-            <label>
+          <!-- Right: image + meta -->
+          <div class="side-panel">
+            <h2><i class="fa-solid fa-image panel-icon"></i> Image</h2>
+
+            <label class="field">
               <span>Image URL</span>
-              <input v-model.trim="form.image" type="text" placeholder="https://..." />
+              <input v-model.trim="form.imageUrl" type="url" placeholder="https://…" />
             </label>
 
             <div class="preview-box">
-              <img :src="previewImage" alt="Product preview" />
-              <p>{{ form.name || 'Product preview' }}</p>
+              <img v-if="form.imageUrl" :src="form.imageUrl" :alt="form.name" />
+              <div v-else class="preview-placeholder">
+                <i class="fa-solid fa-image"></i>
+                <span>No image</span>
+              </div>
             </div>
 
-            <p v-if="error" class="error-text">{{ error }}</p>
-          </aside>
+            <!-- Read-only seller info when editing -->
+            <div v-if="isEditing && sellerName" class="info-row">
+              <i class="fa-solid fa-store"></i>
+              <span>Sold by <strong>{{ sellerName }}</strong></span>
+            </div>
+          </div>
+
         </form>
       </main>
-
       <AdminFooter />
     </div>
   </div>
@@ -105,242 +103,172 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AdminSidebar from '@/components/admin/layout/AdminSidebar.vue'
 import AdminTopbar from '@/components/admin/layout/AdminTopbar.vue'
 import AdminFooter from '@/components/admin/layout/AdminFooter.vue'
+import { api } from '@/services/apiClient'
 import { createInventoryProduct, getInventoryProduct, updateInventoryProduct } from '@/services/adminInventoryService'
-import type { InventoryProductInput, InventoryStatus } from '@/types/inventory'
-import bed1Img from '@/assets/home/bed1.png'
+import type { InventoryProductInput } from '@/types/inventory'
 
-const route = useRoute()
-const router = useRouter()
+interface Category { id: number; name: string }
+interface PagedResponse<T> { content: T[] }
+
+const route    = useRoute()
+const router   = useRouter()
 const productId = computed(() => String(route.params.id || ''))
 const isEditing = computed(() => Boolean(productId.value))
-const error = ref('')
+
+const error   = ref('')
+const saving  = ref(false)
+const sellerName = ref('')
+const categories = ref<Category[]>([])
 
 const form = reactive<InventoryProductInput>({
   name: '',
-  maker: '',
-  sku: '',
-  category: 'Home Decor',
+  description: '',
   price: 0,
   stock: 0,
-  status: 'active' as InventoryStatus,
-  image: '',
-  description: '',
+  imageUrl: '',
+  categoryId: null,
 })
 
-const previewImage = computed(() => form.image || bed1Img)
-
 onMounted(async () => {
-  if (!isEditing.value) return
-
-  const product = await getInventoryProduct(productId.value)
-  if (!product) {
-    error.value = 'Product not found.'
-    return
+  // Load categories
+  try {
+    const res = await api.get<PagedResponse<Category>>('/api/categories?page=0&size=100')
+    categories.value = res.content ?? []
+  } catch {
+    // categories are optional — carry on
   }
 
-  Object.assign(form, {
-    name: product.name,
-    maker: product.maker,
-    sku: product.sku,
-    category: product.category,
-    price: product.price,
-    stock: product.stock,
-    status: product.status,
-    image: product.image,
-    description: product.description,
-  })
+  if (!isEditing.value) return
+
+  // Load product for editing
+  const product = await getInventoryProduct(productId.value)
+  if (!product) { error.value = 'Product not found.'; return }
+
+  form.name        = product.name
+  form.description = product.description
+  form.price       = product.price
+  form.stock       = product.stock
+  form.imageUrl    = product.imageUrl
+  form.categoryId  = product.categoryId
+  sellerName.value = product.sellerName
 })
 
 async function saveProduct() {
   error.value = ''
 
-  if (!form.name || !form.maker || !form.sku) {
-    error.value = 'Name, maker, and SKU are required.'
-    return
-  }
+  if (!form.name.trim()) { error.value = 'Product name is required.'; return }
+  if (form.price <= 0)   { error.value = 'Price must be greater than 0.'; return }
+  if (form.stock < 0)    { error.value = 'Stock cannot be negative.'; return }
 
-  if (isEditing.value) {
-    await updateInventoryProduct(productId.value, form)
-  } else {
-    await createInventoryProduct(form)
+  saving.value = true
+  try {
+    if (isEditing.value) {
+      await updateInventoryProduct(productId.value, form)
+    } else {
+      await createInventoryProduct(form)
+    }
+    router.push('/admin/inventory')
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to save product.'
+  } finally {
+    saving.value = false
   }
-
-  router.push('/admin/inventory')
 }
 </script>
 
 <style scoped>
-.admin-page {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
-  min-width: 1180px;
-  background: #f6f8fb;
-}
+.admin-page { min-height: 100vh; display: grid; grid-template-columns: 230px minmax(0,1fr); background: #f8fafc; }
+.main-shell { display: flex; flex-direction: column; min-height: 100vh; }
+.page-body  { flex: 1; padding: 28px 32px; font-family: 'Inter', Arial, sans-serif; }
 
-.main-shell {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 100vh;
-}
-
-.product-main {
-  padding: 28px;
-}
-
-.form-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
+/* Header */
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 16px; }
 .back-link {
-  display: inline-flex;
-  margin-bottom: 14px;
-  color: #513B3C;
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 7px;
+  color: #513B3C; font-size: 12px; font-weight: 600;
+  text-decoration: none; margin-bottom: 10px;
+}
+.back-link:hover { text-decoration: underline; }
+h1 { margin: 0; font-size: 22px; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; }
+
+.header-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+.cancel-btn {
+  display: inline-flex; align-items: center; height: 36px; padding: 0 16px;
+  border-radius: 8px; background: #fff; border: 1px solid #e2e8f0;
+  color: #334155; font-size: 13px; font-weight: 600; text-decoration: none;
+  font-family: 'Inter', Arial, sans-serif;
+}
+.save-btn {
+  display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 18px;
+  border-radius: 8px; background: #513B3C; border: 0; color: #fff;
+  font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', Arial, sans-serif;
+}
+.save-btn:hover:not(:disabled) { background: #3f2d2e; }
+.save-btn:disabled { opacity: .6; cursor: default; }
+
+/* Error */
+.error-banner {
+  background: #fff1f2; border: 1px solid #fecaca; color: #be123c;
+  border-radius: 10px; padding: 12px 16px; font-size: 13px;
+  margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
 }
 
-.form-header h1 {
-  margin: 0 0 8px;
-  font-size: 44px;
-  line-height: 1;
-  color: #101828;
-}
-
-.form-header p {
-  margin: 0;
-  color: #667085;
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.primary-btn,
-.secondary-btn {
-  display: inline-flex;
-  align-items: center;
-  height: 44px;
-  border: 0;
-  border-radius: 12px;
-  padding: 0 18px;
-  font-weight: 800;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.primary-btn {
-  background: #4361ee;
-  color: #fff;
-}
-
-.secondary-btn {
-  background: #fff;
-  color: #344054;
-}
-
-.product-form {
+/* Layout */
+.form-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0,1fr) 300px;
   gap: 18px;
+  align-items: start;
 }
 
-.form-panel {
-  background: #fff;
-  border: 1px solid #e7ecf5;
-  border-radius: 20px;
-  padding: 24px;
+/* Panels */
+.panel, .side-panel {
+  background: #fff; border: 1px solid #e9eef5; border-radius: 16px; padding: 22px;
+  display: flex; flex-direction: column; gap: 16px;
 }
-
-.form-panel h2 {
-  margin: 0 0 20px;
-  font-size: 20px;
-  color: #101828;
+.panel h2, .side-panel h2 {
+  margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;
+  display: flex; align-items: center; gap: 8px;
 }
+.panel-icon { color: #94a3b8; font-size: 13px; }
 
-.form-grid {
-  display: grid;
-  gap: 16px;
+/* Fields */
+.field {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 13px; font-weight: 600; color: #334155;
 }
+.field span { display: flex; align-items: center; gap: 3px; }
+.req { color: #be123c; font-style: normal; }
 
-.two-columns {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+input, select, textarea {
+  width: 100%; border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 0 12px; background: #f8fafc; color: #0f172a;
+  font-family: 'Inter', Arial, sans-serif; font-size: 13px; outline: none;
 }
+input, select { height: 38px; }
+input:focus, select:focus, textarea:focus { border-color: #513B3C; background: #fff; }
+textarea { resize: vertical; padding: 10px 12px; }
 
-label {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  color: #344054;
-  font-size: 13px;
-  font-weight: 700;
-}
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-input,
-select,
-textarea {
-  width: 100%;
-  border: 1px solid #e4e9f2;
-  border-radius: 12px;
-  padding: 0 14px;
-  background: #f9fafc;
-  color: #101828;
-  font: inherit;
-  outline: 0;
-}
-
-input,
-select {
-  height: 44px;
-}
-
-textarea {
-  resize: vertical;
-  padding-top: 12px;
-}
-
-.full-field {
-  margin-top: 16px;
-}
-
-.side-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
+/* Preview */
 .preview-box {
-  border: 1px dashed #cfd8ea;
-  border-radius: 16px;
-  padding: 14px;
-  background: #f8fafc;
+  border: 1px dashed #e2e8f0; border-radius: 10px;
+  overflow: hidden; background: #f8fafc; aspect-ratio: 4/3;
+  display: flex; align-items: center; justify-content: center;
 }
+.preview-box img { width: 100%; height: 100%; object-fit: cover; }
+.preview-placeholder {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: #cbd5e1; font-size: 12px;
+}
+.preview-placeholder i { font-size: 28px; }
 
-.preview-box img {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: 12px;
-  object-fit: cover;
-  background: #eef2f6;
+/* Seller info */
+.info-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-radius: 8px; background: #f8fafc;
+  border: 1px solid #e2e8f0; font-size: 12px; color: #64748b;
 }
-
-.preview-box p {
-  margin: 12px 0 0;
-  color: #344054;
-  font-weight: 800;
-}
-
-.error-text {
-  margin: 0;
-  color: #dc2626;
-  font-size: 13px;
-  font-weight: 700;
-}
+.info-row i { color: #94a3b8; }
 </style>

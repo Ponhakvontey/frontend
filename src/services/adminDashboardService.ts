@@ -1,29 +1,50 @@
-import { mockAdminDashboard } from '@/data/admin'
-import { readStorage } from '@/utils/storage'
+import { api } from '@/services/apiClient'
 
-export async function getAdminDashboardData() {
-  const orders = readStorage<any[]>('orders', [])
+interface PagedResponse<T> {
+  content: T[]
+  totalElements: number
+  totalPages: number
+  page: number
+  size: number
+  last: boolean
+}
 
-  const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total || 0), 0)
-  const transactions = orders.slice(0, 8).map((order) => ({
-    id: `#${order.orderNumber}`,
-    initials: (order.shippingInfo?.firstName?.[0] || 'U') + (order.shippingInfo?.lastName?.[0] || 'S'),
-    customer: `${order.shippingInfo?.firstName || 'Unknown'} ${order.shippingInfo?.lastName || ''}`.trim(),
-    product: order.items?.[0]?.name || 'Mixed items',
-    date: order.placedDate || '-',
-    amount: `$${Number(order.total || 0).toFixed(2)}`,
-    status: order.status || 'PLACED',
-    statusClass: order.status === 'DELIVERED' ? 'green' : 'blue',
-  }))
+export interface DashboardOrder {
+  id: number
+  orderDate: string
+  status: string
+  totalAmount: number
+  username: string
+  items: { productName: string }[]
+}
+
+export interface DashboardStats {
+  totalUsers: number
+  totalOrders: number
+  totalProducts: number
+  recentRevenue: number
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const [usersRes, ordersRes, productsRes] = await Promise.all([
+    api.get<PagedResponse<unknown>>('/api/admin/users?page=0&size=1'),
+    api.get<PagedResponse<DashboardOrder>>('/api/admin/orders?page=0&size=10'),
+    api.get<PagedResponse<unknown>>('/api/products?page=0&size=1'),
+  ])
+
+  const recentRevenue = (ordersRes.content ?? []).reduce(
+    (sum, o) => sum + Number(o.totalAmount ?? 0), 0,
+  )
 
   return {
-    adminName: mockAdminDashboard.adminName,
-    stats: {
-      products: mockAdminDashboard.stats.products,
-      totalOrders: orders.length,
-      users: readStorage<any[]>('users', []).length,
-      totalRevenue,
-    },
-    transactions: transactions.length ? transactions : mockAdminDashboard.transactions,
+    totalUsers: usersRes.totalElements,
+    totalOrders: ordersRes.totalElements,
+    totalProducts: productsRes.totalElements,
+    recentRevenue,
   }
+}
+
+export async function getRecentOrders(): Promise<DashboardOrder[]> {
+  const res = await api.get<PagedResponse<DashboardOrder>>('/api/admin/orders?page=0&size=8')
+  return res.content ?? []
 }

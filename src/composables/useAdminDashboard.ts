@@ -1,41 +1,26 @@
 import { ref } from 'vue'
-import { getAdminDashboardData } from '@/services/adminDashboardService'
+import { getDashboardStats, getRecentOrders } from '@/services/adminDashboardService'
+import type { DashboardStats, DashboardOrder } from '@/services/adminDashboardService'
 
 export function useAdminDashboard() {
   const loading = ref(false)
   const error = ref<string | null>(null)
-
-  const adminName = ref('')
-  const stats = ref({
-    products: 0,
-    totalOrders: 0,
-    users: 0,
-    totalRevenue: 0,
-  })
-  const transactions = ref<any[]>([])
+  const stats = ref<DashboardStats>({ totalUsers: 0, totalOrders: 0, totalProducts: 0, recentRevenue: 0 })
+  const recentOrders = ref<DashboardOrder[]>([])
 
   async function fetchDashboardData() {
     loading.value = true
     error.value = null
-
     try {
-      const data = await getAdminDashboardData()
-      adminName.value = data.adminName
-      stats.value = data.stats
-      transactions.value = data.transactions
+      const [s, orders] = await Promise.all([getDashboardStats(), getRecentOrders()])
+      stats.value = s
+      recentOrders.value = orders
     } catch (err: any) {
-      error.value = err?.message || 'Failed to load dashboard data'
+      error.value = err?.message ?? 'Failed to load dashboard'
     } finally {
       loading.value = false
     }
   }
 
-  return {
-    loading,
-    error,
-    adminName,
-    stats,
-    transactions,
-    fetchDashboardData,
-  }
+  return { loading, error, stats, recentOrders, fetchDashboardData }
 }

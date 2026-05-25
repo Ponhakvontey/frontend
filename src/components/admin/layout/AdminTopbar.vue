@@ -1,84 +1,109 @@
 <template>
   <header class="topbar">
-    <img :src="logoSrc" alt="Ubuyee" class="brand-logo" />
+    <h2 class="page-title">{{ pageTitle }}</h2>
 
-    <div class="topbar-actions">
-      <div class="search-box">
-        <span>⌕</span>
-        <input type="text" placeholder="Search analytics..." />
+    <div class="topbar-right">
+      <span class="date-label">
+        <i class="fa-regular fa-calendar-days"></i>
+        {{ today }}
+      </span>
+      <div class="divider"></div>
+      <div class="user-chip">
+        <div class="chip-avatar">{{ userInitial }}</div>
+        <span>{{ username }}</span>
       </div>
-
-      <button class="icon-btn" type="button" aria-label="Notifications">
-        <i class="fa-regular fa-bell top-icon"></i>
-      </button>
-
-      <button class="icon-btn" type="button" aria-label="Settings">
-        <i class="fa-solid fa-gear top-icon"></i>
-      </button>
-
-      <button class="icon-btn" type="button" aria-label="Profile">
-        <i class="fa-regular fa-circle-user top-icon"></i>
-      </button>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import logoSrc from '@/assets/home/logo1.png'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { getUser } from '@/services/apiClient'
+
+const route = useRoute()
+const user = getUser()
+
+const username = computed(() => user?.username ?? 'Admin')
+const userInitial = computed(() => (user?.username?.[0] ?? 'A').toUpperCase())
+
+const today = computed(() =>
+  new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
+)
+
+const titleMap: Record<string, string> = {
+  '/admin': 'Dashboard',
+  '/admin/orders': 'Orders',
+  '/admin/users': 'Users',
+  '/admin/inventory': 'Inventory',
+}
+
+const pageTitle = computed(() => titleMap[route.path] ?? 'Admin')
 </script>
 
 <style scoped>
 .topbar {
-  height: 72px;
+  height: 64px;
   background: #ffffff;
-  border-bottom: 1px solid #ebeff5;
+  border-bottom: 1px solid #e9eef5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
+  flex-shrink: 0;
+  font-family: 'Inter', Arial, sans-serif;
 }
 
-.brand-logo {
-  width: 90px;
-  object-fit: contain;
+.page-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
-.topbar-actions {
+.topbar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-width: 0;
+  gap: 14px;
 }
 
-.search-box {
-  width: 240px;
-  max-width: 100%;
-  height: 38px;
-  background: #f4f6fa;
-  border-radius: 999px;
+.date-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: #e2e8f0;
+}
+
+.user-chip {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 14px;
-  color: #98a2b3;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 4px 12px 4px 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
 }
 
-.search-box input {
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-}
-
-.icon-btn {
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-}
-
-.top-icon {
-  font-size: 17px;
-  color: #667085;
+.chip-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #513B3C;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
 }
 </style>

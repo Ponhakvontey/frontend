@@ -1,4 +1,4 @@
-﻿import { computed, ref } from 'vue'
+import { computed, ref } from 'vue'
 import {
   deleteInventoryProduct,
   getInventoryProducts,
@@ -14,31 +14,26 @@ export function useAdminInventory() {
   const sortKey = ref<InventorySortKey>('name')
   const sortDirection = ref<'asc' | 'desc'>('asc')
 
-  const categories = computed(() => [...new Set(products.value.map((product) => product.category))])
-
   const visibleProducts = computed(() => {
     const term = search.value.trim().toLowerCase()
-    const filtered = products.value.filter((product) => {
-      const matchesTerm = !term || [product.name, product.maker, product.sku, product.category].some((value) =>
-        value.toLowerCase().includes(term),
-      )
 
+    const filtered = products.value.filter((p) => {
+      const matchesTerm = !term || [p.name, p.category, p.sellerName].some((v) =>
+        v.toLowerCase().includes(term),
+      )
       const matchesFilter =
         filter.value === 'all' ||
-        (filter.value === 'in-stock' && product.stock > 10) ||
-        (filter.value === 'low-stock' && product.stock > 0 && product.stock <= 10) ||
-        (filter.value === 'out-of-stock' && product.stock === 0)
+        (filter.value === 'in-stock' && p.stock > 10) ||
+        (filter.value === 'low-stock' && p.stock > 0 && p.stock <= 10) ||
+        (filter.value === 'out-of-stock' && p.stock === 0)
 
       return matchesTerm && matchesFilter
     })
 
-    return [...filtered].sort((first, second) => {
-      const firstValue = first[sortKey.value]
-      const secondValue = second[sortKey.value]
-      const result = typeof firstValue === 'number'
-        ? firstValue - Number(secondValue)
-        : String(firstValue).localeCompare(String(secondValue))
-
+    return [...filtered].sort((a, b) => {
+      const av = a[sortKey.value]
+      const bv = b[sortKey.value]
+      const result = typeof av === 'number' ? av - Number(bv) : String(av).localeCompare(String(bv))
       return sortDirection.value === 'asc' ? result : -result
     })
   })
@@ -46,11 +41,10 @@ export function useAdminInventory() {
   async function fetchProducts() {
     loading.value = true
     error.value = null
-
     try {
       products.value = await getInventoryProducts()
-    } catch (err: any) {
-      error.value = err?.message || 'Failed to load inventory products'
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to load products'
     } finally {
       loading.value = false
     }
@@ -58,7 +52,7 @@ export function useAdminInventory() {
 
   async function removeProduct(id: string) {
     await deleteInventoryProduct(id)
-    products.value = products.value.filter((product) => product.id !== id)
+    products.value = products.value.filter((p) => p.id !== id)
   }
 
   function setSort(key: InventorySortKey) {
@@ -66,23 +60,13 @@ export function useAdminInventory() {
       sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
       return
     }
-
     sortKey.value = key
     sortDirection.value = 'asc'
   }
 
   return {
-    loading,
-    error,
-    products,
-    search,
-    filter,
-    sortKey,
-    sortDirection,
-    categories,
-    visibleProducts,
-    fetchProducts,
-    removeProduct,
-    setSort,
+    loading, error, products, search, filter,
+    sortKey, sortDirection, visibleProducts,
+    fetchProducts, removeProduct, setSort,
   }
 }
