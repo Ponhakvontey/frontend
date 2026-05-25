@@ -38,18 +38,18 @@
         <form v-if="mode === 'login'" key="login" class="auth-form" @submit.prevent="handleLogin">
           <!-- Email / Username -->
           <div class="field" :class="{ 'field--error': loginErrors.email }">
-            <label for="login-email">Email address</label>
+            <label for="login-email">Email or Username</label>
             <div class="input-wrap">
               <svg class="input-icon" viewBox="0 0 20 20" fill="none">
-                <path d="M2.5 6.5l7.5 5 7.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                <rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                <circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
               <input
                 id="login-email"
                 v-model.trim="loginEmail"
-                type="email"
-                placeholder="you@example.com"
-                autocomplete="email"
+                type="text"
+                placeholder="you@example.com or username"
+                autocomplete="username"
               />
             </div>
             <span v-if="loginErrors.email" class="err-msg">{{ loginErrors.email }}</span>
@@ -266,16 +266,21 @@ const loginLoading = ref(false)
 
 async function handleLogin() {
   loginErrors.value = { email: '', password: '', general: '' }
-  const email = loginEmail.value.trim().toLowerCase()
+  const identifier = loginEmail.value.trim()
 
-  loginErrors.value.email = validateEmail(email)
+  // Validate: if it contains @, treat as email and check format; otherwise just require non-empty
+  if (!identifier) {
+    loginErrors.value.email = 'Email or username is required.'
+  } else if (identifier.includes('@')) {
+    loginErrors.value.email = validateEmail(identifier)
+  }
   loginErrors.value.password = loginPassword.value ? '' : 'Password is required'
 
   if (loginErrors.value.email || loginErrors.value.password) return
 
   loginLoading.value = true
   try {
-    const data = await login({ username: email, password: loginPassword.value })
+    const data = await login({ username: identifier, password: loginPassword.value })
     const isAdminUser = data.roles.includes('ROLE_ADMIN')
     const dest = isAdminUser
       ? '/admin'
