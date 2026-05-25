@@ -1,4 +1,4 @@
-﻿import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
@@ -6,8 +6,6 @@ import CardView from '../views/CardView.vue'
 import ProductDetailView from '../views/ProductDetailView.vue'
 import CheckoutView from '../views/CheckoutView.vue'
 import PaymentView from '../views/PaymentView.vue'
-import ReviewView from '../views/ReviewView.vue'
-import OrderConfirmView from '../views/OrderConfirmView.vue'
 import SellView from '../views/SellView.vue'
 import OrderHistoryView from '../views/OrderHistoryView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
@@ -16,6 +14,8 @@ import AdminUsersView from '../views/AdminUsersView.vue'
 import AdminInventoryView from '../views/AdminInventoryView.vue'
 import AdminProductFormView from '../views/AdminProductFormView.vue'
 import AdminCategoriesView from '../views/AdminCategoriesView.vue'
+import OrderSuccessView from '../views/OrderSuccessView.vue'
+import BecomeSellerView from '../views/BecomeSellerView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import VerifyIdentityView from '../views/VerifyIdentityView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
@@ -40,16 +40,11 @@ const router = createRouter({
       component: PaymentView,
       meta: { requiresAuth: true, requiresShipping: true },
     },
-    {
-      path: '/review',
-      name: 'review',
-      component: ReviewView,
-      meta: { requiresAuth: true, requiresShipping: true, requiresPayment: true },
-    },
 
-    { path: '/order-confirm', name: 'order-confirm', component: OrderConfirmView, meta: { requiresAuth: true } },
+    { path: '/order-success', name: 'order-success', component: OrderSuccessView },
     { path: '/sell', name: 'sell', component: SellView },
     { path: '/order-history', name: 'order-history', component: OrderHistoryView, meta: { requiresAuth: true } },
+    { path: '/become-seller', name: 'become-seller', component: BecomeSellerView, meta: { requiresAuth: true } },
 
     {
       path: '/admin',
@@ -130,20 +125,7 @@ router.beforeEach((to) => {
     }
   }
 
-  if (to.meta.requiresPayment) {
-    const payment = readStorage('paymentInfo', {})
-    if (!payment?.method) {
-      return '/payment'
-    }
-  }
-
-  if (to.path === '/order-confirm') {
-    const order = readStorage('orderConfirmation', null)
-    if (!order?.orderNumber) return '/review'
-  }
-
   return true
 })
 
 export default router
-

@@ -170,8 +170,8 @@ const PER_PAGE  = 10
 
 const tabs = [
   { label: 'All',              value: 'all',              icon: 'fa-solid fa-list' },
-  { label: 'Placed',           value: 'PLACED',           icon: 'fa-solid fa-circle-dot' },
-  { label: 'Processing',       value: 'PROCESSING',       icon: 'fa-solid fa-rotate' },
+  { label: 'Pending',          value: 'PENDING',          icon: 'fa-solid fa-clock' },
+  { label: 'Paid',             value: 'PAID',             icon: 'fa-solid fa-circle-check' },
   { label: 'Shipped',          value: 'SHIPPED',          icon: 'fa-solid fa-truck' },
   { label: 'Delivered',        value: 'DELIVERED',        icon: 'fa-solid fa-circle-check' },
   { label: 'Cancelled',        value: 'CANCELLED',        icon: 'fa-solid fa-circle-xmark' },
@@ -181,9 +181,9 @@ const tabs = [
 
 // What statuses an admin can move an order to
 const TRANSITIONS: Record<string, string[]> = {
-  PLACED:      ['PROCESSING', 'CANCELLED'],
-  PROCESSING:  ['SHIPPED', 'CANCELLED'],
-  SHIPPED:     ['DELIVERED'],
+  PENDING: ['PAID', 'CANCELLED'],
+  PAID:    ['SHIPPED', 'CANCELLED'],
+  SHIPPED: ['DELIVERED'],
 }
 
 onMounted(load)
@@ -249,10 +249,10 @@ function fmtDate(d: string) { return d ? new Date(d).toLocaleDateString('en-US',
 function formatPrice(v: number) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(v) }
 
 function pillClass(s: string) {
-  return { PLACED:'blue', PROCESSING:'blue', SHIPPED:'purple', DELIVERED:'green', CANCELLED:'red', REFUNDED:'gray', RETURN_REQUESTED:'amber' }[s] ?? 'gray'
+  return { PENDING:'amber', PAID:'blue', SHIPPED:'purple', DELIVERED:'green', CANCELLED:'red', REFUNDED:'gray', RETURN_REQUESTED:'amber' }[s] ?? 'gray'
 }
 function pillIcon(s: string) {
-  return { PLACED:'fa-solid fa-circle-dot', PROCESSING:'fa-solid fa-rotate', SHIPPED:'fa-solid fa-truck', DELIVERED:'fa-solid fa-circle-check', CANCELLED:'fa-solid fa-circle-xmark', REFUNDED:'fa-solid fa-rotate-left', RETURN_REQUESTED:'fa-solid fa-arrow-rotate-left' }[s] ?? 'fa-solid fa-circle'
+  return { PENDING:'fa-solid fa-clock', PAID:'fa-solid fa-circle-check', SHIPPED:'fa-solid fa-truck', DELIVERED:'fa-solid fa-circle-check', CANCELLED:'fa-solid fa-circle-xmark', REFUNDED:'fa-solid fa-rotate-left', RETURN_REQUESTED:'fa-solid fa-arrow-rotate-left' }[s] ?? 'fa-solid fa-circle'
 }
 </script>
 

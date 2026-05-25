@@ -21,23 +21,6 @@ export interface ShippingInfo {
   phone: string
 }
 
-export interface PaymentInfo {
-  method: string
-  cardLast4?: string
-}
-
-export interface OrderRecord {
-  id: number | string
-  orderNumber: string
-  placedDate: string
-  status: string
-  total: number
-  items: CartItem[]
-  shippingInfo: ShippingInfo
-  paymentInfo: PaymentInfo
-  email?: string
-}
-
 export function toLineId(productId: number | string, variant: string) {
   return `${productId}:${variant}`
 }

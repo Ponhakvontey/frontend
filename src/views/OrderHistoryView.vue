@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="orders-page">
     <AppHeader :nav-links="navLinks" :cart-count="cartCount" />
 
@@ -12,27 +12,37 @@
           </p>
         </div>
 
-        <div v-if="orders.length" class="orders-list">
+        <div v-if="loading" class="empty-state">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size:28px;color:#513B3C;"></i>
+          <p>Loading your orders…</p>
+        </div>
+
+        <div v-else-if="error" class="empty-state">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size:28px;color:#d92d20;"></i>
+          <p>{{ error }}</p>
+        </div>
+
+        <div v-else-if="orders.length" class="orders-list">
           <article v-for="order in orders" :key="order.id" class="order-card">
             <div class="order-top">
               <div>
                 <p class="label">ORDER REFERENCE</p>
-                <h3>#{{ order.orderNumber }}</h3>
-                <p class="placed-date">Placed on {{ order.placedDate }}</p>
+                <h3>#{{ order.id }}</h3>
+                <p class="placed-date">Placed on {{ fmtDate(order.orderDate) }}</p>
               </div>
 
               <div class="order-right">
-                <span class="status-pill">{{ order.status }}</span>
-                <strong>{{ formatPrice(order.total) }}</strong>
+                <span class="status-pill" :class="pillClass(order.status)">{{ order.status }}</span>
+                <strong>{{ formatPrice(Number(order.totalAmount)) }}</strong>
               </div>
             </div>
 
-            <div class="order-items">
+            <div v-if="order.items?.length" class="order-items">
               <img
                 v-for="item in order.items.slice(0, 3)"
-                :key="item.lineId || item.id"
-                :src="item.image"
-                :alt="item.name"
+                :key="item.id"
+                :src="item.productImageUrl || ''"
+                :alt="item.productName"
                 class="order-thumb"
               />
               <div v-if="order.items.length > 3" class="more-items">
@@ -40,17 +50,22 @@
               </div>
             </div>
 
-            <div class="order-actions">
-              <button type="button" class="primary-btn">Track Shipment</button>
-              <button type="button" class="secondary-btn">View Order Details</button>
-              <button type="button" class="link-btn">Buy it Again</button>
+            <div class="order-footer">
+              <span class="item-count">
+                {{ order.items?.length ?? 0 }} {{ order.items?.length === 1 ? 'item' : 'items' }}
+              </span>
+              <span v-if="order.shippingAddress" class="ship-addr">
+                <i class="fa-solid fa-location-dot"></i> {{ order.shippingAddress }}
+              </span>
             </div>
           </article>
         </div>
 
         <div v-else class="empty-state">
+          <i class="fa-regular fa-folder-open" style="font-size:36px;color:#98a2b3;"></i>
           <h2>No orders yet</h2>
-          <p>Your placed orders will appear here.</p>
+          <p>Your placed orders will appear here once you complete a purchase.</p>
+          <RouterLink to="/sell" class="shop-btn">Browse Products</RouterLink>
         </div>
       </div>
     </main>
@@ -61,65 +76,87 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
 import { readStorage } from '@/utils/storage'
+import { api } from '@/services/apiClient'
 
-interface CartItem {
-  lineId?: string
+interface OrderItem {
   id: number
-  name: string
-  variant: string
-  price: number
+  productId: number
+  productName: string
+  productImageUrl: string
   quantity: number
-  image: string
+  price: number
+  totalPrice: number
 }
 
-interface Order {
+interface OrderDTO {
   id: number
-  orderNumber: string
-  placedDate: string
+  orderDate: string
   status: string
-  total: number
-  items: CartItem[]
-  email?: string
+  totalAmount: number
+  shippingAddress: string
+  cancellationReason: string | null
+  items: OrderItem[]
 }
 
-const navLinks = ref<NavLink[]>([])
-const footerColumns = ref<FooterColumn[]>([])
-const socialLinks = ref<SocialLink[]>([])
-const orders = ref<Order[]>([])
-const cartItems = ref<Array<{ id: number; quantity: number }>>([])
+interface Paged<T> { content: T[]; totalElements: number }
 
-const cartCount = computed(() => {
-  return cartItems.value.reduce((sum, item) => sum + item.quantity, 0)
-})
+const navLinks     = ref<NavLink[]>([])
+const footerColumns = ref<FooterColumn[]>([])
+const socialLinks  = ref<SocialLink[]>([])
+const orders       = ref<OrderDTO[]>([])
+const loading      = ref(true)
+const error        = ref<string | null>(null)
+const cartItems    = ref<Array<{ id: number; quantity: number }>>([])
+
+const cartCount = computed(() => cartItems.value.reduce((s, i) => s + i.quantity, 0))
+
+function fmtDate(iso: string) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+}
 
 function formatPrice(value: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(value)
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(value)
+}
+
+function pillClass(status: string) {
+  return {
+    PENDING: 'pill-amber',
+    PAID:    'pill-blue',
+    SHIPPED: 'pill-purple',
+    DELIVERED: 'pill-green',
+    CANCELLED: 'pill-red',
+    RETURN_REQUESTED: 'pill-amber',
+    REFUNDED: 'pill-gray',
+  }[status] ?? 'pill-gray'
 }
 
 onMounted(async () => {
-  const currentEmail = (localStorage.getItem('userEmail') || '').toLowerCase()
-  const allOrders = readStorage<Order[]>('orders', [])
-  orders.value = allOrders.filter((order) => !currentEmail || (order.email || '').toLowerCase() === currentEmail)
   cartItems.value = readStorage<Array<{ id: number; quantity: number }>>('cartItems', [])
-  navLinks.value = await getNavLinks()
-  footerColumns.value = await getFooterColumns()
-  socialLinks.value = await getSocialLinks()
+  const [nav, footer, social] = await Promise.all([getNavLinks(), getFooterColumns(), getSocialLinks()])
+  navLinks.value      = nav
+  footerColumns.value = footer
+  socialLinks.value   = social
+
+  try {
+    const res = await api.get<Paged<OrderDTO>>('/api/orders/my?page=0&size=50')
+    orders.value = res.content ?? []
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to load orders. Please try again.'
+  } finally {
+    loading.value = false
+  }
 })
 </script>
 
 <style scoped>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 .orders-page {
   min-height: 100vh;
@@ -134,38 +171,14 @@ onMounted(async () => {
   padding: 0 20px;
 }
 
-.orders-main {
-  padding: 40px 0 80px;
-}
+.orders-main { padding: 40px 0 80px; }
 
-.orders-head {
-  margin-bottom: 28px;
-}
+.orders-head { margin-bottom: 28px; }
+.eyebrow { margin: 0 0 10px; font-size: 10px; letter-spacing: 0.16em; color: #98a2b3; }
+.orders-head h1 { margin: 0 0 8px; font-size: 54px; line-height: 1.04; font-weight: 500; }
+.subtitle { margin: 0; color: #667085; }
 
-.eyebrow {
-  margin: 0 0 10px;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: #98a2b3;
-}
-
-.orders-head h1 {
-  margin: 0 0 8px;
-  font-size: 54px;
-  line-height: 1.04;
-  font-weight: 500;
-}
-
-.subtitle {
-  margin: 0;
-  color: #667085;
-}
-
-.orders-list {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
+.orders-list { display: flex; flex-direction: column; gap: 18px; }
 
 .order-card {
   background: #fff;
@@ -181,119 +194,84 @@ onMounted(async () => {
   margin-bottom: 18px;
 }
 
-.label {
-  margin: 0 0 6px;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  color: #98a2b3;
-}
+.label { margin: 0 0 6px; font-size: 10px; letter-spacing: 0.14em; color: #98a2b3; }
+.order-top h3 { margin: 0 0 6px; font-size: 22px; }
+.placed-date { margin: 0; color: #667085; font-size: 14px; }
 
-.order-top h3 {
-  margin: 0 0 6px;
-  font-size: 22px;
-}
-
-.placed-date {
-  margin: 0;
-  color: #667085;
-  font-size: 14px;
-}
-
-.order-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-}
+.order-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.order-right strong { font-size: 28px; }
 
 .status-pill {
-  padding: 6px 10px;
+  padding: 5px 12px;
   border-radius: 999px;
-  background: #eef4ff;
-  color: #513B3C;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
+.pill-amber  { background: #fffbeb; color: #d97706; }
+.pill-blue   { background: #eff6ff; color: #2563eb; }
+.pill-purple { background: #f5f3ff; color: #7c3aed; }
+.pill-green  { background: #f0fdf4; color: #16a34a; }
+.pill-red    { background: #fff1f2; color: #be123c; }
+.pill-gray   { background: #f8fafc; color: #64748b; }
 
-.order-right strong {
-  font-size: 32px;
-}
+.order-items { display: flex; gap: 10px; margin-bottom: 14px; }
 
-.order-items {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.order-thumb,
-.more-items {
+.order-thumb, .more-items {
   width: 72px;
   height: 72px;
   border-radius: 12px;
   background: #f4f6f9;
 }
+.order-thumb { object-fit: cover; }
+.more-items { display: grid; place-items: center; color: #667085; font-size: 12px; }
 
-.order-thumb {
-  object-fit: cover;
-}
-
-.more-items {
-  display: grid;
-  place-items: center;
-  color: #667085;
-  font-size: 12px;
-}
-
-.order-actions {
+.order-footer {
   display: flex;
-  gap: 10px;
+  gap: 20px;
+  align-items: center;
+  font-size: 13px;
+  color: #94a3b8;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
   flex-wrap: wrap;
 }
-
-.primary-btn,
-.secondary-btn,
-.link-btn {
-  height: 38px;
-  padding: 0 16px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.primary-btn {
-  border: 0;
-  background: #513B3C;
-  color: #fff;
-}
-
-.secondary-btn {
-  border: 0;
-  background: #ede6e7;
-  color: #495467;
-}
-
-.link-btn {
-  border: 0;
-  background: transparent;
-  color: #513B3C;
-}
+.ship-addr { display: flex; align-items: center; gap: 5px; }
 
 .empty-state {
   background: #fff;
   border: 1px solid #eef2f6;
   border-radius: 20px;
-  padding: 40px;
+  padding: 56px 40px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
+.empty-state h2 { margin: 0; font-size: 22px; font-weight: 700; }
+.empty-state p  { margin: 0; color: #667085; font-size: 14px; }
+
+.shop-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 14px;
+  background: #513B3C;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  margin-top: 4px;
+  transition: background 0.15s;
+}
+.shop-btn:hover { background: #6b4f50; }
 
 @media (max-width: 700px) {
-  .order-top {
-    flex-direction: column;
-  }
-
-  .order-right {
-    align-items: flex-start;
-  }
+  .order-top { flex-direction: column; }
+  .order-right { align-items: flex-start; }
+  .orders-head h1 { font-size: 36px; }
 }
 </style>
