@@ -151,6 +151,18 @@
                   </select>
                 </div>
               </div>
+
+              <!-- Search bar -->
+              <form class="search-bar" @submit.prevent="runSearch">
+                <i class="fa-solid fa-magnifying-glass search-ico"></i>
+                <input
+                  v-model="searchText"
+                  type="search"
+                  class="search-inp"
+                  placeholder="Search products…"
+                />
+                <button type="submit" class="search-btn">Search</button>
+              </form>
             </div>
 
             <!-- Loading -->
@@ -302,6 +314,7 @@ const loading       = ref(false)
 const error         = ref('')
 const currentPage   = ref(1)
 const PER_PAGE      = 9
+const searchText    = ref('')
 
 // ── Categories ────────────────────────────────────────────────────────────
 
@@ -399,9 +412,13 @@ async function fetchProducts() {
   if (selectedCategoryId.value !== null) params.set('categoryId', String(selectedCategoryId.value))
   if (priceMin.value > PRICE_MIN)        params.set('minPrice', String(priceMin.value))
   if (priceMax.value < PRICE_MAX)        params.set('maxPrice', String(priceMax.value))
+  if (searchText.value.trim())           params.set('name', searchText.value.trim())
 
-  // search endpoint supports categoryId/price filters; plain products endpoint only supports sort
-  const useSearch = selectedCategoryId.value !== null || priceMin.value > PRICE_MIN || priceMax.value < PRICE_MAX
+  // search endpoint supports name/categoryId/price filters; plain products endpoint only supports sort
+  const useSearch = selectedCategoryId.value !== null
+    || priceMin.value > PRICE_MIN
+    || priceMax.value < PRICE_MAX
+    || searchText.value.trim() !== ''
 
   const sortStr = sortParams()
   const url = useSearch
@@ -445,6 +462,11 @@ function selectCategory(id: number | null, name: string) {
 }
 
 function applyFilter() {
+  currentPage.value = 1
+  fetchProducts()
+}
+
+function runSearch() {
   currentPage.value = 1
   fetchProducts()
 }
@@ -691,6 +713,29 @@ onMounted(async () => {
   font-size: 14px; font-weight: 600; color: #111;
   cursor: pointer; font-family: inherit; outline: none;
 }
+
+/* Search bar */
+.search-bar {
+  display: flex; align-items: center; gap: 0;
+  border: 1px solid #e8e8e8; border-radius: 62px;
+  background: #fff; overflow: hidden; margin-top: 16px;
+}
+.search-ico {
+  padding: 0 12px 0 16px; color: #999; font-size: 14px; flex-shrink: 0;
+}
+.search-inp {
+  flex: 1; height: 44px; border: none; outline: none;
+  font-size: 14px; font-family: inherit; color: #111; background: transparent;
+  min-width: 0;
+}
+.search-inp::placeholder { color: #bbb; }
+.search-btn {
+  height: 44px; padding: 0 22px; border: none; background: #111;
+  color: #fff; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit; flex-shrink: 0;
+  transition: background .15s;
+}
+.search-btn:hover { background: #333; }
 
 /* State messages */
 .state-msg {

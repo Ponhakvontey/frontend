@@ -1,16 +1,12 @@
 <template>
   <div class="nav-actions">
-    <button class="icon-btn" type="button" aria-label="Search" @click="goToSearch">
-      <i class="fa-solid fa-magnifying-glass"></i>
-    </button>
-
-    <button class="icon-btn" type="button" aria-label="Account">
+    <RouterLink :to="accountRoute" class="icon-btn" aria-label="Account">
       <i class="fa-regular fa-user"></i>
-    </button>
+    </RouterLink>
 
-    <button class="icon-btn" type="button" aria-label="Wishlist">
+    <RouterLink to="/sell" class="icon-btn" aria-label="Wishlist">
       <i class="fa-regular fa-heart"></i>
-    </button>
+    </RouterLink>
 
     <RouterLink to="/cart" class="icon-btn cart-btn" aria-label="Cart">
       <i class="fa-solid fa-cart-shopping"></i>
@@ -20,7 +16,9 @@
 </template>
 
 <script setup lang="ts">
-import { RouterLink, useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
+import { isLoggedIn } from '@/services/apiClient'
 
 withDefaults(
   defineProps<{
@@ -31,11 +29,8 @@ withDefaults(
   },
 )
 
-const router = useRouter()
-
-function goToSearch() {
-  router.push('/sell')
-}
+// If the user is logged in, go to their order history; otherwise go to login
+const accountRoute = computed(() => isLoggedIn() ? '/order-history' : '/login')
 </script>
 
 <style scoped>
