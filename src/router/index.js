@@ -15,6 +15,7 @@ import AdminOrdersView from '../views/AdminOrdersView.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
 import AdminInventoryView from '../views/AdminInventoryView.vue'
 import AdminProductFormView from '../views/AdminProductFormView.vue'
+import AdminCategoriesView from '../views/AdminCategoriesView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import VerifyIdentityView from '../views/VerifyIdentityView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
@@ -84,6 +85,12 @@ const router = createRouter({
       path: '/admin/inventory/:id/edit',
       name: 'admin-product-edit',
       component: AdminProductFormView,
+      meta: { requiresAdmin: true },
+    },
+    {
+      path: '/admin/categories',
+      name: 'admin-categories',
+      component: AdminCategoriesView,
       meta: { requiresAdmin: true },
     },
 

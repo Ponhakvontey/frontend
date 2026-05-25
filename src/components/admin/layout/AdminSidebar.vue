@@ -24,6 +24,10 @@
         <i class="fa-solid fa-box-archive nav-icon"></i>
         <span>Inventory</span>
       </RouterLink>
+      <RouterLink to="/admin/categories" class="nav-item" active-class="active">
+        <i class="fa-solid fa-tags nav-icon"></i>
+        <span>Categories</span>
+      </RouterLink>
     </nav>
 
     <div class="sidebar-footer">
