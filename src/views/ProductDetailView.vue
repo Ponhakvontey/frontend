@@ -164,7 +164,7 @@ const API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface ProductDTO {
-  id: number
+  id: string
   name: string
   description: string | null
   price: number

@@ -16,6 +16,8 @@ import AdminProductFormView from '../views/AdminProductFormView.vue'
 import AdminCategoriesView from '../views/AdminCategoriesView.vue'
 import OrderSuccessView from '../views/OrderSuccessView.vue'
 import BecomeSellerView from '../views/BecomeSellerView.vue'
+import StripeSuccessView from '../views/StripeSuccessView.vue'
+import ProfileView from '../views/ProfileView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import VerifyIdentityView from '../views/VerifyIdentityView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
@@ -42,9 +44,11 @@ const router = createRouter({
     },
 
     { path: '/order-success', name: 'order-success', component: OrderSuccessView },
+    { path: '/checkout/success', name: 'stripe-success', component: StripeSuccessView, meta: { requiresAuth: true } },
     { path: '/sell', name: 'sell', component: SellView },
     { path: '/order-history', name: 'order-history', component: OrderHistoryView, meta: { requiresAuth: true } },
     { path: '/become-seller', name: 'become-seller', component: BecomeSellerView, meta: { requiresAuth: true } },
+    { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
 
     {
       path: '/admin',

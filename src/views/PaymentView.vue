@@ -25,32 +25,62 @@
         <section class="payment-layout">
           <div class="payment-left">
 
-            <!-- Idle: ready to pay -->
+            <!-- Payment Method Selector -->
             <div v-if="state === 'idle'" class="panel">
-              <div class="payway-header">
+              <div class="method-title">
                 <span class="payway-badge"><i class="fa-solid fa-shield-halved"></i> Secure Payment</span>
               </div>
-              <p class="payway-desc">
-                You'll pay via <strong>ABA KHQR</strong>. Scan with ABA Mobile or
-                any KHQR-compatible banking app.
-              </p>
+
+              <p class="method-label">Choose a payment method</p>
+
+              <div class="method-options">
+                <button
+                  class="method-card"
+                  :class="{ selected: method === 'aba' }"
+                  @click="method = 'aba'"
+                >
+                  <span class="method-radio" :class="{ active: method === 'aba' }"></span>
+                  <div class="method-info">
+                    <strong>ABA KHQR</strong>
+                    <span>Scan with ABA Mobile or any KHQR-compatible app</span>
+                  </div>
+                  <span class="method-icon">📱</span>
+                </button>
+
+                <button
+                  class="method-card"
+                  :class="{ selected: method === 'stripe' }"
+                  @click="method = 'stripe'"
+                >
+                  <span class="method-radio" :class="{ active: method === 'stripe' }"></span>
+                  <div class="method-info">
+                    <strong>Credit / Debit Card</strong>
+                    <span>Visa, Mastercard, and more — powered by Stripe</span>
+                  </div>
+                  <span class="method-icon">💳</span>
+                </button>
+              </div>
+
               <div class="amount-row">
                 <span>Amount due</span>
                 <strong>{{ formatPrice(total) }}</strong>
               </div>
+
               <button class="pay-btn" @click="pay">
-                <i class="fa-solid fa-qrcode"></i> Generate KHQR
+                <i v-if="method === 'aba'" class="fa-solid fa-qrcode"></i>
+                <i v-else class="fa-solid fa-credit-card"></i>
+                {{ method === 'aba' ? 'Generate KHQR' : 'Pay with Card' }}
               </button>
               <button class="back-btn" @click="router.push('/checkout')">← Back to Shipping</button>
             </div>
 
-            <!-- Loading: calling backend -->
+            <!-- Loading -->
             <div v-else-if="state === 'loading'" class="panel center-panel">
               <i class="fa-solid fa-spinner fa-spin load-icon"></i>
-              <p>Generating your KHQR…</p>
+              <p>{{ method === 'aba' ? 'Generating your KHQR…' : 'Redirecting to Stripe…' }}</p>
             </div>
 
-            <!-- QR: show QR code + timer -->
+            <!-- QR: show QR code + timer (ABA only) -->
             <div v-else-if="state === 'qr'" class="panel qr-panel">
               <div class="qr-header">
                 <span class="payway-badge"><i class="fa-solid fa-shield-halved"></i> Secure Payment</span>
@@ -73,7 +103,6 @@
                 <strong>{{ formatPrice(total) }}</strong>
               </div>
 
-              <!-- Sandbox simulate button -->
               <button class="simulate-btn" @click="simulate" :disabled="simulating">
                 <i class="fa-solid fa-flask"></i>
                 {{ simulating ? 'Simulating…' : 'Simulate Payment (Sandbox)' }}
@@ -150,7 +179,10 @@ const socialLinks = ref<SocialLink[]>([])
 const items       = ref<CartItem[]>([])
 
 type State = 'idle' | 'loading' | 'qr' | 'expired' | 'error'
+type Method = 'aba' | 'stripe'
+
 const state     = ref<State>('idle')
+const method    = ref<Method>('aba')
 const error     = ref('')
 const qrImage   = ref('')
 const tranId    = ref('')
@@ -191,7 +223,6 @@ function cancelQr() {
   state.value = 'idle'
 }
 
-/** Poll our backend every 5 s until COMPLETED or FAILED. */
 function startPolling(id: string) {
   pollInterval = setInterval(async () => {
     try {
@@ -204,11 +235,10 @@ function startPolling(id: string) {
         state.value = 'error'
         error.value = 'Payment was declined or failed.'
       }
-    } catch { /* network hiccup — keep polling */ }
+    } catch { /* keep polling */ }
   }, 5000)
 }
 
-/** Count down; expire QR when timer hits 0. */
 function startTimer(secs: number) {
   secondsLeft.value = secs
   timerInterval = setInterval(() => {
@@ -218,6 +248,53 @@ function startTimer(secs: number) {
       state.value = 'expired'
     }
   }, 1000)
+}
+
+async function payAba(shipping: ShippingInfo) {
+  // Sync cart → backend
+  try { await api.delete('/api/cart/clear') } catch { /* ignore */ }
+  for (const item of items.value) {
+    await api.post('/api/cart/add', { productId: item.id, quantity: item.quantity })
+  }
+
+  const shippingAddress = `${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zipCode}`
+
+  const res = await api.post<{
+    transactionId: string
+    qrImage: string
+    qrString: string
+    expiresIn: number
+  }>('/api/payment/initiate', {
+    shippingAddress,
+    firstName: shipping.firstName,
+    lastName:  shipping.lastName,
+    phone:     shipping.phone,
+  })
+
+  tranId.value  = res.transactionId
+  qrImage.value = res.qrImage
+  state.value   = 'qr'
+
+  startTimer(res.expiresIn)
+  startPolling(res.transactionId)
+}
+
+async function payStripe(shipping: ShippingInfo) {
+  // Sync cart → backend
+  try { await api.delete('/api/cart/clear') } catch { /* ignore */ }
+  for (const item of items.value) {
+    await api.post('/api/cart/add', { productId: item.id, quantity: item.quantity })
+  }
+
+  const shippingAddress = `${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zipCode}`
+
+  const res = await api.post<{ url: string; sessionId: string; orderId: number }>(
+    '/api/stripe/checkout',
+    { shippingAddress },
+  )
+
+  // Redirect to Stripe-hosted checkout
+  window.location.href = res.url
 }
 
 async function pay() {
@@ -237,48 +314,25 @@ async function pay() {
       return
     }
 
-    // Sync localStorage cart → backend DB cart
-    try { await api.delete('/api/cart/clear') } catch { /* no cart yet — ignore */ }
-    for (const item of items.value) {
-      await api.post('/api/cart/add', { productId: Number(item.id), quantity: item.quantity })
+    if (method.value === 'stripe') {
+      await payStripe(shipping)
+    } else {
+      await payAba(shipping)
     }
-
-    const shippingAddress = `${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zipCode}`
-
-    const res = await api.post<{
-      transactionId: string
-      qrImage: string
-      qrString: string
-      expiresIn: number
-    }>('/api/payment/initiate', {
-      shippingAddress,
-      firstName: shipping.firstName,
-      lastName:  shipping.lastName,
-      phone:     shipping.phone,
-    })
-
-    tranId.value  = res.transactionId
-    qrImage.value = res.qrImage
-    state.value   = 'qr'
-
-    startTimer(res.expiresIn)
-    startPolling(res.transactionId)
 
   } catch (err: unknown) {
     state.value = 'error'
-    error.value = err instanceof Error ? err.message : 'Failed to generate QR. Please try again.'
+    error.value = err instanceof Error ? err.message : 'Payment failed. Please try again.'
   }
 }
 
-/** Sandbox only — simulate a successful payment without scanning. */
 async function simulate() {
   if (!tranId.value || simulating.value) return
   simulating.value = true
   try {
     await api.post(`/api/payment/simulate/${tranId.value}`, {})
-    // Polling will detect COMPLETED and redirect automatically
   } catch {
-    // ignore — polling still runs
+    // polling still runs
   } finally {
     simulating.value = false
   }
@@ -310,17 +364,30 @@ onUnmounted(() => stopTimers())
 .step.done p { color: #16a34a; }
 .payment-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 26px; align-items: start; }
 .panel { background: #fff; border: 1px solid #eef2f6; border-radius: 20px; padding: 28px 24px; display: flex; flex-direction: column; gap: 16px; }
-.payway-header { display: flex; align-items: center; }
+
+/* Payment method selector */
+.method-title { display: flex; align-items: center; }
+.method-label { margin: 0; font-size: 13px; font-weight: 600; color: #344054; letter-spacing: 0.04em; text-transform: uppercase; }
+.method-options { display: flex; flex-direction: column; gap: 12px; }
+.method-card { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1.5px solid #e4e7ec; border-radius: 14px; background: #fff; cursor: pointer; text-align: left; transition: border-color 0.15s, background 0.15s; }
+.method-card:hover { border-color: #513B3C; background: #fdf8f8; }
+.method-card.selected { border-color: #513B3C; background: #fdf8f8; }
+.method-radio { width: 18px; height: 18px; border-radius: 999px; border: 2px solid #d0d5dd; flex-shrink: 0; transition: border-color 0.15s, background 0.15s; }
+.method-radio.active { border-color: #513B3C; background: #513B3C; box-shadow: inset 0 0 0 3px #fff; }
+.method-info { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.method-info strong { font-size: 14px; font-weight: 600; color: #191c1e; }
+.method-info span { font-size: 12px; color: #667085; }
+.method-icon { font-size: 22px; }
+
 .payway-badge { font-size: 12px; font-weight: 600; color: #16a34a; background: #dcfce7; border-radius: 999px; padding: 4px 12px; }
-.payway-desc { margin: 0; font-size: 14px; color: #667085; line-height: 1.6; }
 .center-panel { align-items: center; text-align: center; padding: 48px 24px; }
 .load-icon { font-size: 40px; color: #003366; }
 .error-icon { font-size: 40px; color: #d92d20; }
 .error-text { margin: 0; color: #d92d20; font-size: 14px; }
 .amount-row { display: flex; justify-content: space-between; align-items: center; background: #f7f9fb; border-radius: 12px; padding: 12px 16px; font-size: 14px; color: #667085; }
 .amount-row strong { font-size: 22px; color: #191c1e; }
-.pay-btn { width: 100%; height: 50px; border: 0; border-radius: 14px; background: #003366; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.pay-btn:hover { background: #004488; }
+.pay-btn { width: 100%; height: 50px; border: 0; border-radius: 14px; background: #513B3C; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.pay-btn:hover { background: #6b4f50; }
 .back-btn { background: transparent; border: 0; color: #513B3C; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
 /* QR panel */
 .qr-panel { align-items: center; }

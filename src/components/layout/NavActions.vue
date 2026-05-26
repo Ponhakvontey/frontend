@@ -29,8 +29,8 @@ withDefaults(
   },
 )
 
-// If the user is logged in, go to their order history; otherwise go to login
-const accountRoute = computed(() => isLoggedIn() ? '/order-history' : '/login')
+// If the user is logged in, go to their profile; otherwise go to login
+const accountRoute = computed(() => isLoggedIn() ? '/profile' : '/login')
 </script>
 
 <style scoped>

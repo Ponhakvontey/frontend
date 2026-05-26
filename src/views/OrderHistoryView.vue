@@ -57,6 +57,26 @@
               <span v-if="order.shippingAddress" class="ship-addr">
                 <i class="fa-solid fa-location-dot"></i> {{ order.shippingAddress }}
               </span>
+              <div class="order-actions">
+                <button
+                  v-if="order.status === 'PENDING' || order.status === 'PAID'"
+                  class="action-btn cancel-btn"
+                  :disabled="actionLoading === order.id"
+                  @click="cancelOrder(order)"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                  {{ actionLoading === order.id ? 'Cancelling…' : 'Cancel Order' }}
+                </button>
+                <button
+                  v-if="order.status === 'DELIVERED'"
+                  class="action-btn return-btn"
+                  :disabled="actionLoading === order.id"
+                  @click="requestReturn(order)"
+                >
+                  <i class="fa-solid fa-rotate-left"></i>
+                  {{ actionLoading === order.id ? 'Requesting…' : 'Request Return' }}
+                </button>
+              </div>
             </div>
           </article>
         </div>
@@ -109,10 +129,11 @@ interface Paged<T> { content: T[]; totalElements: number }
 const navLinks     = ref<NavLink[]>([])
 const footerColumns = ref<FooterColumn[]>([])
 const socialLinks  = ref<SocialLink[]>([])
-const orders       = ref<OrderDTO[]>([])
-const loading      = ref(true)
-const error        = ref<string | null>(null)
-const cartItems    = ref<Array<{ id: number; quantity: number }>>([])
+const orders        = ref<OrderDTO[]>([])
+const loading       = ref(true)
+const error         = ref<string | null>(null)
+const actionLoading = ref<number | null>(null)
+const cartItems     = ref<Array<{ id: number; quantity: number }>>([])
 
 const cartCount = computed(() => cartItems.value.reduce((s, i) => s + i.quantity, 0))
 
@@ -123,6 +144,33 @@ function fmtDate(iso: string) {
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(value)
+}
+
+async function cancelOrder(order: OrderDTO) {
+  if (!confirm(`Cancel order #${order.id}? This cannot be undone.`)) return
+  actionLoading.value = order.id
+  try {
+    await api.post(`/api/orders/${order.id}/cancel`, {})
+    order.status = 'CANCELLED'
+  } catch (e: unknown) {
+    alert(e instanceof Error ? e.message : 'Failed to cancel order.')
+  } finally {
+    actionLoading.value = null
+  }
+}
+
+async function requestReturn(order: OrderDTO) {
+  const reason = prompt('Please enter the reason for your return request:')
+  if (!reason?.trim()) return
+  actionLoading.value = order.id
+  try {
+    await api.post(`/api/orders/${order.id}/return`, { reason: reason.trim() })
+    order.status = 'RETURN_REQUESTED'
+  } catch (e: unknown) {
+    alert(e instanceof Error ? e.message : 'Failed to submit return request.')
+  } finally {
+    actionLoading.value = null
+  }
 }
 
 function pillClass(status: string) {
@@ -238,6 +286,29 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 .ship-addr { display: flex; align-items: center; gap: 5px; }
+
+.order-actions { display: flex; gap: 8px; margin-left: auto; }
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid;
+  transition: background 0.15s, opacity 0.15s;
+}
+.action-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.cancel-btn { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+.cancel-btn:hover:not(:disabled) { background: #ffe4e6; }
+
+.return-btn { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+.return-btn:hover:not(:disabled) { background: #dbeafe; }
 
 .empty-state {
   background: #fff;

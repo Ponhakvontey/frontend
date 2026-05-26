@@ -1,17 +1,19 @@
 /**
- * Auth service — calls the real Spring Boot JWT endpoints.
+ * Auth service — calls the Spring Boot JWT endpoints.
+ * The JWT is stored in an httpOnly cookie set by the server;
+ * we only keep non-sensitive user metadata in localStorage.
  *
  * Backend endpoints:
- *   POST /api/auth/login    { username, password }   → JwtResponse
- *   POST /api/auth/register { username, email, password, fullName? }  → { message }
- *   POST /api/auth/logout   (requires Bearer token)  → { message }
+ *   POST /api/auth/login    { username, password }  → JwtResponse (token in cookie)
+ *   POST /api/auth/register { username, email, password, fullName? } → { message }
+ *   POST /api/auth/logout   (cookie sent automatically) → { message }
  */
-import { api, saveTokens, saveUser, clearTokens, type AuthUser } from '@/services/apiClient'
+import { api, saveUser, clearTokens, type AuthUser } from '@/services/apiClient'
 
 // ─── Request / Response shapes (mirror backend DTOs) ────────────────────────
 
 export interface LoginPayload {
-  username: string   // backend LoginRequest uses "username" (can be email or username)
+  username: string
   password: string
 }
 
@@ -24,12 +26,13 @@ export interface RegisterPayload {
 }
 
 interface JwtResponse {
-  token: string
+  token: string | null  // null — token is in the httpOnly cookie
   type: string
   id: number
   username: string
   email: string
   roles: string[]
+  expiresAt: number     // epoch ms — when the cookie expires
 }
 
 // ─── Auth API calls ─────────────────────────────────────────────────────────
@@ -37,13 +40,13 @@ interface JwtResponse {
 export async function login(payload: LoginPayload): Promise<JwtResponse> {
   const data = await api.post<JwtResponse>('/api/auth/login', payload)
 
-  // No refresh token in current backend — store access token only
-  saveTokens(data.token, '')
+  // Server sets the httpOnly access_token cookie; we store only UI metadata
   saveUser({
     id: data.id,
     username: data.username,
     email: data.email,
     roles: data.roles,
+    expiresAt: data.expiresAt,
   })
 
   return data
@@ -57,7 +60,7 @@ export async function logout(): Promise<void> {
   try {
     await api.post('/api/auth/logout', {})
   } finally {
-    clearTokens()
+    clearTokens() // clears localStorage; server clears the cookie via Set-Cookie
   }
 }
 
