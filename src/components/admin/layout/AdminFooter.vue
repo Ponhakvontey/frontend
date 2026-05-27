@@ -23,7 +23,7 @@ const year = new Date().getFullYear()
   justify-content: space-between;
   align-items: center;
   padding: 16px 28px;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 12px;
   flex-shrink: 0;
 }

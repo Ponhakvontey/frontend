@@ -34,7 +34,7 @@ const greeting = computed(() => {
   align-items: center;
   gap: 20px;
   margin-bottom: 24px;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .hero-eyebrow {
@@ -60,14 +60,14 @@ h1 {
   height: 40px;
   padding: 0 20px;
   border-radius: 10px;
-  background: #513B3C;
+  background: #000000;
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
   transition: opacity 0.15s;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .primary-btn:hover { opacity: 0.85; }

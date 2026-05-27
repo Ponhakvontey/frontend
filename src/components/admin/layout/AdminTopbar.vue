@@ -51,7 +51,7 @@ const pageTitle = computed(() => titleMap[route.path] ?? 'Admin')
   justify-content: space-between;
   padding: 0 28px;
   flex-shrink: 0;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .page-title {
@@ -99,7 +99,7 @@ const pageTitle = computed(() => titleMap[route.path] ?? 'Admin')
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #513B3C;
+  background: #000000;
   color: #fff;
   display: grid;
   place-items: center;

@@ -226,7 +226,7 @@ function exportCsv() {
 <style scoped>
 .admin-page { min-height: 100vh; display: grid; grid-template-columns: 230px minmax(0,1fr); background: #f8fafc; }
 .main-shell { display: flex; flex-direction: column; min-height: 100vh; }
-.page-body  { flex: 1; padding: 28px 32px; font-family: 'Inter', Arial, sans-serif; }
+.page-body  { flex: 1; padding: 28px 32px; font-family: Helvetica, Arial, sans-serif; }
 
 /* Header */
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 16px; }
@@ -237,8 +237,8 @@ h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; color: #0f172a; letter-
 .add-btn {
   display: inline-flex; align-items: center; gap: 7px;
   height: 36px; padding: 0 16px; border-radius: 8px;
-  background: #513B3C; color: #fff; font-size: 13px; font-weight: 600;
-  text-decoration: none; flex-shrink: 0; font-family: 'Inter', Arial, sans-serif;
+  background: #000000; color: #fff; font-size: 13px; font-weight: 600;
+  text-decoration: none; flex-shrink: 0; font-family: Helvetica, Arial, sans-serif;
 }
 .add-btn:hover { background: #3f2d2e; }
 
@@ -249,7 +249,7 @@ h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; color: #0f172a; letter-
   height: 34px; padding: 0 14px; border-radius: 8px;
   background: #fff; border: 1px solid #e2e8f0;
   font-size: 13px; color: #334155;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 .stat-chip i { font-size: 12px; color: #94a3b8; }
 .stat-chip.green { background: #f0fdf4; border-color: #bbf7d0; }
@@ -265,9 +265,9 @@ h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; color: #0f172a; letter-
 .tab-btn {
   height: 30px; border: 0; border-radius: 999px; padding: 0 12px;
   background: transparent; color: #64748b; font-size: 12px; font-weight: 600;
-  cursor: pointer; font-family: 'Inter', Arial, sans-serif;
+  cursor: pointer; font-family: Helvetica, Arial, sans-serif;
 }
-.tab-btn.active { background: #513B3C; color: #fff; }
+.tab-btn.active { background: #000000; color: #fff; }
 
 .right-tools { display: flex; gap: 8px; align-items: center; }
 .search-wrap { position: relative; }
@@ -275,15 +275,15 @@ h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; color: #0f172a; letter-
 .search-input {
   height: 32px; width: 220px; border: 1px solid #e2e8f0; border-radius: 8px;
   padding: 0 12px 0 30px; font-size: 13px; color: #334155; outline: none;
-  font-family: 'Inter', Arial, sans-serif; background: #fff;
+  font-family: Helvetica, Arial, sans-serif; background: #fff;
 }
-.search-input:focus { border-color: #513B3C; }
+.search-input:focus { border-color: #000000; }
 
 .tool-btn {
   height: 32px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0 12px;
   background: #fff; color: #334155; font-size: 12px; font-weight: 600;
   cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 .tool-btn:hover { background: #f8fafc; }
 
@@ -299,11 +299,11 @@ thead th { text-align: left; padding: 13px 16px 10px; }
   border: 0; background: transparent; cursor: pointer; padding: 0;
   font-size: 11px; letter-spacing: .08em; color: #94a3b8; font-weight: 600;
   text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 .ti { font-size: 10px; }
 .sort-neutral { color: #cbd5e1; font-size: 9px; }
-.sort-active  { color: #513B3C; font-size: 9px; }
+.sort-active  { color: #000000; font-size: 9px; }
 
 tbody tr { border-top: 1px solid #f1f5f9; }
 tbody tr:hover { background: #fafbfc; }
@@ -345,7 +345,7 @@ tbody td { padding: 12px 16px; font-size: 13px; color: #334155; vertical-align: 
   display: inline-flex; align-items: center; gap: 5px;
   height: 28px; padding: 0 10px; border: 0; border-radius: 6px;
   background: #f1f5f9; color: #334155; font-size: 11px; font-weight: 600;
-  cursor: pointer; text-decoration: none; font-family: 'Inter', Arial, sans-serif;
+  cursor: pointer; text-decoration: none; font-family: Helvetica, Arial, sans-serif;
 }
 .action-btn:hover { background: #e2e8f0; }
 .action-btn.danger { background: #fff1f2; color: #be123c; }

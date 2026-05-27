@@ -34,7 +34,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { getStoredUsers, setResetEmail } from '@/utils/auth'
 import { validateEmail } from '@/utils/validation'
 
 const router = useRouter()
@@ -48,152 +47,147 @@ function handleReset() {
   const normalizedEmail = email.value.trim().toLowerCase()
 
   emailError.value = validateEmail(normalizedEmail)
-  if (emailError.value) {
-    return
-  }
+  if (emailError.value) return
 
-  const exists = getStoredUsers().some((user) => user.email.toLowerCase() === normalizedEmail)
-  if (!exists) {
-    formMessage.value = 'No account found for this email.'
-    return
-  }
-
-  setResetEmail(normalizedEmail)
+  sessionStorage.setItem('resetEmail', normalizedEmail)
   router.push('/verify-identity')
 }
 </script>
 
 <style scoped>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 .forgot-page {
   min-height: 100vh;
-  background: #f4f6fb;
+  background: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: Inter, Arial, sans-serif;
-  color: #1f2937;
+  font-family: Helvetica, Arial, sans-serif;
+  color: #000;
   padding: 24px;
 }
 
 .forgot-card {
   width: 100%;
   max-width: 420px;
-  background: #ffffff;
-  border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
-  padding: 0 22px 28px;
+  background: #fff;
+  border: 1px solid #AABBAA;
+  border-radius: 4px;
+  box-shadow: rgba(0,0,0,0.05) 0 2px 4px;
+  padding: 0 24px 28px;
   text-align: center;
   position: relative;
+  overflow: hidden;
 }
 
 .top-line {
   height: 3px;
-  background: #513B3C;
-  border-radius: 14px 14px 0 0;
-  margin: 0 -22px 22px;
+  background: #000;
+  margin: 0 -24px 24px;
 }
 
 .icon-wrap {
   width: 44px;
   height: 44px;
-  margin: 0 auto 18px;
-  border-radius: 999px;
-  background: #f0eaeb;
-  color: #513B3C;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  border: 1px solid #AABBAA;
+  color: #000;
   display: grid;
   place-items: center;
-  font-size: 22px;
+  font-size: 20px;
 }
 
 h1 {
   margin: 0 0 10px;
-  font-size: 34px;
+  font-size: 24px;
   font-weight: 700;
+  color: #000;
 }
 
 .subtitle {
   margin: 0 auto 24px;
-  max-width: 280px;
-  color: #6b7280;
+  max-width: 300px;
+  color: #808080;
   line-height: 1.6;
   font-size: 14px;
 }
 
-.forgot-form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
+.forgot-form { display: flex; flex-direction: column; gap: 16px; }
 
-.field {
-  text-align: left;
-}
+.field { text-align: left; }
 
-.field-error {
-  margin: 8px 0 0;
-  color: #d92d20;
-  font-size: 12px;
-}
+.field-error { margin: 6px 0 0; color: #DA292E; font-size: 12px; }
 
 .field label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: #6b7280;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #808080;
+  text-transform: uppercase;
 }
 
 .input-wrap {
   height: 44px;
-  border-radius: 10px;
-  background: #f3f4f6;
+  border: 1px solid #808080;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 0 12px;
+  transition: border-color 0.15s;
 }
+.input-wrap:focus-within { border-color: #1890FF; }
 
-.input-wrap span {
-  color: #6b7280;
-  font-size: 14px;
-}
+.input-wrap span { color: #808080; font-size: 14px; }
 
 .input-wrap input {
-  width: 100%;
-  border: 0;
-  outline: 0;
+  flex: 1;
+  border: none;
+  outline: none;
   background: transparent;
-  color: #111827;
+  color: #000;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 14px;
 }
+.input-wrap input::placeholder { color: #808080; }
 
 .reset-btn {
-  height: 46px;
-  border: 0;
-  border-radius: 10px;
-  background: #513B3C;
+  height: 44px;
+  border: none;
+  border-radius: 4px;
+  background: #000;
   color: #fff;
-  font-weight: 600;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
+  transition: background 0.15s;
 }
+.reset-btn:hover { background: #211E1E; }
 
 .back-link {
   display: inline-block;
   margin-top: 18px;
-  color: #513B3C;
+  color: #1890FF;
   text-decoration: none;
   font-size: 14px;
+  font-weight: 700;
+  transition: opacity 0.15s;
 }
+.back-link:hover { opacity: 0.7; }
 
 .bottom-note {
-  margin-top: 34px;
+  margin-top: 28px;
   font-size: 10px;
-  letter-spacing: 0.16em;
-  color: #9ca3af;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #808080;
   text-align: center;
 }
 </style>

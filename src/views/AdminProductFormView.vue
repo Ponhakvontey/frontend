@@ -179,13 +179,13 @@ async function saveProduct() {
 <style scoped>
 .admin-page { min-height: 100vh; display: grid; grid-template-columns: 230px minmax(0,1fr); background: #f8fafc; }
 .main-shell { display: flex; flex-direction: column; min-height: 100vh; }
-.page-body  { flex: 1; padding: 28px 32px; font-family: 'Inter', Arial, sans-serif; }
+.page-body  { flex: 1; padding: 28px 32px; font-family: Helvetica, Arial, sans-serif; }
 
 /* Header */
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 16px; }
 .back-link {
   display: inline-flex; align-items: center; gap: 7px;
-  color: #513B3C; font-size: 12px; font-weight: 600;
+  color: #000000; font-size: 12px; font-weight: 600;
   text-decoration: none; margin-bottom: 10px;
 }
 .back-link:hover { text-decoration: underline; }
@@ -196,12 +196,12 @@ h1 { margin: 0; font-size: 22px; font-weight: 700; color: #0f172a; letter-spacin
   display: inline-flex; align-items: center; height: 36px; padding: 0 16px;
   border-radius: 8px; background: #fff; border: 1px solid #e2e8f0;
   color: #334155; font-size: 13px; font-weight: 600; text-decoration: none;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 .save-btn {
   display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 18px;
-  border-radius: 8px; background: #513B3C; border: 0; color: #fff;
-  font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', Arial, sans-serif;
+  border-radius: 8px; background: #000000; border: 0; color: #fff;
+  font-size: 13px; font-weight: 600; cursor: pointer; font-family: Helvetica, Arial, sans-serif;
 }
 .save-btn:hover:not(:disabled) { background: #3f2d2e; }
 .save-btn:disabled { opacity: .6; cursor: default; }
@@ -243,10 +243,10 @@ h1 { margin: 0; font-size: 22px; font-weight: 700; color: #0f172a; letter-spacin
 input, select, textarea {
   width: 100%; border: 1px solid #e2e8f0; border-radius: 8px;
   padding: 0 12px; background: #f8fafc; color: #0f172a;
-  font-family: 'Inter', Arial, sans-serif; font-size: 13px; outline: none;
+  font-family: Helvetica, Arial, sans-serif; font-size: 13px; outline: none;
 }
 input, select { height: 38px; }
-input:focus, select:focus, textarea:focus { border-color: #513B3C; background: #fff; }
+input:focus, select:focus, textarea:focus { border-color: #000000; background: #fff; }
 textarea { resize: vertical; padding: 10px 12px; }
 
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }

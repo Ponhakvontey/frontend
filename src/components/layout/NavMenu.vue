@@ -16,51 +16,33 @@
 import { RouterLink, useRoute } from 'vue-router'
 import type { NavLink } from '@/types/home'
 
-defineProps<{
-  navLinks: NavLink[]
-}>()
+defineProps<{ navLinks: NavLink[] }>()
 
 const route = useRoute()
 
 function getLinkPath(slug: string) {
-  if (slug === 'home') return '/'
-  return `/${slug}`
+  return slug === 'home' ? '/' : `/${slug}`
 }
 
 function isActive(slug: string) {
-  if (slug === 'home') return route.path === '/'
-  return route.path === `/${slug}`
+  return slug === 'home' ? route.path === '/' : route.path === `/${slug}`
 }
 </script>
 
 <style scoped>
-.menu {
-  display: flex;
-  gap: 32px;
-}
+.menu { display: flex; gap: 28px; }
 
 .menu-link {
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 15px;
-  line-height: 24px;
-  border-bottom: 2px solid transparent;
-  padding-bottom: 2px;
-  transition: color 0.18s;
+  color: #211E1E;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 25px;
+  transition: color 0.15s;
 }
+.menu-link:hover { color: #1890FF; }
+.menu-link.active { color: #000; font-weight: 700; }
 
-.menu-link:hover {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.menu-link.active {
-  color: #fff;
-  border-bottom-color: var(--clr-plum);
-}
-
-@media (max-width: 760px) {
-  .menu {
-    display: none;
-  }
-}
+@media (max-width: 760px) { .menu { display: none; } }
 </style>

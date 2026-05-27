@@ -39,7 +39,7 @@
   margin: 10px 0 18px;
   font-size: 56px;
   line-height: 1;
-  color: #513B3C;
+  color: #000000;
   font-weight: 500;
 }
 
@@ -90,7 +90,7 @@
 .progress-fill {
   width: 75%;
   height: 100%;
-  background: #513B3C;
+  background: #000000;
 }
 
 .revenue-footer {
@@ -129,7 +129,7 @@
 .text-link {
   border: 0;
   background: transparent;
-  color: #513B3C;
+  color: #000000;
   cursor: pointer;
   font-size: 12px;
 }

@@ -21,12 +21,8 @@
 
           <!-- Breadcrumb -->
           <nav class="breadcrumb">
-            <RouterLink to="/" class="bc-link">Home</RouterLink>
+            <RouterLink to="/sell" class="bc-link">Product Listing</RouterLink>
             <i class="fa-solid fa-chevron-right bc-sep"></i>
-            <RouterLink to="/sell" class="bc-link">Shop</RouterLink>
-            <i class="fa-solid fa-chevron-right bc-sep"></i>
-            <span v-if="product.categoryName" class="bc-link bc-cat">{{ product.categoryName }}</span>
-            <i v-if="product.categoryName" class="fa-solid fa-chevron-right bc-sep"></i>
             <span class="bc-current">{{ product.name }}</span>
           </nav>
 
@@ -48,12 +44,7 @@
 
             <!-- Main image -->
             <div class="main-img-wrap">
-              <img
-                v-if="activeImg"
-                :src="activeImg"
-                :alt="product.name"
-                class="main-img"
-              />
+              <img v-if="activeImg" :src="activeImg" :alt="product.name" class="main-img" />
               <div v-else class="main-img-placeholder">
                 <i class="fa-solid fa-image"></i>
               </div>
@@ -62,21 +53,22 @@
             <!-- Product panel -->
             <div class="panel">
 
-              <h1 class="product-name">{{ product.name.toUpperCase() }}</h1>
+              <!-- Name + wishlist heart -->
+              <div class="name-row">
+                <h1 class="product-name">{{ product.name }}</h1>
+                <button type="button" class="heart-btn" :class="{ active: isFavorite }" @click="toggleFavorite" :title="isFavorite ? 'Remove from wishlist' : 'Add to wishlist'">
+                  <i :class="isFavorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
+                </button>
+              </div>
 
-              <!-- Rating -->
-              <div class="rating-row">
+              <!-- Price | Stars (reviews) -->
+              <div class="price-rating-row">
+                <span class="price">${{ Number(product.price).toFixed(2) }}</span>
+                <span class="pr-sep">|</span>
                 <div class="stars">
                   <i v-for="n in 5" :key="n" :class="starClass(product.averageRating ?? 0, n)"></i>
                 </div>
-                <span class="rating-val">{{ product.averageRating ? product.averageRating.toFixed(1) : '0.0' }}/5</span>
-                <span class="review-count">({{ product.reviewCount ?? 0 }} Reviews)</span>
-              </div>
-
-              <!-- Price -->
-              <div class="price-row">
-                <span class="price">${{ Number(product.price).toFixed(2) }}</span>
-                <span v-if="product.stockQuantity === 0" class="out-of-stock">Out of stock</span>
+                <span class="review-count">( {{ product.reviewCount ?? 0 }} review )</span>
               </div>
 
               <hr class="divider" />
@@ -84,17 +76,16 @@
               <!-- Description -->
               <p v-if="product.description" class="description">{{ product.description }}</p>
 
-              <hr class="divider" />
-
               <!-- Seller -->
               <div v-if="product.sellerName" class="meta-row">
-                <span class="meta-label"><i class="fa-solid fa-store"></i> Sold by</span>
+                <span class="meta-label">Sold by</span>
                 <span class="meta-val">{{ product.sellerName }}</span>
               </div>
 
-              <hr class="divider" />
+              <!-- Out of stock badge -->
+              <p v-if="product.stockQuantity === 0" class="out-of-stock">Out of stock</p>
 
-              <!-- Quantity + Add to Cart -->
+              <!-- Qty + Add to Cart -->
               <div class="action-row">
                 <div class="qty-ctrl">
                   <button type="button" class="qty-btn" @click="qty > 1 && qty--">
@@ -116,11 +107,16 @@
                 </button>
               </div>
 
-              <p v-if="cartMsg" class="cart-msg" :class="cartMsgType">{{ cartMsg }}</p>
-
-              <button type="button" class="wishlist-btn" @click="toggleFavorite">
-                {{ isFavorite ? 'Saved to Wishlist' : 'Wishlist This Piece' }}
+              <button
+                type="button"
+                class="buy-btn"
+                :disabled="product.stockQuantity === 0"
+                @click="buyNow"
+              >
+                Buy Now
               </button>
+
+              <p v-if="cartMsg" class="cart-msg" :class="cartMsgType">{{ cartMsg }}</p>
 
             </div>
           </section>
@@ -194,19 +190,19 @@ const navLinks      = ref<NavLink[]>([])
 const footerColumns = ref<FooterColumn[]>([])
 const socialLinks   = ref<SocialLink[]>([])
 
-const product  = ref<ProductDTO | null>(null)
-const related  = ref<ProductDTO[]>([])
-const loading  = ref(true)
-const error    = ref('')
+const product   = ref<ProductDTO | null>(null)
+const related   = ref<ProductDTO[]>([])
+const loading   = ref(true)
+const error     = ref('')
 const activeImg = ref('')
 
-const qty        = ref(1)
-const cartMsg    = ref('')
+const qty         = ref(1)
+const cartMsg     = ref('')
 const cartMsgType = ref<'ok' | 'err'>('ok')
-const isFavorite = ref(false)
+const isFavorite  = ref(false)
 
-const cartItems  = computed(() => loadCartItems())
-const cartCount  = computed(() => cartItems.value.reduce((s, i) => s + i.quantity, 0))
+const cartItems = computed(() => loadCartItems())
+const cartCount = computed(() => cartItems.value.reduce((s, i) => s + i.quantity, 0))
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 
@@ -227,9 +223,7 @@ async function loadProduct(id: string) {
     activeImg.value = dto.imageUrl ?? ''
     isFavorite.value = isWishlisted(dto.id)
 
-    // Load related products (same category, or just recent products)
-    const relUrl = `${API}/api/products/${id}/related`
-    const relRes = await fetch(relUrl)
+    const relRes = await fetch(`${API}/api/products/${id}/related`)
     if (relRes.ok) {
       const relData: ProductDTO[] = await relRes.json()
       related.value = relData.slice(0, 4)
@@ -241,38 +235,28 @@ async function loadProduct(id: string) {
   }
 }
 
-// reload when navigating between products (e.g. related products)
 watch(() => route.params.id, (id) => { if (id) loadProduct(String(id)) })
 
-// ── Cart ──────────────────────────────────────────────────────────────────────
+// ── Actions ───────────────────────────────────────────────────────────────────
 
 function toggleFavorite() {
   if (!product.value) return
-  if (!isLoggedIn()) {
-    router.push(`/login?redirect=/product/${product.value.id}`)
-    return
-  }
-
+  if (!isLoggedIn()) { router.push(`/login?redirect=/product/${product.value.id}`); return }
   toggleWishlist(product.value.id)
   isFavorite.value = isWishlisted(product.value.id)
 }
 
 function addToCart() {
   if (!product.value) return
-  if (!isLoggedIn()) {
-    router.push(`/login?redirect=/product/${product.value.id}`)
-    return
-  }
+  if (!isLoggedIn()) { router.push(`/login?redirect=/product/${product.value.id}`); return }
   if (product.value.stockQuantity === 0) {
     cartMsg.value = 'This product is out of stock.'
     cartMsgType.value = 'err'
     return
   }
-
   const items = loadCartItems()
   const lineId = toLineId(product.value.id, 'Default')
   const existing = items.find(i => i.lineId === lineId)
-
   if (existing) {
     existing.quantity += qty.value
   } else {
@@ -287,11 +271,15 @@ function addToCart() {
       image: product.value.imageUrl ?? '',
     })
   }
-
   saveCartItems(items)
   cartMsg.value = `Added ${qty.value} × "${product.value.name}" to cart!`
   cartMsgType.value = 'ok'
   setTimeout(() => { cartMsg.value = '' }, 3000)
+}
+
+function buyNow() {
+  addToCart()
+  if (cartMsgType.value !== 'err') router.push('/cart')
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -314,196 +302,257 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+* { box-sizing: border-box; }
+
 .detail-page {
   min-height: 100vh;
   background: #fff;
-  font-family: Inter, Arial, sans-serif;
-  color: #111;
+  font-family: Helvetica, Arial, sans-serif;
+  color: #000;
 }
 
-.detail-main { padding: 32px 0 80px; }
+.detail-main { padding: 32px 0 72px; }
 
 .container {
-  width: min(1280px, 100%);
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 32px;
 }
 
-/* State messages */
+/* ── State ── */
 .state-msg {
-  min-height: 60vh; display: flex; align-items: center;
-  justify-content: center; gap: 10px; font-size: 16px; color: #999;
+  min-height: 60vh;
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; font-size: 14px; color: #808080;
 }
-.state-msg.err { color: #e85c6e; }
+.state-msg.err { color: #DA292E; }
 
-/* Breadcrumb */
+/* ── Breadcrumb ── */
 .breadcrumb {
   display: flex; align-items: center; gap: 8px;
-  font-size: 13px; color: #999; margin-bottom: 32px; flex-wrap: wrap;
+  font-size: 13px; color: #808080; margin-bottom: 28px; flex-wrap: wrap;
 }
-.bc-link { color: #999; text-decoration: none; }
-.bc-link:hover { color: #111; }
-.bc-cat { color: #999; }
-.bc-sep { font-size: 9px; color: #ccc; }
-.bc-current { color: #111; font-weight: 600; }
+.bc-link { color: #808080; text-decoration: none; }
+.bc-link:hover { color: #000; }
+.bc-sep { font-size: 9px; color: #AABBAA; }
+.bc-current { color: #000; font-weight: 600; }
 
-/* Hero */
+/* ── Hero grid ── */
 .hero {
   display: grid;
-  grid-template-columns: 80px minmax(0, 560px) minmax(320px, 1fr);
+  grid-template-columns: 88px 1fr 440px;
   gap: 20px;
   align-items: start;
-  margin-bottom: 80px;
+  margin-bottom: 64px;
 }
 
-/* Thumbnails */
+/* ── Thumbnails ── */
 .thumbs { display: flex; flex-direction: column; gap: 12px; }
 
 .thumb {
-  width: 72px; height: 72px; border-radius: 12px;
-  border: 2px solid #e8e8e8; overflow: hidden;
-  background: #f3f3f3; cursor: pointer; padding: 0;
+  width: 80px; height: 80px; border-radius: 8px;
+  border: 1.5px solid #AABBAA; overflow: hidden;
+  background: #f5f5f5; cursor: pointer; padding: 0;
   transition: border-color 0.15s;
 }
-.thumb.active { border-color: #111; }
+.thumb.active { border-color: #000; border-width: 2px; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb-placeholder {
   width: 100%; height: 100%; display: grid; place-items: center;
-  color: #ccc; font-size: 18px;
+  color: #AABBAA; font-size: 18px;
 }
 
-/* Main image */
+/* ── Main image ── */
 .main-img-wrap {
-  background: #f3f3f3; border-radius: 20px; overflow: hidden; aspect-ratio: 1;
+  border-radius: 12px; overflow: hidden;
+  background: #f0f0f0;
+  aspect-ratio: 3 / 4;
 }
 .main-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .main-img-placeholder {
   width: 100%; height: 100%; display: grid; place-items: center;
-  color: #ccc; font-size: 48px; aspect-ratio: 1;
+  color: #AABBAA; font-size: 56px;
 }
 
-/* Product panel */
-.panel { padding-top: 4px; }
+/* ── Product panel ── */
+.panel { padding-top: 8px; }
+
+.name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
 
 .product-name {
-  margin: 0 0 14px;
-  font-size: 32px;
-  font-weight: 800;
-  color: #111;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #000;
+  line-height: 1.25;
+  flex: 1;
 }
 
-/* Rating */
-.rating-row {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+.heart-btn {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  border: 1.5px solid #AABBAA;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  display: grid; place-items: center;
+  color: #AABBAA;
+  font-size: 16px;
+  transition: border-color 0.15s, color 0.15s;
 }
-.stars { display: flex; gap: 2px; }
-.stars i { font-size: 16px; color: #f5a623; }
-.rating-val { font-size: 14px; font-weight: 700; color: #111; }
-.review-count { font-size: 13px; color: #999; }
+.heart-btn:hover { border-color: #DA292E; color: #DA292E; }
+.heart-btn.active { border-color: #DA292E; color: #DA292E; }
 
-/* Price */
-.price-row {
-  display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+/* ── Price + rating ── */
+.price-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
-.price { font-size: 28px; font-weight: 700; color: #111; }
+
+.price {
+  font-size: 26px;
+  font-weight: 700;
+  color: #000;
+}
+
+.pr-sep {
+  font-size: 18px;
+  color: #AABBAA;
+  font-weight: 300;
+}
+
+.stars { display: flex; gap: 3px; }
+.stars i { font-size: 13px; color: #b0b0b0; }
+
+.review-count { font-size: 13px; color: #808080; }
+
+/* ── Divider ── */
+.divider { border: none; border-top: 1px solid #AABBAA; margin: 16px 0; }
+
+/* ── Description ── */
+.description {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: #434655;
+}
+
+/* ── Meta row (seller) ── */
+.meta-row {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; margin-bottom: 16px;
+}
+.meta-label { color: #808080; }
+.meta-val { font-weight: 700; color: #000; }
+
+/* ── Out of stock ── */
 .out-of-stock {
-  font-size: 12px; font-weight: 600; color: #e85c6e;
-  background: rgba(232,92,110,.1); border-radius: 4px; padding: 3px 10px;
+  font-size: 12px; font-weight: 700; color: #DA292E;
+  margin: 0 0 16px;
 }
 
-/* Divider */
-.divider { border: none; border-top: 1px solid #f0f0f0; margin: 16px 0; }
-
-/* Description */
-.description { margin: 0 0 4px; font-size: 14px; line-height: 1.7; color: #555; }
-
-/* Meta row */
-.meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
-.meta-label { color: #999; display: flex; align-items: center; gap: 6px; }
-.meta-val { font-weight: 600; color: #111; }
-
-/* Action row */
+/* ── Action row ── */
 .action-row {
   display: grid;
-  grid-template-columns: 130px 1fr;
+  grid-template-columns: 120px 1fr;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 8px;
+  margin-bottom: 12px;
 }
 
 .qty-ctrl {
-  height: 52px; border-radius: 62px; background: #f5f5f5;
-  display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
+  height: 50px;
+  border-radius: 50px;
+  border: 1.5px solid #AABBAA;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
 }
 .qty-btn {
-  border: 0; background: transparent; cursor: pointer;
-  font-size: 13px; color: #111; width: 28px; height: 28px;
+  border: none; background: transparent; cursor: pointer;
+  font-size: 13px; color: #000; width: 22px; height: 22px;
   display: grid; place-items: center;
+  transition: color 0.15s;
 }
-.qty-val { font-size: 15px; font-weight: 600; color: #111; min-width: 24px; text-align: center; }
+.qty-btn:hover { color: #555; }
+.qty-val { font-size: 15px; font-weight: 600; color: #000; min-width: 20px; text-align: center; }
 
 .add-btn {
-  height: 52px; border: 0; border-radius: 62px;
-  background: #111; color: #fff; font-size: 15px; font-weight: 600;
-  cursor: pointer; font-family: inherit; transition: background .18s;
+  height: 50px;
+  border: none;
+  border-radius: 50px;
+  background: #000;
+  color: #fff;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
 }
-.add-btn:hover:not(:disabled) { background: #333; }
-.add-btn:disabled { background: #ccc; cursor: default; }
+.add-btn:hover:not(:disabled) { background: #222; }
+.add-btn:disabled { background: #AABBAA; cursor: default; }
 
-.cart-msg {
-  margin: 10px 0 0; font-size: 13px; font-weight: 500;
+.buy-btn {
+  width: 100%;
+  height: 50px;
+  border: 1.5px solid #000;
+  border-radius: 50px;
+  background: #fff;
+  color: #000;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
 }
+.buy-btn:hover:not(:disabled) { background: #f5f5f5; }
+.buy-btn:disabled { border-color: #AABBAA; color: #AABBAA; cursor: default; }
+
+.cart-msg { margin: 10px 0 0; font-size: 13px; font-weight: 600; }
 .cart-msg.ok { color: #16a34a; }
-.cart-msg.err { color: #e85c6e; }
+.cart-msg.err { color: #DA292E; }
 
-/* Related */
-.related { border-top: 1px solid #f0f0f0; padding-top: 48px; }
-.related-title {
-  margin: 0 0 24px; font-size: 22px; font-weight: 800; color: #111; letter-spacing: -0.02em;
-}
-.related-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
-}
+/* ── Related ── */
+.related { border-top: 1px solid #AABBAA; padding-top: 48px; }
+.related-title { margin: 0 0 24px; font-size: 20px; font-weight: 700; color: #000; }
+.related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .related-card { text-decoration: none; color: inherit; display: block; }
 .related-img-wrap {
-  aspect-ratio: 3/4; border-radius: 16px; overflow: hidden;
-  background: #f3f3f3; margin-bottom: 10px;
+  aspect-ratio: 3/4; border-radius: 8px; overflow: hidden;
+  background: #f5f5f5; margin-bottom: 10px;
 }
 .related-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
 .related-card:hover .related-img-wrap img { transform: scale(1.04); }
 .related-placeholder {
-  width: 100%; height: 100%; display: grid; place-items: center; color: #ccc; font-size: 28px;
+  width: 100%; height: 100%; display: grid; place-items: center; color: #AABBAA; font-size: 28px;
 }
-.related-name {
-  margin: 0 0 4px; font-size: 14px; font-weight: 600; color: #111;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.related-price { margin: 0; font-size: 14px; font-weight: 700; color: #111; }
+.related-name { margin: 0 0 4px; font-size: 13px; font-weight: 700; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.related-price { margin: 0; font-size: 14px; font-weight: 700; color: #DA292E; }
 
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 1024px) {
-  .hero { grid-template-columns: 72px 1fr; }
+  .hero { grid-template-columns: 80px 1fr; }
   .panel { grid-column: 1 / -1; }
   .related-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 640px) {
+  .container { padding: 0 16px; }
   .hero { grid-template-columns: 1fr; }
   .thumbs { flex-direction: row; }
-  .product-name { font-size: 24px; }
+  .product-name { font-size: 22px; }
   .action-row { grid-template-columns: 1fr; }
   .related-grid { grid-template-columns: repeat(2, 1fr); }
-}
-.wishlist-btn {
-  width: 100%;
-  height: 48px;
-  margin-top: 14px;
-  border: 1px solid #d9dfeb;
-  border-radius: 14px;
-  background: transparent;
-  color: #111827;
-  font-weight: 700;
-  cursor: pointer;
 }
 </style>

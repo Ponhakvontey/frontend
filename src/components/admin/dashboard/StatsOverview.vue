@@ -52,7 +52,7 @@ const props = defineProps<{
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 28px;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .stat-card {

@@ -73,7 +73,7 @@ async function handleLogout() {
   min-height: 100vh;
   position: sticky;
   top: 0;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .sidebar-brand {
@@ -89,7 +89,7 @@ async function handleLogout() {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #513B3C;
+  background: #000000;
   flex-shrink: 0;
 }
 
@@ -169,7 +169,7 @@ async function handleLogout() {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #513B3C;
+  background: #000000;
   color: #fff;
   display: grid;
   place-items: center;
@@ -211,7 +211,7 @@ async function handleLogout() {
   cursor: pointer;
   padding: 0 12px;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .logout-btn:hover {

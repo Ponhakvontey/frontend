@@ -92,21 +92,22 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.success-page { min-height: 100vh; background: #f7f9fb; font-family: Inter, Arial, sans-serif; }
-.container { width: min(680px, 100%); margin: 0 auto; padding: 0 20px; }
-.success-main { padding: 80px 0; }
-.state-box { background: #fff; border: 1px solid #eef2f6; border-radius: 24px; padding: 48px 32px; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
-.state-box h2 { margin: 0; font-size: 28px; font-weight: 600; color: #191c1e; }
-.state-box p { margin: 0; font-size: 15px; color: #667085; max-width: 340px; line-height: 1.6; }
-.state-icon { font-size: 44px; }
-.spinner-icon { color: #513B3C; }
-.success-circle { width: 72px; height: 72px; border-radius: 999px; background: #dcfce7; display: grid; place-items: center; }
-.success-icon { font-size: 34px; color: #16a34a; }
-.fail-circle { width: 72px; height: 72px; border-radius: 999px; background: #fee2e2; display: grid; place-items: center; }
-.fail-icon { font-size: 34px; color: #d92d20; }
-.actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
-.primary-btn { padding: 12px 28px; border-radius: 12px; background: #513B3C; color: #fff; font-weight: 700; font-size: 14px; text-decoration: none; }
-.primary-btn:hover { background: #6b4f50; }
-.secondary-btn { padding: 12px 28px; border-radius: 12px; background: #f4f6f9; color: #344054; font-weight: 600; font-size: 14px; text-decoration: none; }
-.secondary-btn:hover { background: #e8ecf4; }
+* { box-sizing: border-box; }
+.success-page { min-height: 100vh; background: #fff; color: #000; font-family: Helvetica, Arial, sans-serif; }
+.container { max-width: 640px; margin: 0 auto; padding: 0 20px; }
+.success-main { padding: 70px 0 80px; }
+.state-box { background: #fff; border: 1px solid #AABBAA; border-radius: 4px; padding: 48px 32px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; box-shadow: rgba(0,0,0,0.05) 0 2px 4px; }
+.state-box h2 { margin: 0; font-size: 24px; font-weight: 700; color: #000; }
+.state-box p { margin: 0; font-size: 14px; color: #808080; max-width: 340px; line-height: 1.6; }
+.state-icon { font-size: 40px; }
+.spinner-icon { color: #808080; }
+.success-circle { width: 68px; height: 68px; border-radius: 50%; background: #f0fdf4; border: 1px solid #AABBAA; display: grid; place-items: center; }
+.success-icon { font-size: 30px; color: #16a34a; }
+.fail-circle { width: 68px; height: 68px; border-radius: 50%; background: #fff1f2; border: 1px solid #AABBAA; display: grid; place-items: center; }
+.fail-icon { font-size: 30px; color: #DA292E; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+.primary-btn { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 24px; border-radius: 4px; background: #000; color: #fff; font-family: Helvetica, Arial, sans-serif; font-weight: 700; font-size: 14px; text-decoration: none; transition: background 0.15s; }
+.primary-btn:hover { background: #211E1E; }
+.secondary-btn { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 24px; border-radius: 4px; background: #fff; color: #000; font-family: Helvetica, Arial, sans-serif; font-weight: 700; font-size: 14px; text-decoration: none; border: 1px solid #000; transition: background 0.15s; }
+.secondary-btn:hover { background: #AABBAA; }
 </style>

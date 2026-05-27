@@ -44,12 +44,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { getResetEmail } from '@/utils/auth'
 
 const router = useRouter()
-const email = getResetEmail() || 'your@email.com'
+const email = sessionStorage.getItem('resetEmail') || 'your@email.com'
 
-if (!getResetEmail()) {
+if (!sessionStorage.getItem('resetEmail')) {
   router.replace('/forgot-password')
 }
 
@@ -88,39 +87,39 @@ function handleVerify() {
 </script>
 
 <style scoped>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 .verify-page {
   min-height: 100vh;
-  background: #f3f5fb;
+  background: #fff;
   padding: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 30px;
-  font-family: Inter, Arial, sans-serif;
+  gap: 24px;
+  font-family: Helvetica, Arial, sans-serif;
+  color: #000;
 }
 
 .verify-card {
   width: 100%;
   max-width: 420px;
-  background: #ffffff;
-  border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
-  padding: 28px 26px 32px;
+  background: #fff;
+  border: 1px solid #AABBAA;
+  border-radius: 4px;
+  box-shadow: rgba(0,0,0,0.05) 0 2px 4px;
+  padding: 28px 24px 32px;
   text-align: center;
 }
 
 .icon-wrap {
-  width: 42px;
-  height: 42px;
-  margin: 0 auto 18px;
-  border-radius: 999px;
-  background: #f0eaeb;
-  color: #513B3C;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  border: 1px solid #AABBAA;
   display: grid;
   place-items: center;
   font-size: 20px;
@@ -128,104 +127,89 @@ function handleVerify() {
 
 h1 {
   margin: 0 0 10px;
-  font-size: 34px;
-  line-height: 1.1;
-  color: #1f2937;
-  font-weight: 800;
+  font-size: 24px;
+  font-weight: 700;
+  color: #000;
 }
 
 .subtitle {
   margin: 0 auto 24px;
   max-width: 300px;
-  color: #6b7280;
+  color: #808080;
   line-height: 1.6;
   font-size: 14px;
 }
 
-.verify-form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
+.verify-form { display: flex; flex-direction: column; gap: 16px; }
 
-.code-row {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
+.code-row { display: flex; justify-content: center; gap: 8px; }
 
-.field-error {
-  margin: 0;
-  color: #d92d20;
-  font-size: 12px;
-}
-
-.success-message {
-  margin: 0;
-  color: #0f766e;
-  font-size: 12px;
-}
+.field-error { margin: 0; color: #DA292E; font-size: 12px; }
+.success-message { margin: 0; color: #16a34a; font-size: 12px; }
 
 .code-input {
   width: 44px;
   height: 44px;
-  border: 0;
-  border-radius: 10px;
-  background: #f3f4f6;
+  border: 1px solid #808080;
+  border-radius: 4px;
+  background: #fff;
   text-align: center;
   font-size: 18px;
   font-weight: 700;
-  color: #111827;
+  color: #000;
+  font-family: Helvetica, Arial, sans-serif;
   outline: none;
+  transition: border-color 0.15s;
 }
+.code-input:focus { border-color: #1890FF; }
 
 .verify-btn {
-  height: 46px;
-  border: 0;
-  border-radius: 10px;
-  background: #513B3C;
-  color: #ffffff;
+  height: 44px;
+  border: none;
+  border-radius: 4px;
+  background: #000;
+  color: #fff;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.15s;
 }
+.verify-btn:hover { background: #211E1E; }
 
-.resend-box {
-  margin-top: 18px;
-}
-
-.resend-box p {
-  margin: 0 0 8px;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: #9ca3af;
-}
+.resend-box { margin-top: 16px; }
+.resend-box p { margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: #808080; text-transform: uppercase; }
 
 .resend-btn {
-  border: 0;
+  border: none;
   background: transparent;
-  color: #513B3C;
-  font-weight: 600;
+  color: #1890FF;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
+  transition: opacity 0.15s;
 }
-
-.resend-btn span {
-  color: #6b7280;
-  font-weight: 500;
-}
+.resend-btn:hover { opacity: 0.7; }
+.resend-btn span { color: #808080; font-weight: 500; }
 
 .back-link {
   display: inline-block;
-  margin-top: 22px;
-  color: #6b7280;
+  margin-top: 20px;
+  color: #1890FF;
   text-decoration: none;
   font-size: 14px;
+  font-weight: 700;
+  transition: opacity 0.15s;
 }
+.back-link:hover { opacity: 0.7; }
 
 .footer-text {
   margin: 0;
   text-align: center;
-  font-size: 9px;
-  letter-spacing: 0.16em;
-  color: #97a0ac;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #808080;
 }
 </style>

@@ -39,7 +39,7 @@
 
         <!-- No tran_id — direct navigation -->
         <div v-else class="state-box">
-          <i class="fa-regular fa-circle-question state-icon" style="color: #98a2b3;"></i>
+          <i class="fa-regular fa-circle-question state-icon" style="color: #808080;"></i>
           <h2>Nothing to show here</h2>
           <p>This page is shown after a PayWay payment. Start shopping to place an order.</p>
           <RouterLink to="/sell" class="primary-btn" style="margin-top: 8px;">Browse Products</RouterLink>
@@ -122,97 +122,69 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+* { box-sizing: border-box; }
+
 .success-page {
   min-height: 100vh;
-  background: #f7f9fb;
-  font-family: Inter, Arial, sans-serif;
+  background: #fff;
+  color: #000;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .container {
-  width: min(680px, 100%);
+  max-width: 640px;
   margin: 0 auto;
   padding: 0 20px;
 }
 
-.success-main {
-  padding: 80px 0 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.success-main { padding: 70px 0 80px; }
 
 .state-box {
   background: #fff;
-  border: 1px solid #eef2f6;
-  border-radius: 24px;
+  border: 1px solid #AABBAA;
+  border-radius: 4px;
   padding: 56px 40px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  box-shadow: rgba(0,0,0,0.05) 0 2px 4px;
 }
 
-.state-box h2 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  color: #191c1e;
-}
+.state-box h2 { margin: 0; font-size: 24px; font-weight: 700; color: #000; }
+.state-box p  { margin: 0; font-size: 14px; color: #808080; max-width: 420px; }
 
-.state-box p {
-  margin: 0;
-  font-size: 15px;
-  color: #667085;
-  max-width: 420px;
-}
-
-/* Success */
 .success-circle {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background: #dcfce7;
+  background: #f0fdf4;
+  border: 1px solid #AABBAA;
   display: grid;
   place-items: center;
-  margin-bottom: 8px;
-}
-
-.success-icon {
-  font-size: 36px;
-  color: #16a34a;
-}
-
-/* Fail */
-.fail-circle {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: #fee2e2;
-  display: grid;
-  place-items: center;
-  margin-bottom: 8px;
-}
-
-.fail-icon {
-  font-size: 36px;
-  color: #d92d20;
-}
-
-/* Spinner */
-.state-icon {
-  font-size: 52px;
   margin-bottom: 4px;
 }
+.success-icon { font-size: 32px; color: #16a34a; }
 
-.spinner-icon {
-  color: #003366;
+.fail-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #fff1f2;
+  border: 1px solid #AABBAA;
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
 }
+.fail-icon { font-size: 32px; color: #DA292E; }
 
-/* Actions */
+.state-icon { font-size: 44px; margin-bottom: 4px; }
+.spinner-icon { color: #808080; }
+
 .actions {
   display: flex;
-  gap: 14px;
+  gap: 10px;
   margin-top: 8px;
   flex-wrap: wrap;
   justify-content: center;
@@ -222,27 +194,34 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 48px;
-  padding: 0 28px;
-  border-radius: 14px;
-  background: #513B3C;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 4px;
+  background: #000;
   color: #fff;
+  font-family: Helvetica, Arial, sans-serif;
   font-weight: 700;
   font-size: 14px;
   text-decoration: none;
+  transition: background 0.15s;
 }
+.primary-btn:hover { background: #211E1E; }
 
 .secondary-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 48px;
-  padding: 0 28px;
-  border-radius: 14px;
-  background: #f4f6f9;
-  color: #191c1e;
-  font-weight: 600;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 4px;
+  background: #fff;
+  color: #000;
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight: 700;
   font-size: 14px;
   text-decoration: none;
+  border: 1px solid #000;
+  transition: background 0.15s;
 }
+.secondary-btn:hover { background: #AABBAA; }
 </style>

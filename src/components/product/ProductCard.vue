@@ -2,18 +2,19 @@
   <article class="product-card">
     <RouterLink :to="`/product/${product.id}`" class="product-link">
       <div class="image-wrap">
-        <img :src="product.image" :alt="product.name" />
+        <img :src="product.image" :alt="product.name" loading="lazy" />
         <span v-if="product.badge" class="badge">{{ product.badge }}</span>
       </div>
-
-      <h4>{{ product.name }}</h4>
-      <p class="maker">{{ product.maker }}</p>
-      <p class="price">{{ formattedPrice }}</p>
+      <div class="card-body">
+        <p class="maker">{{ product.maker }}</p>
+        <h4 class="name">{{ product.name }}</h4>
+        <p class="price">{{ formattedPrice }}</p>
+      </div>
     </RouterLink>
 
     <button
       type="button"
-      class="favorite-btn"
+      class="fav-btn"
       :class="{ active: favorite }"
       :aria-label="favorite ? 'Remove from wishlist' : 'Add to wishlist'"
       @click="toggleFavorite"
@@ -30,117 +31,111 @@ import type { Product } from '@/types/home'
 import { isLoggedIn } from '@/services/apiClient'
 import { isWishlisted, toggleWishlist } from '@/services/wishlistService'
 
-const props = defineProps<{
-  product: Product
-}>()
-
+const props = defineProps<{ product: Product }>()
 const router = useRouter()
 const favorite = ref(false)
 
-const formattedPrice = computed(() => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: props.product.currency,
-    minimumFractionDigits: 0,
-  }).format(props.product.price)
-})
+const formattedPrice = computed(() =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: props.product.currency, minimumFractionDigits: 0 })
+    .format(props.product.price)
+)
 
 function toggleFavorite() {
-  if (!isLoggedIn()) {
-    router.push(`/login?redirect=/product/${props.product.id}`)
-    return
-  }
-
+  if (!isLoggedIn()) { router.push(`/login?redirect=/product/${props.product.id}`); return }
   toggleWishlist(props.product.id)
   favorite.value = isWishlisted(props.product.id)
 }
 
-onMounted(() => {
-  favorite.value = isWishlisted(props.product.id)
-})
+onMounted(() => { favorite.value = isWishlisted(props.product.id) })
 </script>
 
 <style scoped>
+* { box-sizing: border-box; }
+
 .product-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  background: #fff;
+  border: 1px solid #AABBAA;
+  border-radius: 4px;
+  box-shadow: rgba(0,0,0,0.05) 0 2px 4px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.product-card:hover {
+  box-shadow: rgba(0,0,0,0.12) 0 3px 6px -4px;
 }
 
-.product-link {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-}
+.product-link { display: block; text-decoration: none; color: inherit; }
 
 .image-wrap {
   position: relative;
-  background: #fff;
-  border-radius: 16px;
+  background: #f5f5f5;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
-  box-shadow: 0 40px 60px -15px rgba(25, 28, 30, 0.04);
 }
-
 .image-wrap img {
   width: 100%;
-  height: 373px;
+  height: 100%;
   object-fit: cover;
   display: block;
 }
 
 .badge {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  background: #2563eb;
-  color: #eeefff;
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 11px;
-  line-height: 16px;
-  letter-spacing: 0.05em;
-}
-
-.favorite-btn {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 38px;
-  height: 38px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #513B3C;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.1);
-}
-
-.favorite-btn.active {
-  background: #513B3C;
+  top: 12px;
+  left: 12px;
+  background: #DA292E;
   color: #fff;
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.product-card h4 {
-  margin: 8px 0 0;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-}
+.card-body { padding: 12px 16px 16px; }
 
 .maker {
-  margin: 0;
+  margin: 0 0 4px;
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 12px;
-  line-height: 16px;
-  color: #434655;
+  color: #808080;
+}
+
+.name {
+  margin: 0 0 6px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+  line-height: 1.3;
 }
 
 .price {
   margin: 0;
-  font-size: 16px;
-  line-height: 24px;
-  color: #004ac6;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #DA292E;
 }
+
+.fav-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 35px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #AABBAA;
+  color: #211E1E;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fav-btn:hover { background: #AABBAA; }
+.fav-btn.active { background: #DA292E; color: #fff; border-color: #DA292E; }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <header class="top-nav" :class="{ hidden: isHeaderHidden }">
-    <div class="container nav-inner">
+    <div class="nav-inner">
       <img :src="uiAssets.logo" alt="Ubuyee" class="brand" />
       <NavMenu :nav-links="navLinks" />
       <NavActions :cart-count="cartCount" />
@@ -15,45 +15,21 @@ import NavActions from '@/components/layout/NavActions.vue'
 import { uiAssets } from '@/data/home'
 import type { NavLink } from '@/types/home'
 
-withDefaults(
-  defineProps<{
-    navLinks: NavLink[]
-    cartCount?: number
-  }>(),
-  {
-    cartCount: 0,
-  },
-)
+withDefaults(defineProps<{ navLinks: NavLink[]; cartCount?: number }>(), { cartCount: 0 })
 
 const isHeaderHidden = ref(false)
 let lastScrollY = 0
 
 function handleScroll() {
-  const currentScrollY = window.scrollY
-
-  if (currentScrollY <= 20) {
-    isHeaderHidden.value = false
-    lastScrollY = currentScrollY
-    return
-  }
-
-  if (currentScrollY > lastScrollY + 8) {
-    isHeaderHidden.value = true
-  } else if (currentScrollY < lastScrollY - 8) {
-    isHeaderHidden.value = false
-  }
-
-  lastScrollY = currentScrollY
+  const y = window.scrollY
+  if (y <= 10) { isHeaderHidden.value = false; lastScrollY = y; return }
+  if (y > lastScrollY + 8) isHeaderHidden.value = true
+  else if (y < lastScrollY - 8) isHeaderHidden.value = false
+  lastScrollY = y
 }
 
-onMounted(() => {
-  lastScrollY = window.scrollY
-  window.addEventListener('scroll', handleScroll, { passive: true })
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('scroll', handleScroll)
-})
+onMounted(() => { lastScrollY = window.scrollY; window.addEventListener('scroll', handleScroll, { passive: true }) })
+onBeforeUnmount(() => window.removeEventListener('scroll', handleScroll))
 </script>
 
 <style scoped>
@@ -63,24 +39,19 @@ onBeforeUnmount(() => {
   left: 0;
   width: 100%;
   z-index: 1000;
-  background: rgba(7, 7, 7, 0.96);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
+  background: #fff;
+  border-bottom: 1px solid #AABBAA;
+  height: 50px;
   transform: translateY(0);
-  transition:
-    transform 0.28s ease,
-    background-color 0.28s ease;
+  transition: transform 0.25s ease;
 }
-
-.top-nav.hidden {
-  transform: translateY(-100%);
-}
+.top-nav.hidden { transform: translateY(-100%); }
 
 .nav-inner {
-  width: min(1440px, 100%);
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 32px;
-  min-height: 60px;
+  padding: 0 20px;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -88,9 +59,8 @@ onBeforeUnmount(() => {
 }
 
 .brand {
-  width: 120px;
-  height: 42px;
+  width: 100px;
+  height: 36px;
   object-fit: contain;
-  filter: brightness(0) invert(1);
 }
 </style>

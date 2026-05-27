@@ -114,7 +114,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { addStoredUser, getStoredUsers } from '@/utils/auth'
+import { register } from '@/services/authService'
 import { validateConfirmPassword, validateEmail, validatePassword, validateRequired } from '@/utils/validation'
 import confirmIcon from '../assets/confirm.png'
 import emailIcon from '../assets/message.png'
@@ -149,7 +149,7 @@ function clearErrors() {
   }
 }
 
-function handleRegister() {
+async function handleRegister() {
   clearErrors()
   const normalizedEmail = email.value.trim().toLowerCase()
 
@@ -161,18 +161,17 @@ function handleRegister() {
 
   if (Object.values(errors.value).some(Boolean)) return
 
-  const users = getStoredUsers()
-  if (users.some((user) => user.email.toLowerCase() === normalizedEmail)) {
-    errors.value.general = 'An account with this email already exists.'
-    return
+  try {
+    await register({
+      username: normalizedEmail,
+      email: normalizedEmail,
+      password: password.value,
+      fullName: fullName.value.trim(),
+    })
+    router.push('/login')
+  } catch (e: unknown) {
+    errors.value.general = e instanceof Error ? e.message : 'Registration failed. Please try again.'
   }
-
-  addStoredUser({
-    fullName: fullName.value.trim(),
-    email: normalizedEmail,
-    password: password.value,
-  })
-  router.push('/login')
 }
 </script>
 
@@ -185,7 +184,7 @@ function handleRegister() {
   min-height: 100vh;
   background: #dfe1e5;
   padding: 24px 16px 20px;
-  font-family: Inter, Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   overflow-x: auto;
   overflow-y: auto;
 }

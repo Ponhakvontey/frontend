@@ -47,7 +47,7 @@ defineProps<{
   font-size: 11px;
   line-height: 16.5px;
   letter-spacing: 0.2em;
-  color: #513B3C;
+  color: #808080;
 }
 .section-head {
   display: flex;
@@ -63,12 +63,15 @@ defineProps<{
 }
 .head-link {
   font-size: 14px;
+  font-weight: 700;
   line-height: 20px;
-  color: #513B3C;
+  color: #1890FF;
   text-decoration: none;
-  border-bottom: 2px solid #dbe1ff;
-  padding-bottom: 6px;
+  border-bottom: 2px solid #1890FF;
+  padding-bottom: 4px;
+  transition: opacity 0.15s;
 }
+.head-link:hover { opacity: 0.7; }
 .category-grid {
   height: 600px;
   display: grid;

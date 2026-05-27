@@ -40,7 +40,7 @@ defineProps<{
   font-size: 11px;
   line-height: 16.5px;
   letter-spacing: 0.2em;
-  color: #513B3C;
+  color: #808080;
 }
 .trending-head {
   text-align: center;

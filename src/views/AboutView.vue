@@ -96,34 +96,35 @@ onMounted(async () => {
 
 .about-page {
   min-height: 100vh;
-  background: #f7f9fb;
-  color: #191c1e;
-  font-family: Inter, Arial, sans-serif;
+  background: #fff;
+  color: #000;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .container {
-  width: min(1440px, 100%);
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
 }
 
-.about-main { padding: 86px 0 0; }
+.about-main { padding: 70px 0 0; }
 
-.intro-section { padding: 50px 0 38px; }
+.intro-section { padding: 40px 0 32px; }
 
 .intro-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
-  gap: 34px;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 20px;
   align-items: stretch;
 }
 
 .eyebrow {
-  margin: 0 0 12px;
-  font-size: 10px;
+  margin: 0 0 8px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  color: #98a2b3;
+  letter-spacing: 0.12em;
+  color: #808080;
+  text-transform: uppercase;
 }
 
 .intro-copy,
@@ -131,20 +132,20 @@ onMounted(async () => {
 .stat-card,
 .value-card {
   background: #fff;
-  border: 1px solid #eef2f6;
-  border-radius: 18px;
+  border: 1px solid #AABBAA;
+  border-radius: 4px;
+  box-shadow: rgba(0,0,0,0.05) 0 2px 4px;
 }
 
-.intro-copy { padding: 34px; }
+.intro-copy { padding: 28px; }
 
 .intro-copy h1,
 .section-head h2,
 .team-head h2 {
   margin: 0;
-  font-size: 56px;
-  line-height: 1.04;
-  font-weight: 400;
-  letter-spacing: -0.03em;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 .intro-copy p:not(.eyebrow),
@@ -153,31 +154,24 @@ onMounted(async () => {
 .value-card p,
 .team-head > p,
 .team-card p {
-  color: #667085;
-  line-height: 1.7;
+  color: #808080;
+  line-height: 1.6;
+  font-size: 14px;
 }
 
-.intro-copy p:not(.eyebrow) {
-  margin: 20px 0 0;
-  max-width: 720px;
-}
+.intro-copy p:not(.eyebrow) { margin: 16px 0 0; }
 
-.project-card { padding: 28px; }
+.project-card { padding: 24px; }
 
 .project-card img {
-  width: 132px;
-  height: 54px;
+  width: 100px;
+  height: 40px;
   object-fit: contain;
   filter: brightness(0);
-  margin-bottom: 26px;
+  margin-bottom: 20px;
 }
 
-.project-card h2 {
-  margin: 0 0 12px;
-  font-size: 28px;
-  font-weight: 500;
-}
-
+.project-card h2 { margin: 0 0 10px; font-size: 20px; font-weight: 700; }
 .project-card p { margin: 0; }
 
 .stats-grid,
@@ -185,59 +179,54 @@ onMounted(async () => {
 .team-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 14px;
 }
 
 .stat-card,
-.value-card { padding: 24px; }
+.value-card { padding: 20px; }
 
 .stat-card strong {
   display: block;
-  margin-bottom: 12px;
-  font-size: 38px;
-  color: #513B3C;
+  margin-bottom: 10px;
+  font-size: 32px;
+  font-weight: 700;
+  color: #DA292E;
 }
 
-.stat-card p,
-.value-card p,
-.team-card p { margin: 0; }
+.stat-card p, .value-card p, .team-card p { margin: 0; }
 
-.values-section { padding-top: 56px; }
+.values-section { padding-top: 40px; }
 
-.section-head {
-  max-width: 860px;
-  margin-bottom: 24px;
-}
+.section-head { max-width: 800px; margin-bottom: 20px; }
 
-.value-card h3 {
-  margin: 0 0 12px;
-  font-size: 22px;
-  font-weight: 500;
-}
+.value-card h3 { margin: 0 0 10px; font-size: 18px; font-weight: 700; }
 
 .team-section {
-  margin-top: 70px;
-  padding: 58px 0 80px;
-  background: #e7e8e3;
+  margin-top: 56px;
+  padding: 48px 0 60px;
+  background: #f5f5f5;
+  border-top: 1px solid #AABBAA;
 }
 
 .team-head {
   display: flex;
   justify-content: space-between;
-  align-items: end;
-  gap: 24px;
-  margin-bottom: 28px;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
-.team-head h2 { font-size: 76px; }
-.team-head > p { max-width: 360px; margin: 0; font-weight: 700; color: #111827; }
+.team-head h2 { font-size: 28px; }
+.team-head > p { max-width: 360px; margin: 0; font-weight: 700; color: #000; }
 
 .team-card { background: transparent; }
 
 .team-image {
   background: #fff;
+  border: 1px solid #AABBAA;
+  border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .team-image img {
@@ -247,20 +236,13 @@ onMounted(async () => {
   display: block;
 }
 
-.team-card h3 {
-  margin: 0 0 6px;
-  font-size: 24px;
-  font-weight: 800;
-}
+.team-card h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; color: #000; }
 
 @media (max-width: 980px) {
   .intro-grid,
   .stats-grid,
   .values-grid,
   .team-grid { grid-template-columns: 1fr; }
-  .intro-copy h1,
-  .section-head h2 { font-size: 40px; }
-  .team-head { align-items: flex-start; flex-direction: column; }
-  .team-head h2 { font-size: 54px; }
+  .team-head { flex-direction: column; align-items: flex-start; }
 }
 </style>

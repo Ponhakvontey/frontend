@@ -85,88 +85,80 @@ function getFooterPath(slug: string): string {
 </script>
 
 <style scoped>
+* { box-sizing: border-box; }
+
 /* ── Shared container ── */
 .footer-container {
-  width: min(1280px, 100%);
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 32px;
+  padding: 0 20px;
 }
 
 /* ══════════════════════════════════════════
    MAIN FOOTER
 ══════════════════════════════════════════ */
 .footer-main {
-  background: #f0f0f0;
-  padding: 56px 0 48px;
+  background: #f5f5f5;
+  border-top: 1px solid #AABBAA;
+  padding: 48px 0 40px;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .footer-main .footer-container {
   display: flex;
-  gap: 48px;
+  gap: 40px;
   flex-wrap: wrap;
   align-items: flex-start;
 }
 
 /* Brand column */
 .footer-brand {
-  flex: 1 1 220px;
-  max-width: 260px;
+  flex: 1 1 200px;
+  max-width: 240px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .brand-name {
   margin: 0;
-  font-size: 28px;
-  font-weight: 900;
-  color: #111;
-  letter-spacing: -0.02em;
+  font-size: 20px;
+  font-weight: 700;
+  color: #000;
+  letter-spacing: 0.08em;
 }
 
 .brand-tagline {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.7;
-  color: #666;
+  color: #808080;
 }
 
-.social-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+.social-row { display: flex; gap: 10px; flex-wrap: wrap; }
 
 .social-btn {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 1px solid #ddd;
+  border: 1px solid #AABBAA;
   background: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #111;
+  color: #000;
   text-decoration: none;
-  transition: background 0.18s, border-color 0.18s, color 0.18s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-
-.social-btn:hover {
-  background: #111;
-  border-color: #111;
-  color: #fff;
-}
-
-.social-btn i {
-  font-size: 14px;
-}
+.social-btn:hover { background: #000; border-color: #000; color: #fff; }
+.social-btn i { font-size: 13px; }
 
 /* Link columns */
 .footer-columns {
   display: flex;
-  gap: 48px;
+  gap: 40px;
   flex-wrap: wrap;
-  flex: 1 1 500px;
+  flex: 1 1 480px;
   justify-content: flex-end;
 }
 
@@ -174,15 +166,16 @@ function getFooterPath(slug: string): string {
   display: flex;
   flex-direction: column;
   gap: 0;
-  min-width: 120px;
+  min-width: 110px;
 }
 
 .col-title {
-  margin: 0 0 20px;
-  font-size: 14px;
+  margin: 0 0 16px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #111;
+  letter-spacing: 0.1em;
+  color: #000;
+  text-transform: uppercase;
 }
 
 .col-links {
@@ -191,99 +184,72 @@ function getFooterPath(slug: string): string {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .footer-link {
   text-decoration: none;
-  font-size: 14px;
-  color: #555;
-  transition: color 0.18s;
+  font-size: 13px;
+  color: #808080;
+  transition: color 0.15s;
 }
-
-.footer-link:hover {
-  color: #111;
-}
+.footer-link:hover { color: #000; }
 
 /* ══════════════════════════════════════════
    BOTTOM BAR
 ══════════════════════════════════════════ */
 .footer-bottom {
-  background: #f0f0f0;
-  border-top: 1px solid #ddd;
-  padding: 20px 32px;
+  background: #f5f5f5;
+  border-top: 1px solid #AABBAA;
+  padding: 16px 20px;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .bottom-inner {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
 
-
-.payment-icons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+.payment-icons { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
 .pay-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  padding: 3px 8px;
+  border: 1px solid #AABBAA;
+  border-radius: 4px;
   background: #fff;
-  font-size: 26px;
+  font-size: 22px;
   line-height: 1;
-  /* Let FontAwesome brand icons render their natural brand colors */
 }
 
 .pay-badge.google-pay {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  color: #333;
+  color: #000;
   letter-spacing: -0.02em;
-  padding: 6px 10px;
+  padding: 5px 8px;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 /* ══════════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════════ */
 @media (max-width: 900px) {
-  .footer-main .footer-container {
-    flex-direction: column;
-    gap: 36px;
-  }
-
-  .footer-brand {
-    max-width: 100%;
-  }
-
-  .footer-columns {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 28px;
-  }
-
-  .footer-col {
-    min-width: 140px;
-  }
-
-  .bottom-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
+  .footer-main .footer-container { flex-direction: column; gap: 28px; }
+  .footer-brand { max-width: 100%; }
+  .footer-columns { width: 100%; justify-content: flex-start; gap: 24px; }
+  .footer-col { min-width: 130px; }
+  .bottom-inner { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 
 @media (max-width: 560px) {
-  .footer-columns {
-    gap: 20px;
-  }
+  .footer-columns { gap: 18px; }
 }
 </style>

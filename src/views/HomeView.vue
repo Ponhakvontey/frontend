@@ -76,13 +76,11 @@ onMounted(async () => {
 </script>
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 .home-page {
   background: #fff;
-  color: #191c1e;
-  font-family: Inter, Arial, sans-serif;
+  color: #000;
+  font-family: Helvetica, Arial, sans-serif;
 }
 </style>

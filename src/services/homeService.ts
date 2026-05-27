@@ -1,3 +1,8 @@
+/**
+ * Home/CMS service.
+ * Navigation, hero, footer etc. are static data — no backend endpoint exists for them.
+ * Products and categories come from the real Spring Boot API.
+ */
 import type {
   NavLink,
   Benefit,
@@ -13,7 +18,6 @@ import {
   mockNavLinks,
   mockBenefits,
   mockCategories,
-  mockProducts,
   mockFooterColumns,
   mockHeroContent,
   mockJournalContent,
@@ -22,77 +26,18 @@ import {
 import { getInventoryProducts } from '@/services/adminInventoryService'
 import type { InventoryProduct } from '@/types/inventory'
 
-// Static/CMS content has no backend endpoint — always use mock
-// Only products & categories hit the real Spring Boot API
-const USE_MOCK = true
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 
-function toProductId(id: string): number | string {
-  const numericId = id.match(/^prod-(\d+)$/)?.[1]
-  return numericId ? Number(numericId) : id
-}
+// ── Static content (no backend endpoint) ─────────────────────────────────────
 
-function toSlug(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
+export const getNavLinks     = (): Promise<NavLink[]>      => Promise.resolve(mockNavLinks)
+export const getBenefits     = (): Promise<Benefit[]>      => Promise.resolve(mockBenefits)
+export const getFooterColumns= (): Promise<FooterColumn[]> => Promise.resolve(mockFooterColumns)
+export const getHeroContent  = (): Promise<HeroContent>    => Promise.resolve(mockHeroContent)
+export const getJournalContent= (): Promise<JournalContent>=> Promise.resolve(mockJournalContent)
+export const getSocialLinks  = (): Promise<SocialLink[]>   => Promise.resolve(mockSocialLinks)
 
-function inventoryToStorefrontProduct(product: InventoryProduct): Product {
-  const existingProduct = mockProducts.find((item) => item.name === product.name)
-  const productId = toProductId(product.id)
-
-  return {
-    ...(existingProduct || {}),
-    id: productId,
-    name: product.name,
-    maker: product.sellerName || existingProduct?.maker || 'Ubuyee Studio',
-    price: product.price,
-    currency: existingProduct?.currency || 'USD',
-    image: product.imageUrl || existingProduct?.image || '',
-    badge: existingProduct?.badge,
-    slug: existingProduct?.slug || toSlug(product.name),
-    colorLabel: existingProduct?.colorLabel || product.category.toUpperCase(),
-    reviewCount: existingProduct?.reviewCount || 0,
-    tagLabel: product.category.toUpperCase(),
-    gallery: existingProduct?.gallery || [{ id: 1, url: product.imageUrl }],
-    sizes: existingProduct?.sizes || [{ label: 'ONE SIZE' }],
-    narrative: existingProduct?.narrative || product.description,
-    composition: existingProduct?.composition || '-',
-    origin: existingProduct?.origin || '-',
-    sku: `SKU-${product.id}`,
-    infoCards: existingProduct?.infoCards || [
-      {
-        id: 1,
-        title: 'Product Notes',
-        description: product.description || 'Curated by the admin inventory team.',
-      },
-    ],
-    editorialImage: existingProduct?.editorialImage || product.imageUrl,
-    pairings: existingProduct?.pairings || [],
-    benefits: existingProduct?.benefits || [
-      {
-        id: 1,
-        title: 'Curated Quality Assurance',
-        description: 'This product is managed through the admin inventory workflow.',
-      },
-    ],
-  }
-}
-
-export async function getNavLinks(): Promise<NavLink[]> {
-  if (USE_MOCK) return mockNavLinks
-  const res = await fetch(`${API_BASE}/navigation`)
-  return res.json()
-}
-
-export async function getBenefits(): Promise<Benefit[]> {
-  if (USE_MOCK) return mockBenefits
-  const res = await fetch(`${API_BASE}/benefits`)
-  return res.json()
-}
+// ── Live data ─────────────────────────────────────────────────────────────────
 
 export async function getCategories(): Promise<Category[]> {
   try {
@@ -105,30 +50,37 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function getTrendingProducts(): Promise<Product[]> {
-  const inventoryProducts = await getInventoryProducts()
-  return inventoryProducts.map(inventoryToStorefrontProduct)
+  const products = await getInventoryProducts()
+  return products.map(inventoryToProduct)
 }
 
-export async function getFooterColumns(): Promise<FooterColumn[]> {
-  if (USE_MOCK) return mockFooterColumns
-  const res = await fetch(`${API_BASE}/footer`)
-  return res.json()
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function toSlug(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 }
 
-export async function getHeroContent(): Promise<HeroContent> {
-  if (USE_MOCK) return mockHeroContent
-  const res = await fetch(`${API_BASE}/cms/hero`)
-  return res.json()
-}
-
-export async function getJournalContent(): Promise<JournalContent> {
-  if (USE_MOCK) return mockJournalContent
-  const res = await fetch(`${API_BASE}/cms/journal`)
-  return res.json()
-}
-
-export async function getSocialLinks(): Promise<SocialLink[]> {
-  if (USE_MOCK) return mockSocialLinks
-  const res = await fetch(`${API_BASE}/social-links`)
-  return res.json()
+function inventoryToProduct(p: InventoryProduct): Product {
+  return {
+    id: p.id,
+    name: p.name,
+    maker: p.sellerName || 'Ubuyee Studio',
+    price: p.price,
+    currency: 'USD',
+    image: p.imageUrl || '',
+    slug: toSlug(p.name),
+    colorLabel: p.category.toUpperCase(),
+    reviewCount: 0,
+    tagLabel: p.category.toUpperCase(),
+    gallery: [{ id: 1, url: p.imageUrl }],
+    sizes: [{ label: 'ONE SIZE' }],
+    narrative: p.description,
+    composition: '-',
+    origin: '-',
+    sku: `SKU-${p.id}`,
+    infoCards: [{ id: 1, title: 'Product Notes', description: p.description || 'No description.' }],
+    editorialImage: p.imageUrl,
+    pairings: [],
+    benefits: [],
+  }
 }

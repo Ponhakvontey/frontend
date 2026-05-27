@@ -3,12 +3,10 @@
     <RouterLink :to="accountRoute" class="icon-btn" aria-label="Account">
       <i class="fa-regular fa-user"></i>
     </RouterLink>
-
     <RouterLink :to="wishlistRoute" class="icon-btn" aria-label="Wishlist">
       <i class="fa-regular fa-heart"></i>
     </RouterLink>
-
-    <RouterLink to="/cart" class="icon-btn cart-btn" aria-label="Cart">
+    <RouterLink to="/cart" class="icon-btn" aria-label="Cart">
       <i class="fa-solid fa-cart-shopping"></i>
       <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
     </RouterLink>
@@ -20,67 +18,47 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { isLoggedIn } from '@/services/apiClient'
 
-withDefaults(
-  defineProps<{
-    cartCount?: number
-  }>(),
-  {
-    cartCount: 0,
-  },
-)
+withDefaults(defineProps<{ cartCount?: number }>(), { cartCount: 0 })
 
 const accountRoute = computed(() => isLoggedIn() ? '/profile' : '/login')
 const wishlistRoute = computed(() => isLoggedIn() ? '/wishlist' : '/login?redirect=/wishlist')
 </script>
 
 <style scoped>
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-}
+.nav-actions { display: flex; align-items: center; gap: 20px; }
 
 .icon-btn {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 35px;
+  background: transparent;
+  border: none;
   text-decoration: none;
-  width: 20px;
-  height: 20px;
+  cursor: pointer;
+  transition: background 0.15s;
 }
-
-.icon-btn i {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.88);
-  transition: color 0.18s;
-}
-
-.icon-btn:hover i {
-  color: #fff;
-}
-
-.cart-btn {
-  position: relative;
-}
+.icon-btn i { font-size: 16px; color: #211E1E; transition: color 0.15s; }
+.icon-btn:hover { background: #AABBAA; }
+.icon-btn:hover i { color: #000; }
 
 .cart-badge {
   position: absolute;
-  top: -7px;
-  right: -9px;
-  min-width: 15px;
-  height: 15px;
-  border-radius: 999px;
-  background: var(--clr-black);
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 12px;
+  background: #DA292E;
   color: #fff;
-  font-size: 9px;
-  line-height: 15px;
-  text-align: center;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 10px;
   font-weight: 700;
-  padding: 0 3px;
+  line-height: 16px;
+  text-align: center;
+  padding: 0 4px;
 }
 </style>

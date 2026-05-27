@@ -399,7 +399,7 @@ function updateUser(updated: BackendUser) {
   flex: 1;
   padding: 28px 32px;
   overflow-x: auto;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 /* ── Header ── */
@@ -530,11 +530,11 @@ function updateUser(updated: BackendUser) {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .tab-btn.active {
-  background: #513B3C;
+  background: #000000;
   color: #fff;
 }
 
@@ -573,11 +573,11 @@ function updateUser(updated: BackendUser) {
   font-size: 13px;
   color: #334155;
   outline: none;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   background: #f8fafc;
 }
 
-.search-input:focus { border-color: #513B3C; background: #fff; }
+.search-input:focus { border-color: #000000; background: #fff; }
 
 /* ── Table ── */
 .table-scroll { overflow-x: auto; }
@@ -677,7 +677,7 @@ tbody td {
   letter-spacing: 0.04em;
 }
 
-.pill-admin    { background: #513B3C; color: #fff; }
+.pill-admin    { background: #000000; color: #fff; }
 .pill-seller   { background: #fffbeb; color: #d97706; }
 .pill-customer { background: #eff6ff; color: #2563eb; }
 
@@ -715,7 +715,7 @@ tbody td {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   transition: opacity 0.15s;
 }
 
@@ -759,7 +759,7 @@ tbody td {
 }
 
 .page-btn:disabled { opacity: 0.4; cursor: default; }
-.page-btn:not(:disabled):hover { border-color: #513B3C; color: #513B3C; }
+.page-btn:not(:disabled):hover { border-color: #000000; color: #000000; }
 
 .page-info {
   font-size: 12px;

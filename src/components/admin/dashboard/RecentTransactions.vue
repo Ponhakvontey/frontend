@@ -95,7 +95,7 @@ function statusIcon(status: string) {
 
 <style scoped>
 .table-section {
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .table-head {
@@ -130,7 +130,7 @@ h2 {
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #513B3C;
+  color: #000000;
   text-decoration: none;
 }
 

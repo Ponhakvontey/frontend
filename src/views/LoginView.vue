@@ -355,7 +355,7 @@ async function handleRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   overflow: hidden;
 }
 
