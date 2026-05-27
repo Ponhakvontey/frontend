@@ -44,7 +44,7 @@
                     <strong>ABA KHQR</strong>
                     <span>Scan with ABA Mobile or any KHQR-compatible app</span>
                   </div>
-                  <span class="method-icon">📱</span>
+                  <span class="method-icon"><i class="fa-solid fa-credit-card"></i></span>
                 </button>
 
                 <button
@@ -57,7 +57,7 @@
                     <strong>Credit / Debit Card</strong>
                     <span>Visa, Mastercard, and more — powered by Stripe</span>
                   </div>
-                  <span class="method-icon">💳</span>
+                  <span class="method-icon"><i class="fa-solid fa-credit-card"></i></span>
                 </button>
               </div>
 

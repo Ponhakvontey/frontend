@@ -118,6 +118,10 @@
 
               <p v-if="cartMsg" class="cart-msg" :class="cartMsgType">{{ cartMsg }}</p>
 
+              <button type="button" class="wishlist-btn" @click="toggleFavorite">
+                {{ isFavorite ? 'Saved to Wishlist' : 'Wishlist This Piece' }}
+              </button>
+
             </div>
           </section>
 
@@ -157,6 +161,7 @@ import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
 import { isLoggedIn } from '@/services/apiClient'
+import { isWishlisted, toggleWishlist } from '@/services/wishlistService'
 import { loadCartItems, saveCartItems, toLineId } from '@/utils/commerce'
 
 const API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
@@ -198,6 +203,7 @@ const activeImg = ref('')
 const qty        = ref(1)
 const cartMsg    = ref('')
 const cartMsgType = ref<'ok' | 'err'>('ok')
+const isFavorite = ref(false)
 
 const cartItems  = computed(() => loadCartItems())
 const cartCount  = computed(() => cartItems.value.reduce((s, i) => s + i.quantity, 0))
@@ -219,6 +225,7 @@ async function loadProduct(id: string) {
     const dto: ProductDTO = await res.json()
     product.value = dto
     activeImg.value = dto.imageUrl ?? ''
+    isFavorite.value = isWishlisted(dto.id)
 
     // Load related products (same category, or just recent products)
     const relUrl = `${API}/api/products/${id}/related`
@@ -238,6 +245,17 @@ async function loadProduct(id: string) {
 watch(() => route.params.id, (id) => { if (id) loadProduct(String(id)) })
 
 // ── Cart ──────────────────────────────────────────────────────────────────────
+
+function toggleFavorite() {
+  if (!product.value) return
+  if (!isLoggedIn()) {
+    router.push(`/login?redirect=/product/${product.value.id}`)
+    return
+  }
+
+  toggleWishlist(product.value.id)
+  isFavorite.value = isWishlisted(product.value.id)
+}
 
 function addToCart() {
   if (!product.value) return
@@ -476,5 +494,16 @@ onMounted(async () => {
   .product-name { font-size: 24px; }
   .action-row { grid-template-columns: 1fr; }
   .related-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.wishlist-btn {
+  width: 100%;
+  height: 48px;
+  margin-top: 14px;
+  border: 1px solid #d9dfeb;
+  border-radius: 14px;
+  background: transparent;
+  color: #111827;
+  font-weight: 700;
+  cursor: pointer;
 }
 </style>

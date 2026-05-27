@@ -267,6 +267,7 @@ import { RouterLink } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
+import { getInventoryProducts } from '@/services/adminInventoryService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
 import { readStorage } from '@/utils/storage'
 
@@ -275,7 +276,7 @@ const API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface ProductDTO {
-  id: number
+  id: number | string
   name: string
   price: number
   stockQuantity: number
@@ -378,6 +379,44 @@ function sortParams() {
   }
 }
 
+async function loadLocalProductsFallback() {
+  const localProducts = await getInventoryProducts()
+  const query = searchText.value.trim().toLowerCase()
+
+  let filtered = localProducts.filter((product) => {
+    const matchesCategory = selectedCategoryId.value === null || product.categoryId === selectedCategoryId.value
+    const matchesPrice = product.price >= priceMin.value && product.price <= priceMax.value
+    const matchesSearch = !query
+      || product.name.toLowerCase().includes(query)
+      || product.category.toLowerCase().includes(query)
+
+    return matchesCategory && matchesPrice && matchesSearch
+  })
+
+  filtered = [...filtered].sort((a, b) => {
+    if (sortBy.value === 'price_asc') return a.price - b.price
+    if (sortBy.value === 'price_desc') return b.price - a.price
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+
+  const start = (currentPage.value - 1) * PER_PAGE
+  const visible = filtered.slice(start, start + PER_PAGE)
+
+  products.value = visible.map((product) => ({
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    stockQuantity: product.stock,
+    imageUrl: product.imageUrl,
+    categoryId: product.categoryId,
+    averageRating: null,
+    reviewCount: null,
+  }))
+  totalElements.value = filtered.length
+  totalPages.value = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
+  error.value = ''
+}
+
 // ── Pagination ────────────────────────────────────────────────────────────
 
 const startItem = computed(() => totalElements.value ? (currentPage.value - 1) * PER_PAGE + 1 : 0)
@@ -432,8 +471,8 @@ async function fetchProducts() {
     products.value      = data.content ?? []
     totalElements.value = data.totalElements ?? 0
     totalPages.value    = data.totalPages ?? 1
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to load products.'
+  } catch {
+    await loadLocalProductsFallback()
   } finally {
     loading.value = false
   }

@@ -232,7 +232,7 @@ import {
   validatePassword,
   validateRequired,
 } from '@/utils/validation'
-import logo from '@/assets/logo.png'
+import logo from '@/assets/home/logo1.png'
 import bgVideo from '@/assets/login_signup/login_signup.mp4'
 
 // ── Video ──

@@ -73,7 +73,7 @@
                     </td>
                     <td class="items-cell">
                       <span v-if="o.items?.length">
-                        {{ o.items[0].productName }}
+                        {{ o.items[0]?.productName ?? 'Item' }}
                         <em v-if="o.items.length > 1"> +{{ o.items.length - 1 }} more</em>
                       </span>
                       <span v-else class="muted">—</span>
@@ -244,7 +244,7 @@ async function denyReturn(id: number) {
 }
 
 // helpers
-function initial(u: string) { return (u ?? '?')[0].toUpperCase() }
+function initial(u: string) { return (u ?? '?').charAt(0).toUpperCase() }
 function fmtDate(d: string) { return d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—' }
 function formatPrice(v: number) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(v) }
 

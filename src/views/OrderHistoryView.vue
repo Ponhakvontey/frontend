@@ -8,13 +8,13 @@
           <p class="eyebrow">MEMBER DASHBOARD</p>
           <h1>Your Orders</h1>
           <p class="subtitle">
-            Track your curated acquisitions and explore your history with Curator Luxe.
+            Track your purchases and explore your order history.
           </p>
         </div>
 
         <div v-if="loading" class="empty-state">
           <i class="fa-solid fa-spinner fa-spin" style="font-size:28px;color:#513B3C;"></i>
-          <p>Loading your orders…</p>
+          <p>Loading your orders...</p>
         </div>
 
         <div v-else-if="error" class="empty-state">
@@ -58,6 +58,14 @@
                 <i class="fa-solid fa-location-dot"></i> {{ order.shippingAddress }}
               </span>
               <div class="order-actions">
+                <RouterLink :to="`/invoice/${order.id}`" class="action-btn invoice-btn">
+                  <i class="fa-regular fa-file-lines"></i>
+                  View Invoice
+                </RouterLink>
+                <RouterLink to="/sell" class="action-btn buy-btn">
+                  <i class="fa-solid fa-bag-shopping"></i>
+                  Buy Again
+                </RouterLink>
                 <button
                   v-if="order.status === 'PENDING' || order.status === 'PAID'"
                   class="action-btn cancel-btn"
@@ -65,7 +73,7 @@
                   @click="cancelOrder(order)"
                 >
                   <i class="fa-solid fa-xmark"></i>
-                  {{ actionLoading === order.id ? 'Cancelling…' : 'Cancel Order' }}
+                  {{ actionLoading === order.id ? 'Cancelling...' : 'Cancel Order' }}
                 </button>
                 <button
                   v-if="order.status === 'DELIVERED'"
@@ -74,7 +82,7 @@
                   @click="requestReturn(order)"
                 >
                   <i class="fa-solid fa-rotate-left"></i>
-                  {{ actionLoading === order.id ? 'Requesting…' : 'Request Return' }}
+                  {{ actionLoading === order.id ? 'Requesting...' : 'Request Return' }}
                 </button>
               </div>
             </div>
@@ -138,12 +146,42 @@ const cartItems     = ref<Array<{ id: number; quantity: number }>>([])
 const cartCount = computed(() => cartItems.value.reduce((s, i) => s + i.quantity, 0))
 
 function fmtDate(iso: string) {
-  if (!iso) return '—'
+  if (!iso) return '-'
   return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(value)
+}
+
+function loadLocalOrders() {
+  const currentEmail = (localStorage.getItem('userEmail') || '').toLowerCase()
+  const localOrders = readStorage<any[]>('orders', [])
+
+  return localOrders
+    .filter((order) => !currentEmail || (order.email || '').toLowerCase() === currentEmail)
+    .map((order) => ({
+      id: order.orderNumber || order.id,
+      orderDate: order.placedDate || '',
+      status: order.status || 'PLACED',
+      totalAmount: Number(order.total || 0),
+      shippingAddress: [
+        order.shippingInfo?.address,
+        order.shippingInfo?.city,
+        order.shippingInfo?.state,
+        order.shippingInfo?.zipCode,
+      ].filter(Boolean).join(', '),
+      cancellationReason: null,
+      items: (order.items || []).map((item: any) => ({
+        id: item.lineId || item.id,
+        productId: item.id,
+        productName: item.name,
+        productImageUrl: item.image,
+        quantity: item.quantity,
+        price: item.price,
+        totalPrice: item.price * item.quantity,
+      })),
+    }))
 }
 
 async function cancelOrder(order: OrderDTO) {
@@ -196,7 +234,9 @@ onMounted(async () => {
     const res = await api.get<Paged<OrderDTO>>('/api/orders/my?page=0&size=50')
     orders.value = res.content ?? []
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to load orders. Please try again.'
+    const localOrders = loadLocalOrders()
+    orders.value = localOrders
+    error.value = localOrders.length ? null : e instanceof Error ? e.message : 'Failed to load orders. Please try again.'
   } finally {
     loading.value = false
   }
@@ -308,6 +348,8 @@ onMounted(async () => {
 .cancel-btn:hover:not(:disabled) { background: #ffe4e6; }
 
 .return-btn { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+.invoice-btn { background: #ede6e7; color: #495467; border-color: #ede6e7; }
+.buy-btn { background: #fff; color: #513B3C; border-color: #e7dfe0; }
 .return-btn:hover:not(:disabled) { background: #dbeafe; }
 
 .empty-state {

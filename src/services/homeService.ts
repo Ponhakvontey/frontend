@@ -41,28 +41,28 @@ function toSlug(value: string) {
 }
 
 function inventoryToStorefrontProduct(product: InventoryProduct): Product {
-  const existingProduct = mockProducts.find((item) => item.sku === product.sku || item.name === product.name)
+  const existingProduct = mockProducts.find((item) => item.name === product.name)
   const productId = toProductId(product.id)
 
   return {
     ...(existingProduct || {}),
     id: productId,
     name: product.name,
-    maker: product.maker,
+    maker: product.sellerName || existingProduct?.maker || 'Ubuyee Studio',
     price: product.price,
     currency: existingProduct?.currency || 'USD',
-    image: product.image || existingProduct?.image || '',
+    image: product.imageUrl || existingProduct?.image || '',
     badge: existingProduct?.badge,
     slug: existingProduct?.slug || toSlug(product.name),
     colorLabel: existingProduct?.colorLabel || product.category.toUpperCase(),
     reviewCount: existingProduct?.reviewCount || 0,
     tagLabel: product.category.toUpperCase(),
-    gallery: existingProduct?.gallery || [{ id: 1, url: product.image }],
+    gallery: existingProduct?.gallery || [{ id: 1, url: product.imageUrl }],
     sizes: existingProduct?.sizes || [{ label: 'ONE SIZE' }],
     narrative: existingProduct?.narrative || product.description,
     composition: existingProduct?.composition || '-',
     origin: existingProduct?.origin || '-',
-    sku: product.sku,
+    sku: `SKU-${product.id}`,
     infoCards: existingProduct?.infoCards || [
       {
         id: 1,
@@ -70,7 +70,7 @@ function inventoryToStorefrontProduct(product: InventoryProduct): Product {
         description: product.description || 'Curated by the admin inventory team.',
       },
     ],
-    editorialImage: existingProduct?.editorialImage || product.image,
+    editorialImage: existingProduct?.editorialImage || product.imageUrl,
     pairings: existingProduct?.pairings || [],
     benefits: existingProduct?.benefits || [
       {
@@ -105,19 +105,8 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function getTrendingProducts(): Promise<Product[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/products?page=0&size=4`)
-    if (!res.ok) throw new Error()
-    const data = await res.json()
-    // Backend returns a Page object; extract the content array
-    return (data.content ?? data).map(inventoryToStorefrontProduct)
-  } catch {
-    // Fallback to local inventory if backend is unreachable
-    const inventoryProducts = await getInventoryProducts()
-    return inventoryProducts
-      .filter((product) => product.status === 'active')
-      .map(inventoryToStorefrontProduct)
-  }
+  const inventoryProducts = await getInventoryProducts()
+  return inventoryProducts.map(inventoryToStorefrontProduct)
 }
 
 export async function getFooterColumns(): Promise<FooterColumn[]> {

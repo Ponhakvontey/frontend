@@ -8,6 +8,9 @@ import CheckoutView from '../views/CheckoutView.vue'
 import PaymentView from '../views/PaymentView.vue'
 import SellView from '../views/SellView.vue'
 import OrderHistoryView from '../views/OrderHistoryView.vue'
+import WishlistView from '../views/WishlistView.vue'
+import InvoiceView from '../views/InvoiceView.vue'
+import AboutView from '../views/AboutView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminOrdersView from '../views/AdminOrdersView.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
@@ -46,6 +49,9 @@ const router = createRouter({
     { path: '/order-success', name: 'order-success', component: OrderSuccessView },
     { path: '/checkout/success', name: 'stripe-success', component: StripeSuccessView, meta: { requiresAuth: true } },
     { path: '/sell', name: 'sell', component: SellView },
+    { path: '/about', name: 'about', component: AboutView },
+    { path: '/wishlist', name: 'wishlist', component: WishlistView, meta: { requiresAuth: true } },
+    { path: '/invoice/:orderNumber', name: 'invoice', component: InvoiceView, meta: { requiresAuth: true } },
     { path: '/order-history', name: 'order-history', component: OrderHistoryView, meta: { requiresAuth: true } },
     { path: '/become-seller', name: 'become-seller', component: BecomeSellerView, meta: { requiresAuth: true } },
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },

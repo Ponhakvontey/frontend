@@ -119,7 +119,7 @@ import { validateConfirmPassword, validateEmail, validatePassword, validateRequi
 import confirmIcon from '../assets/confirm.png'
 import emailIcon from '../assets/message.png'
 import googleIcon from '../assets/google.png'
-import logo from '../assets/logo.png'
+import logo from '@/assets/home/logo1.png'
 import passwordIcon from '../assets/password.png'
 import peopleIcon from '../assets/people.png'
 

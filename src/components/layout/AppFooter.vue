@@ -77,7 +77,7 @@ function getFooterPath(slug: string): string {
   const mappedSlug = slug === 'orders' ? 'order-history' : slug
   const normalized = mappedSlug.startsWith('/') ? mappedSlug : `/${mappedSlug}`
   const supported = new Set([
-    '/', '/home', '/sell', '/login', '/register', '/order-history', '/forgot-password',
+    '/', '/home', '/sell', '/login', '/register', '/order-history', '/forgot-password', '/about'
   ])
   if (normalized === '/home') return '/'
   return supported.has(normalized) ? normalized : '/'

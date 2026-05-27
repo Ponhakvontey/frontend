@@ -36,7 +36,7 @@
             <td class="order-id">#{{ o.id }}</td>
             <td>
               <div class="customer-cell">
-                <span class="avatar">{{ (o.username ?? '?')[0].toUpperCase() }}</span>
+                <span class="avatar">{{ (o.username ?? '?').charAt(0).toUpperCase() }}</span>
                 {{ o.username ?? '—' }}
               </div>
             </td>

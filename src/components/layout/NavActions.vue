@@ -4,7 +4,7 @@
       <i class="fa-regular fa-user"></i>
     </RouterLink>
 
-    <RouterLink to="/sell" class="icon-btn" aria-label="Wishlist">
+    <RouterLink :to="wishlistRoute" class="icon-btn" aria-label="Wishlist">
       <i class="fa-regular fa-heart"></i>
     </RouterLink>
 
@@ -29,8 +29,8 @@ withDefaults(
   },
 )
 
-// If the user is logged in, go to their profile; otherwise go to login
 const accountRoute = computed(() => isLoggedIn() ? '/profile' : '/login')
+const wishlistRoute = computed(() => isLoggedIn() ? '/wishlist' : '/login?redirect=/wishlist')
 </script>
 
 <style scoped>

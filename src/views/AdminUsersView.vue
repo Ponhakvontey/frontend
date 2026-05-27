@@ -279,7 +279,7 @@ function hasRole(u: BackendUser, role: string) {
 function initials(u: BackendUser) {
   const name = u.fullName?.trim() || u.username || '?'
   const parts = name.split(' ')
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  if (parts.length >= 2) return ((parts[0]?.charAt(0) ?? '') + (parts[1]?.charAt(0) ?? '')).toUpperCase()
   return name.slice(0, 2).toUpperCase()
 }
 
