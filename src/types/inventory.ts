@@ -5,6 +5,7 @@ export interface InventoryProduct {
   price: number
   stock: number
   imageUrl: string
+  sizes: string[]
   categoryId: number | null
   category: string
   sellerName: string
@@ -18,6 +19,7 @@ export interface InventoryProductInput {
   price: number
   stock: number
   imageUrl: string
+  sizes: string[]
   categoryId: number | null
 }
 

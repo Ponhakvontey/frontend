@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="admin-page">
     <AdminSidebar />
 
@@ -38,16 +38,6 @@
             <div class="stat-body">
               <p class="stat-label">ADMINS</p>
               <h2>{{ loading ? '—' : stats.admins }}</h2>
-            </div>
-          </article>
-
-          <article class="stat-card">
-            <div class="stat-icon-wrap amber">
-              <i class="fa-solid fa-store"></i>
-            </div>
-            <div class="stat-body">
-              <p class="stat-label">SELLERS</p>
-              <h2>{{ loading ? '—' : stats.sellers }}</h2>
             </div>
           </article>
 
@@ -128,10 +118,7 @@
                       <span v-if="hasRole(u, 'ROLE_ADMIN')" class="pill pill-admin">
                         <i class="fa-solid fa-shield-halved"></i> Admin
                       </span>
-                      <span v-if="hasRole(u, 'ROLE_SELLER')" class="pill pill-seller">
-                        <i class="fa-solid fa-store"></i> Seller
-                      </span>
-                      <span v-if="hasRole(u, 'ROLE_USER') && !hasRole(u, 'ROLE_ADMIN') && !hasRole(u, 'ROLE_SELLER')" class="pill pill-customer">
+                      <span v-if="hasRole(u, 'ROLE_USER') && !hasRole(u, 'ROLE_ADMIN')" class="pill pill-customer">
                         <i class="fa-solid fa-user"></i> Customer
                       </span>
                     </div>
@@ -167,15 +154,6 @@
                         <i class="fa-solid fa-circle-check"></i> Unban
                       </button>
 
-                      <button
-                        v-if="hasRole(u, 'ROLE_SELLER') && !hasRole(u, 'ROLE_ADMIN')"
-                        type="button"
-                        class="action-btn revoke"
-                        :disabled="actionLoading === u.id"
-                        @click="revokeSeller(u.id)"
-                      >
-                        <i class="fa-solid fa-store-slash"></i> Revoke Seller
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -246,7 +224,7 @@ const loading     = ref(true)
 const error       = ref('')
 const actionLoading = ref<number | null>(null)
 
-const activeTab   = ref<'all' | 'admins' | 'sellers' | 'customers' | 'banned'>('all')
+const activeTab   = ref<'all' | 'admins' | 'customers' | 'banned'>('all')
 const search      = ref('')
 const currentPage = ref(1)
 const PAGE_SIZE   = 10
@@ -288,7 +266,6 @@ function initials(u: BackendUser) {
 const stats = computed(() => ({
   total:   users.value.length,
   admins:  users.value.filter(u => hasRole(u, 'ROLE_ADMIN')).length,
-  sellers: users.value.filter(u => hasRole(u, 'ROLE_SELLER') && !hasRole(u, 'ROLE_ADMIN')).length,
   banned:  users.value.filter(u => !u.enabled).length,
 }))
 
@@ -297,8 +274,7 @@ const stats = computed(() => ({
 const TABS = computed(() => [
   { label: 'All',       value: 'all',       count: users.value.length },
   { label: 'Admins',    value: 'admins',    count: stats.value.admins },
-  { label: 'Sellers',   value: 'sellers',   count: stats.value.sellers },
-  { label: 'Customers', value: 'customers', count: users.value.filter(u => hasRole(u, 'ROLE_USER') && !hasRole(u, 'ROLE_ADMIN') && !hasRole(u, 'ROLE_SELLER')).length },
+  { label: 'Customers', value: 'customers', count: users.value.filter(u => hasRole(u, 'ROLE_USER') && !hasRole(u, 'ROLE_ADMIN')).length },
   { label: 'Banned',    value: 'banned',    count: stats.value.banned },
 ] as const)
 
@@ -312,9 +288,8 @@ function setTab(v: typeof activeTab.value) {
 const filtered = computed(() => {
   let list = users.value
 
-  if (activeTab.value === 'admins')    list = list.filter(u => hasRole(u, 'ROLE_ADMIN'))
-  else if (activeTab.value === 'sellers')   list = list.filter(u => hasRole(u, 'ROLE_SELLER') && !hasRole(u, 'ROLE_ADMIN'))
-  else if (activeTab.value === 'customers') list = list.filter(u => hasRole(u, 'ROLE_USER') && !hasRole(u, 'ROLE_ADMIN') && !hasRole(u, 'ROLE_SELLER'))
+  if (activeTab.value === 'admins')        list = list.filter(u => hasRole(u, 'ROLE_ADMIN'))
+  else if (activeTab.value === 'customers') list = list.filter(u => hasRole(u, 'ROLE_USER') && !hasRole(u, 'ROLE_ADMIN'))
   else if (activeTab.value === 'banned')    list = list.filter(u => !u.enabled)
 
   const q = search.value.trim().toLowerCase()
@@ -357,18 +332,6 @@ async function unban(id: number) {
     updateUser(updated)
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Failed to unban user.'
-  } finally {
-    actionLoading.value = null
-  }
-}
-
-async function revokeSeller(id: number) {
-  actionLoading.value = id
-  try {
-    const updated = await api.post<BackendUser>(`/api/admin/users/${id}/revoke-seller`, {})
-    updateUser(updated)
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to revoke seller role.'
   } finally {
     actionLoading.value = null
   }
@@ -443,7 +406,7 @@ function updateUser(updated: BackendUser) {
 /* ── Stats ── */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -470,7 +433,6 @@ function updateUser(updated: BackendUser) {
 
 .stat-icon-wrap.blue   { background: #eff6ff; color: #2563eb; }
 .stat-icon-wrap.purple { background: #f5f3ff; color: #7c3aed; }
-.stat-icon-wrap.amber  { background: #fffbeb; color: #d97706; }
 .stat-icon-wrap.red    { background: #fff1f2; color: #be123c; }
 
 .stat-body { min-width: 0; }
@@ -678,7 +640,6 @@ tbody td {
 }
 
 .pill-admin    { background: #000000; color: #fff; }
-.pill-seller   { background: #fffbeb; color: #d97706; }
 .pill-customer { background: #eff6ff; color: #2563eb; }
 
 /* ── Status chip ── */
@@ -723,7 +684,6 @@ tbody td {
 
 .action-btn.ban    { background: #fff1f2; color: #be123c; }
 .action-btn.unban  { background: #f0fdf4; color: #16a34a; }
-.action-btn.revoke { background: #fffbeb; color: #d97706; }
 
 /* ── Footer ── */
 .table-footer {
@@ -766,5 +726,10 @@ tbody td {
   color: #64748b;
   min-width: 48px;
   text-align: center;
+}
+
+@media (max-width: 768px) {
+  .admin-page { grid-template-columns: 1fr !important; }
+  .page-body  { padding: 16px !important; }
 }
 </style>

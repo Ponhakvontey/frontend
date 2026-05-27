@@ -380,7 +380,7 @@ async function handleRegister() {
 .auth-card {
   position: relative;
   z-index: 2;
-  width: 420px;
+  width: min(420px, calc(100vw - 32px));
   padding: 36px 40px 32px;
   border-radius: 20px;
   background: rgba(10, 10, 22, 0.52);
@@ -652,5 +652,12 @@ async function handleRegister() {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(-6px);
+}
+
+@media (max-width: 460px) {
+  .auth-card {
+    padding: 28px 20px 24px;
+    border-radius: 16px;
+  }
 }
 </style>

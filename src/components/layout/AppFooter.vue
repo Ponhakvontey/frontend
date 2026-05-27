@@ -52,8 +52,9 @@
     <div class="footer-bottom">
       <div class="footer-container bottom-inner">
 <div class="payment-icons">
-          <span class="pay-badge"><i class="fa-brands fa-cc-visa"></i></span>
-          <span class="pay-badge"><i class="fa-brands fa-cc-mastercard"></i></span>
+          <span class="pay-badge"><img src="https://cdn.simpleicons.org/visa" alt="Visa" class="pay-img" /></span>
+          <span class="pay-badge"><img src="https://cdn.simpleicons.org/mastercard" alt="Mastercard" class="pay-img" /></span>
+          <span class="pay-badge"><img :src="abaLogo" alt="ABA Pay" class="pay-img" /></span>
           <span class="pay-badge"><i class="fa-brands fa-cc-paypal"></i></span>
           <span class="pay-badge"><i class="fa-brands fa-cc-apple-pay"></i></span>
           <span class="pay-badge google-pay">G Pay</span>
@@ -67,6 +68,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import type { FooterColumn, SocialLink } from '@/types/home'
+import abaLogo from '@/assets/aba.png'
 
 defineProps<{
   footerColumns: FooterColumn[]
@@ -227,6 +229,12 @@ function getFooterPath(slug: string): string {
   background: #fff;
   font-size: 22px;
   line-height: 1;
+}
+
+.pay-img {
+  height: 22px;
+  width: auto;
+  display: block;
 }
 
 .pay-badge.google-pay {

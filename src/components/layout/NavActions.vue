@@ -6,10 +6,10 @@
     <RouterLink :to="wishlistRoute" class="icon-btn" aria-label="Wishlist">
       <i class="fa-regular fa-heart"></i>
     </RouterLink>
-    <RouterLink to="/cart" class="icon-btn" aria-label="Cart">
+    <button type="button" class="icon-btn" aria-label="Cart" @click="openSidebar">
       <i class="fa-solid fa-cart-shopping"></i>
       <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
-    </RouterLink>
+    </button>
   </div>
 </template>
 
@@ -17,15 +17,22 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { isLoggedIn } from '@/services/apiClient'
+import { useCartSidebar } from '@/composables/useCartSidebar'
 
 withDefaults(defineProps<{ cartCount?: number }>(), { cartCount: 0 })
 
 const accountRoute = computed(() => isLoggedIn() ? '/profile' : '/login')
 const wishlistRoute = computed(() => isLoggedIn() ? '/wishlist' : '/login?redirect=/wishlist')
+
+const { openSidebar } = useCartSidebar()
 </script>
 
 <style scoped>
-.nav-actions { display: flex; align-items: center; gap: 20px; }
+.nav-actions { display: flex; align-items: center; gap: 8px; }
+
+@media (min-width: 769px) {
+  .nav-actions { gap: 20px; }
+}
 
 .icon-btn {
   position: relative;

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="admin-page">
     <AdminSidebar />
 
@@ -64,6 +64,21 @@
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
               </select>
             </label>
+
+            <!-- Sizes -->
+            <div class="field">
+              <span>Available Sizes</span>
+              <div class="size-toggle-row">
+                <button
+                  v-for="s in PRESET_SIZES"
+                  :key="s"
+                  type="button"
+                  class="size-toggle"
+                  :class="{ active: form.sizes.includes(s) }"
+                  @click="toggleSize(s)"
+                >{{ s }}</button>
+              </div>
+            </div>
           </div>
 
           <!-- Right: image + meta -->
@@ -126,8 +141,17 @@ const form = reactive<InventoryProductInput>({
   price: 0,
   stock: 0,
   imageUrl: '',
+  sizes: [],
   categoryId: null,
 })
+
+const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+
+function toggleSize(size: string) {
+  const idx = form.sizes.indexOf(size)
+  if (idx >= 0) form.sizes.splice(idx, 1)
+  else form.sizes.push(size)
+}
 
 onMounted(async () => {
   // Load categories
@@ -149,6 +173,7 @@ onMounted(async () => {
   form.price       = product.price
   form.stock       = product.stock
   form.imageUrl    = product.imageUrl
+  form.sizes       = product.sizes ? [...product.sizes] : []
   form.categoryId  = product.categoryId
   sellerName.value = product.sellerName
 })
@@ -271,4 +296,27 @@ textarea { resize: vertical; padding: 10px 12px; }
   border: 1px solid #e2e8f0; font-size: 12px; color: #64748b;
 }
 .info-row i { color: #94a3b8; }
+
+/* Sizes */
+.size-toggle-row {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+
+.size-toggle {
+  min-width: 46px; height: 36px; padding: 0 14px;
+  border: 1.5px solid #e2e8f0; border-radius: 8px;
+  background: #f8fafc; color: #334155;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.size-toggle:hover { border-color: #94a3b8; }
+.size-toggle.active { border-color: #000; background: #000; color: #fff; }
+
+@media (max-width: 768px) {
+  .admin-page  { grid-template-columns: 1fr !important; }
+  .page-body   { padding: 16px !important; }
+  .form-layout { grid-template-columns: 1fr !important; }
+  .two-col     { grid-template-columns: 1fr !important; }
+}
 </style>

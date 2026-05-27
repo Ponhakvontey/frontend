@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="admin-page">
     <AdminSidebar />
 
@@ -62,5 +62,10 @@ onMounted(fetchDashboardData)
   padding: 12px 16px;
   font-size: 13px;
   margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .admin-page { grid-template-columns: 1fr !important; }
+  .page-body  { padding: 16px !important; }
 }
 </style>

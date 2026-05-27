@@ -1,5 +1,10 @@
 <template>
-  <aside class="sidebar">
+  <!-- Mobile backdrop -->
+  <Transition name="mob-fade">
+    <div v-if="adminMenu.state.open" class="mob-backdrop" @click="adminMenu.close()" />
+  </Transition>
+
+  <aside class="sidebar" :class="{ 'mob-open': adminMenu.state.open }">
 
     <div class="sidebar-brand">
       <span class="brand-dot"></span>
@@ -8,23 +13,23 @@
     </div>
 
     <nav class="sidebar-nav">
-      <RouterLink to="/admin" class="nav-item" active-class="active" exact>
+      <RouterLink to="/admin" class="nav-item" active-class="active" exact @click="adminMenu.close()">
         <i class="fa-solid fa-gauge-high nav-icon"></i>
         <span>Dashboard</span>
       </RouterLink>
-      <RouterLink to="/admin/orders" class="nav-item" active-class="active">
+      <RouterLink to="/admin/orders" class="nav-item" active-class="active" @click="adminMenu.close()">
         <i class="fa-solid fa-receipt nav-icon"></i>
         <span>Orders</span>
       </RouterLink>
-      <RouterLink to="/admin/users" class="nav-item" active-class="active">
+      <RouterLink to="/admin/users" class="nav-item" active-class="active" @click="adminMenu.close()">
         <i class="fa-solid fa-users nav-icon"></i>
         <span>Users</span>
       </RouterLink>
-      <RouterLink to="/admin/inventory" class="nav-item" active-class="active">
+      <RouterLink to="/admin/inventory" class="nav-item" active-class="active" @click="adminMenu.close()">
         <i class="fa-solid fa-box-archive nav-icon"></i>
         <span>Inventory</span>
       </RouterLink>
-      <RouterLink to="/admin/categories" class="nav-item" active-class="active">
+      <RouterLink to="/admin/categories" class="nav-item" active-class="active" @click="adminMenu.close()">
         <i class="fa-solid fa-tags nav-icon"></i>
         <span>Categories</span>
       </RouterLink>
@@ -52,19 +57,32 @@ import { computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { getUser } from '@/services/apiClient'
 import { logout } from '@/services/authService'
+import { useAdminMenu } from '@/composables/useAdminMenu'
 
 const router = useRouter()
+const adminMenu = useAdminMenu()
 const user = getUser()
 const username = computed(() => user?.username ?? 'Admin')
 const userInitial = computed(() => (user?.username?.[0] ?? 'A').toUpperCase())
 
 async function handleLogout() {
+  adminMenu.close()
   await logout()
   router.push('/login')
 }
 </script>
 
 <style scoped>
+/* ── Mobile backdrop ── */
+.mob-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 800;
+}
+
+/* ── Sidebar ── */
 .sidebar {
   background: #0f172a;
   padding: 24px 16px;
@@ -74,6 +92,8 @@ async function handleLogout() {
   position: sticky;
   top: 0;
   font-family: Helvetica, Arial, sans-serif;
+  z-index: 801;
+  transition: transform 0.3s ease;
 }
 
 .sidebar-brand {
@@ -219,4 +239,25 @@ async function handleLogout() {
   color: #fca5a5;
   border-color: rgba(239,68,68,0.2);
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .mob-backdrop { display: block; }
+
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100dvh;
+    min-height: unset;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.mob-open {
+    transform: translateX(0);
+  }
+}
+
+/* ── Transitions ── */
+.mob-fade-enter-active, .mob-fade-leave-active { transition: opacity 0.25s ease; }
+.mob-fade-enter-from, .mob-fade-leave-to { opacity: 0; }
 </style>

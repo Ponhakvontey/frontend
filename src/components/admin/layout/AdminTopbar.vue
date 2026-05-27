@@ -1,6 +1,11 @@
 <template>
   <header class="topbar">
-    <h2 class="page-title">{{ pageTitle }}</h2>
+    <div class="topbar-left">
+      <button class="mob-menu-btn" type="button" @click="adminMenu.toggle()" aria-label="Toggle sidebar">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <h2 class="page-title">{{ pageTitle }}</h2>
+    </div>
 
     <div class="topbar-right">
       <span class="date-label">
@@ -10,7 +15,7 @@
       <div class="divider"></div>
       <div class="user-chip">
         <div class="chip-avatar">{{ userInitial }}</div>
-        <span>{{ username }}</span>
+        <span class="chip-name">{{ username }}</span>
       </div>
     </div>
   </header>
@@ -20,9 +25,11 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getUser } from '@/services/apiClient'
+import { useAdminMenu } from '@/composables/useAdminMenu'
 
 const route = useRoute()
 const user = getUser()
+const adminMenu = useAdminMenu()
 
 const username = computed(() => user?.username ?? 'Admin')
 const userInitial = computed(() => (user?.username?.[0] ?? 'A').toUpperCase())
@@ -36,6 +43,7 @@ const titleMap: Record<string, string> = {
   '/admin/orders': 'Orders',
   '/admin/users': 'Users',
   '/admin/inventory': 'Inventory',
+  '/admin/categories': 'Categories',
 }
 
 const pageTitle = computed(() => titleMap[route.path] ?? 'Admin')
@@ -52,7 +60,27 @@ const pageTitle = computed(() => titleMap[route.path] ?? 'Admin')
   padding: 0 28px;
   flex-shrink: 0;
   font-family: Helvetica, Arial, sans-serif;
+  gap: 12px;
 }
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mob-menu-btn {
+  display: none;
+  width: 36px; height: 36px;
+  border: none; background: transparent;
+  cursor: pointer; border-radius: 8px;
+  color: #334155; font-size: 16px;
+  align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.mob-menu-btn:hover { background: #f1f5f9; }
 
 .page-title {
   margin: 0;
@@ -60,12 +88,16 @@ const pageTitle = computed(() => titleMap[route.path] ?? 'Admin')
   font-weight: 700;
   color: #0f172a;
   letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .topbar-right {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-shrink: 0;
 }
 
 .date-label {
@@ -105,5 +137,15 @@ const pageTitle = computed(() => titleMap[route.path] ?? 'Admin')
   place-items: center;
   font-size: 11px;
   font-weight: 700;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .topbar { padding: 0 16px; }
+  .mob-menu-btn { display: flex; }
+  .date-label { display: none; }
+  .divider { display: none; }
+  .chip-name { display: none; }
+  .user-chip { padding: 4px; border-radius: 50%; }
 }
 </style>

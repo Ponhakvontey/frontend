@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="admin-page">
     <AdminSidebar />
 
@@ -354,4 +354,9 @@ textarea { resize: vertical; padding: 10px 12px; }
 }
 .save-btn:hover:not(:disabled) { background: #3f2d2e; }
 .save-btn:disabled { opacity: .6; cursor: default; }
+
+@media (max-width: 768px) {
+  .admin-page { grid-template-columns: 1fr !important; }
+  .page-body  { padding: 16px !important; }
+}
 </style>

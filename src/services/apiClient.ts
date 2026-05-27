@@ -1,11 +1,14 @@
 /**
  * Thin fetch wrapper that:
- * 1. Prefixes every request with VITE_API_BASE_URL
+ * 1. Prefixes every request with VITE_API_BASE_URL (empty in dev — Vite proxy handles routing)
  * 2. Sends credentials (httpOnly auth cookie) with every request
- * 3. Throws on non-2xx; 401 → auto-clears session and redirects to login
+ * 3. Sends X-XSRF-TOKEN header on mutating requests (CSRF protection)
+ * 4. Throws on non-2xx; 401 → auto-clears session and redirects to login
  */
 
-const BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+// In development the Vite proxy forwards /api/* to localhost:8080, so BASE is empty.
+// In production set VITE_API_BASE_URL to the backend origin (e.g. https://api.ubuyee.com).
+const BASE = import.meta.env.VITE_API_BASE_URL ?? ''
 
 // ─── User metadata ───────────────────────────────────────────────────────────
 // The JWT lives in an httpOnly cookie set by the server — JS cannot read it.
@@ -77,12 +80,37 @@ export function isAdmin(): boolean {
   return getUser()?.roles?.includes('ROLE_ADMIN') ?? false
 }
 
+// ─── CSRF ────────────────────────────────────────────────────────────────────
+
+/**
+ * Reads the XSRF-TOKEN cookie that Spring Security sets.
+ * Only works when the frontend is same-origin with the backend (Vite proxy in dev,
+ * or co-hosted in production). The cookie is not httpOnly so JS can read it.
+ */
+function getCsrfToken(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+/** Methods that change server state and must include a CSRF token. */
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+
 // ─── Core request ───────────────────────────────────────────────────────────
 
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const method = (options.method ?? 'GET').toUpperCase()
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
+  }
+
+  // Attach CSRF token on every mutating request
+  if (MUTATING_METHODS.has(method)) {
+    const csrf = getCsrfToken()
+    if (csrf) {
+      headers['X-XSRF-TOKEN'] = csrf
+    }
   }
 
   const res = await fetch(`${BASE}${path}`, {

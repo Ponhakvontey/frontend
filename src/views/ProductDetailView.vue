@@ -85,6 +85,24 @@
               <!-- Out of stock badge -->
               <p v-if="product.stockQuantity === 0" class="out-of-stock">Out of stock</p>
 
+              <!-- Size selector -->
+              <div v-if="product.sizes && product.sizes.length > 0" class="size-section">
+                <p class="size-label">
+                  Size <span v-if="!selectedSize" class="size-required">(required)</span>
+                  <span v-else class="size-chosen">{{ selectedSize }}</span>
+                </p>
+                <div class="size-grid">
+                  <button
+                    v-for="s in product.sizes"
+                    :key="s"
+                    type="button"
+                    class="size-btn"
+                    :class="{ active: selectedSize === s }"
+                    @click="selectedSize = s"
+                  >{{ s }}</button>
+                </div>
+              </div>
+
               <!-- Qty + Add to Cart -->
               <div class="action-row">
                 <div class="qty-ctrl">
@@ -156,9 +174,9 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
-import { isLoggedIn } from '@/services/apiClient'
+import { api, isLoggedIn } from '@/services/apiClient'
 import { isWishlisted, toggleWishlist } from '@/services/wishlistService'
-import { loadCartItems, saveCartItems, toLineId } from '@/utils/commerce'
+import { useCartSidebar } from '@/composables/useCartSidebar'
 
 const API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 
@@ -171,6 +189,7 @@ interface ProductDTO {
   price: number
   stockQuantity: number
   imageUrl: string | null
+  sizes: string[]
   categoryId: number | null
   categoryName: string | null
   sellerId: number | null
@@ -196,13 +215,14 @@ const loading   = ref(true)
 const error     = ref('')
 const activeImg = ref('')
 
-const qty         = ref(1)
-const cartMsg     = ref('')
-const cartMsgType = ref<'ok' | 'err'>('ok')
-const isFavorite  = ref(false)
+const qty          = ref(1)
+const selectedSize = ref('')
+const cartMsg      = ref('')
+const cartMsgType  = ref<'ok' | 'err'>('ok')
+const isFavorite   = ref(false)
 
-const cartItems = computed(() => loadCartItems())
-const cartCount = computed(() => cartItems.value.reduce((s, i) => s + i.quantity, 0))
+const { state: cartState, openSidebar, refreshCart } = useCartSidebar()
+const cartCount = computed(() => cartState.items.reduce((s, i) => s + i.quantity, 0))
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 
@@ -212,6 +232,7 @@ async function loadProduct(id: string) {
   product.value = null
   related.value = []
   qty.value = 1
+  selectedSize.value = ''
   cartMsg.value = ''
 
   try {
@@ -246,40 +267,53 @@ function toggleFavorite() {
   isFavorite.value = isWishlisted(product.value.id)
 }
 
-function addToCart() {
-  if (!product.value) return
-  if (!isLoggedIn()) { router.push(`/login?redirect=/product/${product.value.id}`); return }
+function validateBeforeAdd(): boolean {
+  if (!product.value) return false
+  if (!isLoggedIn()) { router.push(`/login?redirect=/product/${product.value.id}`); return false }
   if (product.value.stockQuantity === 0) {
     cartMsg.value = 'This product is out of stock.'
     cartMsgType.value = 'err'
-    return
+    return false
   }
-  const items = loadCartItems()
-  const lineId = toLineId(product.value.id, 'Default')
-  const existing = items.find(i => i.lineId === lineId)
-  if (existing) {
-    existing.quantity += qty.value
-  } else {
-    items.push({
-      lineId,
-      id: product.value.id,
-      brand: product.value.sellerName ?? '',
-      name: product.value.name,
-      variant: 'Default',
-      price: Number(product.value.price),
-      quantity: qty.value,
-      image: product.value.imageUrl ?? '',
-    })
+  const hasSizes = product.value.sizes && product.value.sizes.length > 0
+  if (hasSizes && !selectedSize.value) {
+    cartMsg.value = 'Please select a size before adding to cart.'
+    cartMsgType.value = 'err'
+    return false
   }
-  saveCartItems(items)
-  cartMsg.value = `Added ${qty.value} × "${product.value.name}" to cart!`
-  cartMsgType.value = 'ok'
-  setTimeout(() => { cartMsg.value = '' }, 3000)
+  cartMsg.value = ''
+  return true
 }
 
-function buyNow() {
-  addToCart()
-  if (cartMsgType.value !== 'err') router.push('/cart')
+async function addToCart() {
+  if (!validateBeforeAdd()) return
+  try {
+    await api.post('/api/cart/add', {
+      productId: product.value!.id,
+      quantity: qty.value,
+      size: selectedSize.value || undefined,
+    })
+    qty.value = 1
+    await openSidebar()
+  } catch (e: unknown) {
+    cartMsg.value = e instanceof Error ? e.message : 'Failed to add to cart.'
+    cartMsgType.value = 'err'
+  }
+}
+
+async function buyNow() {
+  if (!validateBeforeAdd()) return
+  try {
+    await api.post('/api/cart/add', {
+      productId: product.value!.id,
+      quantity: qty.value,
+      size: selectedSize.value || undefined,
+    })
+    router.push('/checkout')
+  } catch (e: unknown) {
+    cartMsg.value = e instanceof Error ? e.message : 'Failed to add to cart.'
+    cartMsgType.value = 'err'
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -297,6 +331,7 @@ onMounted(async () => {
   navLinks.value      = nav
   footerColumns.value = footer
   socialLinks.value   = social
+  refreshCart() // populate nav badge from API (non-blocking)
   await loadProduct(String(route.params.id))
 })
 </script>
@@ -460,6 +495,32 @@ onMounted(async () => {
   margin: 0 0 16px;
 }
 
+/* ── Size selector ── */
+.size-section { margin: 0 0 20px; }
+
+.size-label {
+  font-size: 14px; font-weight: 700; color: #000;
+  margin: 0 0 10px; display: flex; align-items: center; gap: 6px;
+}
+.size-required { font-weight: 400; color: #DA292E; font-size: 12px; }
+.size-chosen   { font-weight: 600; color: #000; font-size: 13px; }
+
+.size-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.size-btn {
+  min-width: 46px; height: 38px; padding: 0 12px;
+  border: 1.5px solid #AABBAA;
+  border-radius: 6px;
+  background: #fff;
+  color: #000;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.size-btn:hover { border-color: #000; }
+.size-btn.active { border-color: #000; background: #000; color: #fff; }
+
 /* ── Action row ── */
 .action-row {
   display: grid;
@@ -545,14 +606,23 @@ onMounted(async () => {
   .hero { grid-template-columns: 80px 1fr; }
   .panel { grid-column: 1 / -1; }
   .related-grid { grid-template-columns: repeat(2, 1fr); }
+  .detail-main { padding: 24px 0 56px; }
 }
 
 @media (max-width: 640px) {
   .container { padding: 0 16px; }
-  .hero { grid-template-columns: 1fr; }
-  .thumbs { flex-direction: row; }
+  .detail-main { padding: 16px 0 48px; }
+  .hero { grid-template-columns: 1fr; gap: 12px; }
+  .thumbs { flex-direction: row; overflow-x: auto; }
+  .thumb { flex-shrink: 0; }
   .product-name { font-size: 22px; }
+  .price { font-size: 22px; }
   .action-row { grid-template-columns: 1fr; }
-  .related-grid { grid-template-columns: repeat(2, 1fr); }
+  .related-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .breadcrumb { margin-bottom: 16px; }
+}
+
+@media (max-width: 380px) {
+  .related-grid { grid-template-columns: 1fr; }
 }
 </style>

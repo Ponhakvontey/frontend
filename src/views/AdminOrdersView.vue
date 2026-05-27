@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="admin-page">
     <AdminSidebar />
     <div class="main-shell">
@@ -337,4 +337,9 @@ tbody td{ padding:12px 16px; font-size:13px; color:#334155; vertical-align:middl
 .pg:hover:not(:disabled){ background:#f8fafc; }
 .pg.active{ background:#000000; color:#fff; border-color:#000000; font-weight:600; }
 .pg:disabled{ opacity:.35; cursor:not-allowed; }
+
+@media (max-width: 768px) {
+  .admin-page { grid-template-columns: 1fr !important; }
+  .page-body  { padding: 16px !important; }
+}
 </style>

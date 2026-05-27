@@ -100,10 +100,7 @@
                     @change="selectedMethod = selectedMethod === 'aba' ? '' : 'aba'"
                     class="method-check"
                   />
-                  <div class="aba-logo">
-                    <span class="aba-top">ABA</span>
-                    <span class="aba-bot">PAY</span>
-                  </div>
+                  <img :src="abaLogo" alt="ABA Pay" class="aba-img" />
                   <div class="method-text">
                     <strong>ABA PAY</strong>
                     <span>Scan to pay with ABA Mobile</span>
@@ -124,8 +121,8 @@
                   <div class="method-text">
                     <strong>Credit/Debit Card</strong>
                     <div class="card-brand-icons">
-                      <i class="fa-brands fa-cc-visa"></i>
-                      <i class="fa-brands fa-cc-mastercard"></i>
+                      <img src="https://cdn.simpleicons.org/visa" alt="Visa" class="brand-img" />
+                      <img src="https://cdn.simpleicons.org/mastercard" alt="Mastercard" class="brand-img" />
                       <i class="fa-brands fa-cc-amex"></i>
                       <i class="fa-brands fa-cc-jcb"></i>
                     </div>
@@ -203,10 +200,7 @@
 
           <div class="modal-head">
             <div class="aba-badge">
-              <div class="aba-logo-sm">
-                <span class="abt">ABA</span>
-                <span class="abp">PAY</span>
-              </div>
+              <img :src="abaLogo" alt="ABA Pay" class="aba-img-sm" />
             </div>
             <div class="modal-timer">
               <i class="fa-solid fa-spinner fa-spin timer-spin"></i>
@@ -269,8 +263,8 @@
                   @input="formatCardNumber"
                 />
                 <div class="inline-card-logos">
-                  <i class="fa-brands fa-cc-visa"></i>
-                  <i class="fa-brands fa-cc-mastercard"></i>
+                  <img src="https://cdn.simpleicons.org/visa" alt="Visa" class="brand-img" />
+                  <img src="https://cdn.simpleicons.org/mastercard" alt="Mastercard" class="brand-img" />
                   <i class="fa-brands fa-cc-amex"></i>
                   <i class="fa-brands fa-cc-jcb"></i>
                 </div>
@@ -341,8 +335,9 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
-import { loadCartItems, saveCartItems, type CartItem } from '@/utils/commerce'
+import type { CartItem } from '@/utils/commerce'
 import { api } from '@/services/apiClient'
+import abaLogo from '@/assets/aba.png'
 
 const router = useRouter()
 
@@ -372,7 +367,7 @@ const qrImage      = ref('')
 const tranId       = ref('')
 const secondsLeft  = ref(0)
 const simulating   = ref(false)
-let pollInterval: ReturnType<typeof setInterval> | null = null
+let sseSource: EventSource | null = null
 let timerInterval: ReturnType<typeof setInterval> | null = null
 
 // ── Card modal state ──────────────────────────────────────────────────────────
@@ -395,22 +390,68 @@ const totalQty   = computed(() => items.value.reduce((s, i) => s + i.quantity, 0
 const subtotal   = computed(() => items.value.reduce((s, i) => s + i.price * i.quantity, 0))
 const amountToPay = computed(() => subtotal.value + deliveryFee.value)
 
-// ── Cart helpers ──────────────────────────────────────────────────────────────
-function saveCart() { saveCartItems(items.value) }
-
-function increaseQty(lineId: string) {
-  const item = items.value.find(i => i.lineId === lineId)
-  if (item) { item.quantity++; saveCart() }
+// ── API cart helpers ──────────────────────────────────────────────────────────
+interface ApiCartItem {
+  productId: string
+  productName: string
+  productImageUrl: string | null
+  size: string | null
+  quantity: number
+  currentPrice: number
 }
 
-function decreaseQty(lineId: string) {
-  const item = items.value.find(i => i.lineId === lineId)
-  if (item && item.quantity > 1) { item.quantity--; saveCart() }
+async function loadCart() {
+  try {
+    const data = await api.get<{ items?: ApiCartItem[] }>('/api/cart')
+    items.value = (data.items ?? []).map(i => ({
+      lineId:   `${i.productId}:${i.size ?? 'Default'}`,
+      id:       i.productId,
+      brand:    '',
+      name:     i.productName,
+      variant:  i.size ?? 'Default',
+      price:    Number(i.currentPrice),
+      quantity: i.quantity,
+      image:    i.productImageUrl ?? '',
+    }))
+  } catch {
+    items.value = []
+  }
 }
 
-function removeItem(lineId: string) {
-  items.value = items.value.filter(i => i.lineId !== lineId)
-  saveCart()
+function parseLineId(lineId: string) {
+  const idx = lineId.indexOf(':')
+  const productId = lineId.substring(0, idx)
+  const variant   = lineId.substring(idx + 1)
+  return { productId, size: variant === 'Default' ? null : variant }
+}
+
+async function increaseQty(lineId: string) {
+  const item = items.value.find(i => i.lineId === lineId)
+  if (!item) return
+  const { productId, size } = parseLineId(lineId)
+  try {
+    await api.put('/api/cart/update', { productId, quantity: item.quantity + 1, size: size ?? undefined })
+    await loadCart()
+  } catch { /* ignore */ }
+}
+
+async function decreaseQty(lineId: string) {
+  const item = items.value.find(i => i.lineId === lineId)
+  if (!item || item.quantity <= 1) return
+  const { productId, size } = parseLineId(lineId)
+  try {
+    await api.put('/api/cart/update', { productId, quantity: item.quantity - 1, size: size ?? undefined })
+    await loadCart()
+  } catch { /* ignore */ }
+}
+
+async function removeItem(lineId: string) {
+  const { productId, size } = parseLineId(lineId)
+  const sizeParam = size ? `?size=${encodeURIComponent(size)}` : ''
+  try {
+    await api.delete(`/api/cart/remove/${productId}${sizeParam}`)
+    await loadCart()
+  } catch { /* ignore */ }
 }
 
 // ── Contact helpers ───────────────────────────────────────────────────────────
@@ -428,7 +469,7 @@ function formatTime(secs: number) {
 }
 
 function stopAbaTimers() {
-  if (pollInterval)  { clearInterval(pollInterval);  pollInterval  = null }
+  if (sseSource)     { sseSource.close();            sseSource     = null }
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null }
 }
 
@@ -449,19 +490,33 @@ function startAbaTimer(secs: number) {
 }
 
 function startPolling(id: string) {
-  pollInterval = setInterval(async () => {
+  // Use SSE for real-time payment status — falls back to the /status poll endpoint
+  // if EventSource is not available (unlikely in any modern browser).
+  if (typeof EventSource === 'undefined') {
+    return
+  }
+
+  const url = `/api/payment/stream/${encodeURIComponent(id)}`
+  sseSource = new EventSource(url, { withCredentials: true })
+
+  sseSource.addEventListener('payment-status', (event: MessageEvent) => {
     try {
-      const res = await api.get<{ status: string }>(`/api/payment/status/${id}`)
-      if (res.status === 'COMPLETED') {
+      const data = JSON.parse(event.data) as { status: string }
+      if (data.status === 'COMPLETED') {
         stopAbaTimers()
         router.push(`/order-success?tran_id=${id}`)
-      } else if (res.status === 'FAILED') {
+      } else if (data.status === 'FAILED') {
         stopAbaTimers()
         closeModal()
         checkoutError.value = 'Payment was declined. Please try again.'
       }
-    } catch { /* keep polling */ }
-  }, 5000)
+    } catch { /* malformed event — keep connection open */ }
+  })
+
+  sseSource.onerror = () => {
+    // Connection dropped — SSE auto-reconnects, but if we're past the QR lifetime
+    // the timer will close the modal anyway. No user action needed.
+  }
 }
 
 function startCardTimer() {
@@ -514,14 +569,6 @@ function buildShippingInfo() {
   }
 }
 
-// ── Sync cart to backend ──────────────────────────────────────────────────────
-async function syncCart() {
-  try { await api.delete('/api/cart/clear') } catch { /* ignore */ }
-  for (const item of items.value) {
-    await api.post('/api/cart/add', { productId: item.id, quantity: item.quantity })
-  }
-}
-
 // ── Checkout handler ──────────────────────────────────────────────────────────
 async function handleCheckout() {
   if (!selectedMethod.value || checkoutLoading.value) return
@@ -529,7 +576,6 @@ async function handleCheckout() {
   checkoutError.value   = ''
 
   try {
-    await syncCart()
     const shipping = buildShippingInfo()
 
     if (selectedMethod.value === 'aba') {
@@ -595,8 +641,7 @@ function formatCardNumber() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  items.value = loadCartItems()
-  const [nav, footer, social] = await Promise.all([getNavLinks(), getFooterColumns(), getSocialLinks()])
+  const [nav, footer, social] = await Promise.all([getNavLinks(), getFooterColumns(), getSocialLinks(), loadCart()])
   navLinks.value      = nav
   footerColumns.value = footer
   socialLinks.value   = social
@@ -769,22 +814,10 @@ onUnmounted(() => { stopAbaTimers(); stopCardTimer() })
 
 .method-check { width: 16px; height: 16px; cursor: pointer; accent-color: #000; flex-shrink: 0; }
 
-/* ABA logo badge */
-.aba-logo {
+/* ABA logo image */
+.aba-img {
   width: 52px; height: 34px;
-  background: linear-gradient(135deg, #0a4d8c, #0d6ebc);
-  border-radius: 6px;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  flex-shrink: 0; gap: 1px;
-}
-.aba-top {
-  font-size: 8px; font-weight: 900; color: #fff;
-  letter-spacing: 0.08em; line-height: 1;
-}
-.aba-bot {
-  font-size: 10px; font-weight: 900; color: #fff;
-  letter-spacing: 0.15em; line-height: 1;
+  object-fit: contain; border-radius: 6px; flex-shrink: 0;
 }
 
 /* Card icon box */
@@ -801,7 +834,8 @@ onUnmounted(() => { stopAbaTimers(); stopCardTimer() })
 .method-text strong { display: block; font-size: 14px; font-weight: 700; color: #000; margin-bottom: 2px; }
 .method-text span { font-size: 12px; color: #808080; }
 
-.card-brand-icons { display: flex; gap: 4px; font-size: 18px; color: #808080; margin-top: 2px; }
+.card-brand-icons { display: flex; gap: 4px; font-size: 18px; color: #808080; margin-top: 2px; align-items: center; }
+.brand-img { height: 18px; width: auto; display: block; }
 
 /* ── Preferred contact ── */
 .contact-row {
@@ -901,15 +935,10 @@ onUnmounted(() => { stopAbaTimers(); stopCardTimer() })
 /* ── ABA PAY modal ── */
 .aba-badge { display: flex; align-items: center; gap: 8px; }
 
-.aba-logo-sm {
+.aba-img-sm {
   width: 48px; height: 30px;
-  background: linear-gradient(135deg, #0a4d8c, #0d6ebc);
-  border-radius: 5px;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 1px;
+  object-fit: contain; border-radius: 5px;
 }
-.abt { font-size: 7px; font-weight: 900; color: #fff; letter-spacing: 0.08em; }
-.abp { font-size: 9px; font-weight: 900; color: #fff; letter-spacing: 0.15em; }
 
 .aba-amount {
   text-align: center; margin-bottom: 20px;
@@ -975,6 +1004,7 @@ onUnmounted(() => { stopAbaTimers(); stopCardTimer() })
 .inline-card-logos {
   display: flex; gap: 4px; padding: 0 10px;
   font-size: 18px; color: #808080; flex-shrink: 0;
+  align-items: center;
 }
 
 .card-fields-row {
@@ -1014,6 +1044,7 @@ onUnmounted(() => { stopAbaTimers(); stopCardTimer() })
 /* ── Responsive ── */
 @media (max-width: 960px) {
   .page-layout { grid-template-columns: 1fr; }
+  .cart-main { padding: 70px 0 60px; }
 }
 
 @media (max-width: 640px) {
@@ -1022,5 +1053,7 @@ onUnmounted(() => { stopAbaTimers(); stopCardTimer() })
   .item-price { grid-column: 1 / -1; text-align: right; }
   .card-fields-row { grid-template-columns: 1fr; }
   .contact-row { flex-direction: column; }
+  .addr-row { flex-wrap: wrap; gap: 8px; }
+  .section-title { font-size: 16px; }
 }
 </style>

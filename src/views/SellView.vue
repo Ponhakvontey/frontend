@@ -12,10 +12,18 @@
           <span class="bc-current">{{ selectedCategoryName || 'All Products' }}</span>
         </nav>
 
+        <!-- Mobile filter toggle -->
+        <button class="mob-filter-btn" type="button" @click="filterOpen = !filterOpen">
+          <i class="fa-solid fa-sliders"></i>
+          {{ filterOpen ? 'Hide Filters' : 'Show Filters' }}
+        </button>
+        <!-- Mobile filter backdrop -->
+        <div v-if="filterOpen" class="mob-filter-overlay" @click="filterOpen = false" />
+
         <div class="shop-layout">
 
           <!-- ══ Sidebar ══ -->
-          <aside class="sidebar">
+          <aside class="sidebar" :class="{ 'mob-open': filterOpen }">
 
             <div class="sidebar-header">
               <span class="sidebar-title">Filters</span>
@@ -369,6 +377,7 @@ function toggleSize(s: string) {
 // ── Sort ──────────────────────────────────────────────────────────────────
 
 const sortBy = ref('newest')
+const filterOpen = ref(false)
 
 function sortParams() {
   switch (sortBy.value) {
@@ -502,6 +511,7 @@ function selectCategory(id: number | null, name: string) {
 
 function applyFilter() {
   currentPage.value = 1
+  filterOpen.value = false
   fetchProducts()
 }
 
@@ -541,7 +551,7 @@ onMounted(async () => {
 }
 
 /* ── Container ── */
-.shop-main { padding: 24px 0 60px; }
+.shop-main { padding: 60px 0 60px; }
 
 .shop-container {
   max-width: 1200px;
@@ -878,13 +888,69 @@ onMounted(async () => {
   .product-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* ── Mobile filter toggle button ── */
+.mob-filter-btn {
+  display: none;
+}
+.mob-filter-overlay {
+  display: none;
+}
+
 @media (max-width: 768px) {
+  .mob-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 18px;
+    border: 1.5px solid #000;
+    border-radius: 6px;
+    background: #fff;
+    color: #000;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: background 0.15s;
+  }
+  .mob-filter-btn:hover { background: #f5f5f5; }
+
+  .mob-filter-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 490;
+  }
+
   .shop-layout { grid-template-columns: 1fr; }
-  .sidebar { position: static; }
   .product-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Sidebar: hidden by default, slides in from left as overlay */
+  .sidebar {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100dvh;
+    width: 300px;
+    max-width: 88vw;
+    z-index: 500;
+    overflow-y: auto;
+    border-radius: 0;
+    border: none;
+    border-right: 1px solid #AABBAA;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+  }
+  .sidebar.mob-open { display: block; }
 }
 
 @media (max-width: 480px) {
+  .product-grid { grid-template-columns: repeat(2, 1fr); }
+  .shop-main { padding-top: 60px; }
+}
+
+@media (max-width: 360px) {
   .product-grid { grid-template-columns: 1fr; }
 }
 </style>

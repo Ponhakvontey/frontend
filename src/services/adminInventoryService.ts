@@ -16,6 +16,7 @@ interface BackendProduct {
   stock?: number | string | null
   imageUrl?: string | null
   image?: string | null
+  sizes?: string[] | null
   categoryName?: string | null
   category?: string | null
   categoryId?: number | string | null
@@ -70,6 +71,7 @@ function toInventoryProduct(product: BackendProduct): InventoryProduct {
     price: Number(product.price || 0),
     stock: normalizeStock(product),
     imageUrl: product.imageUrl ?? product.image ?? '',
+    sizes: Array.isArray(product.sizes) ? product.sizes : [],
     category: product.categoryName ?? product.category ?? 'Clothing',
     categoryId: toCategoryId(product.categoryId),
     sellerName: product.sellerName ?? 'Ubuyee Studio',
@@ -90,6 +92,7 @@ function toPayload(input: InventoryProductInput) {
     price: input.price,
     stockQuantity: input.stock,
     imageUrl: input.imageUrl,
+    sizes: input.sizes ?? [],
     categoryId: input.categoryId ? Number(input.categoryId) : null,
   }
 }
@@ -103,6 +106,7 @@ function createLocalProduct(input: InventoryProductInput) {
     price: input.price,
     stock: input.stock,
     imageUrl: input.imageUrl,
+    sizes: input.sizes ?? [],
     categoryId: input.categoryId,
     category: 'Clothing',
     sellerName: 'Ubuyee Studio',
@@ -128,6 +132,7 @@ function updateLocalProduct(id: string, input: InventoryProductInput) {
       price: input.price,
       stock: input.stock,
       imageUrl: input.imageUrl,
+      sizes: input.sizes ?? [],
       categoryId: input.categoryId,
       updatedAt: new Date().toISOString(),
     }
@@ -172,12 +177,9 @@ export async function getInventoryProduct(id: string) {
 
 export async function createInventoryProduct(input: InventoryProductInput) {
   if (USE_API) {
-    try {
-      const product = await api.post<BackendProduct>('/api/products', toPayload(input))
-      return toInventoryProduct(product)
-    } catch (error) {
-      console.warn('Product API create failed. Saving product locally instead.', error)
-    }
+    // Let errors propagate — the form catches and displays them
+    const product = await api.post<BackendProduct>('/api/products', toPayload(input))
+    return toInventoryProduct(product)
   }
 
   return createLocalProduct(input)
@@ -185,12 +187,9 @@ export async function createInventoryProduct(input: InventoryProductInput) {
 
 export async function updateInventoryProduct(id: string, input: InventoryProductInput) {
   if (USE_API && !isLocalProductId(id)) {
-    try {
-      const product = await api.put<BackendProduct>(`/api/products/${id}`, toPayload(input))
-      return toInventoryProduct(product)
-    } catch (error) {
-      console.warn('Product API update failed. Updating local inventory data instead.', error)
-    }
+    // Let errors propagate — the form catches and displays them
+    const product = await api.put<BackendProduct>(`/api/products/${id}`, toPayload(input))
+    return toInventoryProduct(product)
   }
 
   return updateLocalProduct(id, input)

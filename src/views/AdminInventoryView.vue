@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="admin-page">
     <AdminSidebar />
 
@@ -354,4 +354,9 @@ tbody td { padding: 12px 16px; font-size: 13px; color: #334155; vertical-align: 
 /* Footer */
 .table-footer { padding: 13px 16px; border-top: 1px solid #f1f5f9; }
 .muted { font-size: 12px; color: #94a3b8; }
+
+@media (max-width: 768px) {
+  .admin-page { grid-template-columns: 1fr !important; }
+  .page-body  { padding: 16px !important; }
+}
 </style>
