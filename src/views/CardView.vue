@@ -513,9 +513,15 @@ function startPolling(id: string) {
     } catch { /* malformed event — keep connection open */ }
   })
 
-  sseSource.onerror = () => {
-    // Connection dropped — SSE auto-reconnects, but if we're past the QR lifetime
-    // the timer will close the modal anyway. No user action needed.
+  sseSource.onerror = (e: Event) => {
+    const target = e.target as EventSource
+    // CLOSED means the server rejected the connection (401/403) — stop retrying.
+    if (target.readyState === EventSource.CLOSED) {
+      stopAbaTimers()
+      closeModal()
+      checkoutError.value = 'Session expired. Please log in again.'
+    }
+    // CONNECTING means a transient drop — EventSource will auto-reconnect.
   }
 }
 
