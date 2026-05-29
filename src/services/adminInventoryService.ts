@@ -15,6 +15,7 @@ interface BackendProduct {
   stockQuantity?: number | string | null
   stock?: number | string | null
   imageUrl?: string | null
+  imageUrls?: string[] | null
   image?: string | null
   sizes?: string[] | null
   categoryName?: string | null
@@ -71,6 +72,7 @@ function toInventoryProduct(product: BackendProduct): InventoryProduct {
     price: Number(product.price || 0),
     stock: normalizeStock(product),
     imageUrl: product.imageUrl ?? product.image ?? '',
+    imageUrls: Array.isArray(product.imageUrls) ? product.imageUrls : [],
     sizes: Array.isArray(product.sizes) ? product.sizes : [],
     category: product.categoryName ?? product.category ?? 'Clothing',
     categoryId: toCategoryId(product.categoryId),
@@ -86,12 +88,14 @@ function readProductsFromResponse(response: PagedResponse<BackendProduct> | Back
 }
 
 function toPayload(input: InventoryProductInput) {
+  const validUrls = (input.imageUrls ?? []).filter((u) => u.trim())
   return {
     name: input.name,
     description: input.description,
     price: input.price,
     stockQuantity: input.stock,
-    imageUrl: input.imageUrl,
+    imageUrl: validUrls[0] ?? input.imageUrl ?? '',
+    imageUrls: validUrls,
     sizes: input.sizes ?? [],
     categoryId: input.categoryId ? Number(input.categoryId) : null,
   }
@@ -106,6 +110,7 @@ function createLocalProduct(input: InventoryProductInput) {
     price: input.price,
     stock: input.stock,
     imageUrl: input.imageUrl,
+    imageUrls: input.imageUrls ?? [],
     sizes: input.sizes ?? [],
     categoryId: input.categoryId,
     category: 'Clothing',
@@ -132,6 +137,7 @@ function updateLocalProduct(id: string, input: InventoryProductInput) {
       price: input.price,
       stock: input.stock,
       imageUrl: input.imageUrl,
+      imageUrls: input.imageUrls ?? [],
       sizes: input.sizes ?? [],
       categoryId: input.categoryId,
       updatedAt: new Date().toISOString(),
@@ -197,13 +203,8 @@ export async function updateInventoryProduct(id: string, input: InventoryProduct
 
 export async function deleteInventoryProduct(id: string) {
   if (USE_API && !isLocalProductId(id)) {
-    try {
-      await api.delete(`/api/products/${id}`)
-      return
-    } catch (error) {
-      console.warn('Product API delete failed. Removing local inventory data instead.', error)
-    }
+    await api.delete(`/api/products/${id}`)
+    return
   }
-
   deleteLocalProduct(id)
 }

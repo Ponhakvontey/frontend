@@ -32,13 +32,21 @@
             <!-- Thumbnail strip -->
             <div class="thumbs">
               <button
+                v-for="(img, idx) in allImages"
+                :key="idx"
                 type="button"
                 class="thumb"
-                :class="{ active: activeImg === product.imageUrl }"
-                @click="activeImg = product.imageUrl ?? ''"
+                :class="{ active: activeImg === img }"
+                @click="activeImg = img"
               >
-                <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.name" />
-                <div v-else class="thumb-placeholder"><i class="fa-solid fa-image"></i></div>
+                <img :src="img" :alt="`${product.name} image ${idx + 1}`" />
+              </button>
+              <button
+                v-if="!allImages.length"
+                type="button"
+                class="thumb active"
+              >
+                <div class="thumb-placeholder"><i class="fa-solid fa-image"></i></div>
               </button>
             </div>
 
@@ -189,6 +197,7 @@ interface ProductDTO {
   price: number
   stockQuantity: number
   imageUrl: string | null
+  imageUrls: string[] | null
   sizes: string[]
   categoryId: number | null
   categoryName: string | null
@@ -214,6 +223,13 @@ const related   = ref<ProductDTO[]>([])
 const loading   = ref(true)
 const error     = ref('')
 const activeImg = ref('')
+
+const allImages = computed((): string[] => {
+  if (!product.value) return []
+  const list = product.value.imageUrls?.filter(Boolean) ?? []
+  if (list.length) return list
+  return product.value.imageUrl ? [product.value.imageUrl] : []
+})
 
 const qty          = ref(1)
 const selectedSize = ref('')
@@ -241,7 +257,8 @@ async function loadProduct(id: string) {
     if (!res.ok) throw new Error(`Server error ${res.status}`)
     const dto: ProductDTO = await res.json()
     product.value = dto
-    activeImg.value = dto.imageUrl ?? ''
+    const imgs = dto.imageUrls?.filter(Boolean) ?? []
+    activeImg.value = imgs[0] ?? dto.imageUrl ?? ''
     isFavorite.value = isWishlisted(dto.id)
 
     const relRes = await fetch(`${API}/api/products/${id}/related`)

@@ -81,22 +81,52 @@
             </div>
           </div>
 
-          <!-- Right: image + meta -->
+          <!-- Right: images + meta -->
           <div class="side-panel">
-            <h2><i class="fa-solid fa-image panel-icon"></i> Image</h2>
+            <h2><i class="fa-solid fa-images panel-icon"></i> Images</h2>
 
-            <label class="field">
-              <span>Image URL</span>
-              <input v-model.trim="form.imageUrl" type="url" placeholder="https://…" />
-            </label>
+            <!-- Image entries -->
+            <div
+              v-for="(url, idx) in form.imageUrls"
+              :key="idx"
+              class="img-entry"
+            >
+              <div class="img-entry-header">
+                <span class="img-entry-label">
+                  {{ idx === 0 ? 'Primary image' : `Image ${idx + 1}` }}
+                </span>
+                <button
+                  v-if="form.imageUrls.length > 1"
+                  type="button"
+                  class="remove-img-btn"
+                  @click="removeImage(idx)"
+                  title="Remove image"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
 
-            <div class="preview-box">
-              <img v-if="form.imageUrl" :src="form.imageUrl" :alt="form.name" />
-              <div v-else class="preview-placeholder">
-                <i class="fa-solid fa-image"></i>
-                <span>No image</span>
+              <input
+                :value="url"
+                @input="updateImage(idx, ($event.target as HTMLInputElement).value)"
+                type="url"
+                placeholder="https://…"
+                class="img-url-input"
+              />
+
+              <div class="preview-box">
+                <img v-if="url" :src="url" :alt="`Product image ${idx + 1}`" />
+                <div v-else class="preview-placeholder">
+                  <i class="fa-solid fa-image"></i>
+                  <span>No image</span>
+                </div>
               </div>
             </div>
+
+            <!-- Add image button -->
+            <button type="button" class="add-img-btn" @click="addImage">
+              <i class="fa-solid fa-plus"></i> Add Image
+            </button>
 
             <!-- Read-only seller info when editing -->
             <div v-if="isEditing && sellerName" class="info-row">
@@ -141,9 +171,21 @@ const form = reactive<InventoryProductInput>({
   price: 0,
   stock: 0,
   imageUrl: '',
+  imageUrls: [''],
   sizes: [],
   categoryId: null,
 })
+
+function addImage() { form.imageUrls.push('') }
+
+function removeImage(idx: number) {
+  form.imageUrls.splice(idx, 1)
+  if (!form.imageUrls.length) form.imageUrls.push('')
+}
+
+function updateImage(idx: number, val: string) {
+  form.imageUrls[idx] = val
+}
 
 const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 
@@ -173,6 +215,7 @@ onMounted(async () => {
   form.price       = product.price
   form.stock       = product.stock
   form.imageUrl    = product.imageUrl
+  form.imageUrls   = product.imageUrls?.length ? [...product.imageUrls] : [product.imageUrl ?? '']
   form.sizes       = product.sizes ? [...product.sizes] : []
   form.categoryId  = product.categoryId
   sellerName.value = product.sellerName
@@ -184,6 +227,10 @@ async function saveProduct() {
   if (!form.name.trim()) { error.value = 'Product name is required.'; return }
   if (form.price <= 0)   { error.value = 'Price must be greater than 0.'; return }
   if (form.stock < 0)    { error.value = 'Stock cannot be negative.'; return }
+
+  // Sync primary imageUrl from the first non-empty entry in imageUrls
+  const validUrls = form.imageUrls.filter(u => u.trim())
+  form.imageUrl = validUrls[0] ?? ''
 
   saving.value = true
   try {
@@ -288,6 +335,43 @@ textarea { resize: vertical; padding: 10px 12px; }
   color: #cbd5e1; font-size: 12px;
 }
 .preview-placeholder i { font-size: 28px; }
+
+/* Multi-image manager */
+.img-entry {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px;
+  background: #f8fafc;
+}
+
+.img-entry-header {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; font-weight: 700; color: #64748b;
+}
+
+.img-url-input {
+  height: 36px !important;
+}
+
+.remove-img-btn {
+  width: 24px; height: 24px; border-radius: 6px;
+  border: 1px solid #e2e8f0; background: #fff;
+  color: #94a3b8; cursor: pointer; display: grid; place-items: center;
+  font-size: 11px; flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.remove-img-btn:hover { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
+
+.add-img-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 14px;
+  border: 1.5px dashed #cbd5e1; border-radius: 8px;
+  background: #fff; color: #475569;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: Helvetica, Arial, sans-serif;
+  transition: border-color 0.15s, color 0.15s;
+  align-self: flex-start;
+}
+.add-img-btn:hover { border-color: #000; color: #000; }
 
 /* Seller info */
 .info-row {

@@ -5,257 +5,268 @@
     <main class="shop-main">
       <div class="shop-container">
 
-        <!-- Breadcrumb -->
-        <nav class="breadcrumb">
-          <RouterLink to="/" class="bc-link">Home</RouterLink>
-          <i class="fa-solid fa-chevron-right bc-sep"></i>
-          <span class="bc-current">{{ selectedCategoryName || 'All Products' }}</span>
-        </nav>
-
         <!-- Mobile filter toggle -->
         <button class="mob-filter-btn" type="button" @click="filterOpen = !filterOpen">
           <i class="fa-solid fa-sliders"></i>
-          {{ filterOpen ? 'Hide Filters' : 'Show Filters' }}
+          {{ filterOpen ? 'Hide Filters' : 'Filters' }}
         </button>
-        <!-- Mobile filter backdrop -->
         <div v-if="filterOpen" class="mob-filter-overlay" @click="filterOpen = false" />
 
+        <!-- Top toolbar -->
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-label">Filters</span>
+            <button type="button" class="clear-all-btn" @click="clearAll">Clear All</button>
+          </div>
+          <span class="toolbar-count">
+            <template v-if="loading">Loading…</template>
+            <template v-else>
+              Showing {{ pageStart }}–{{ pageEnd }} Result from total {{ totalElements }}
+            </template>
+          </span>
+          <div class="toolbar-right">
+            <select v-model="sortBy" class="sort-select" @change="fetchProducts">
+              <option value="popular">Popularity</option>
+              <option value="newest">Newest</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+            </select>
+            <i class="fa-solid fa-chevron-down sort-chevron"></i>
+          </div>
+        </div>
+
+        <!-- Two-column layout -->
         <div class="shop-layout">
 
-          <!-- ══ Sidebar ══ -->
+          <!-- ── Sidebar ── -->
           <aside class="sidebar" :class="{ 'mob-open': filterOpen }">
 
-            <div class="sidebar-header">
-              <span class="sidebar-title">Filters</span>
-              <i class="fa-solid fa-sliders"></i>
-            </div>
-
-            <hr class="divider" />
-
-            <!-- Categories -->
-            <ul class="cat-list">
-              <li
-                class="cat-item"
-                :class="{ active: selectedCategoryId === null }"
-                @click="selectCategory(null, 'All Products')"
-              >
-                <span>All Products</span>
-                <i class="fa-solid fa-chevron-right"></i>
-              </li>
-              <li
-                v-for="cat in categories"
-                :key="cat.id"
-                class="cat-item"
-                :class="{ active: selectedCategoryId === cat.id }"
-                @click="selectCategory(cat.id, cat.name)"
-              >
-                <span>{{ cat.name }}</span>
-                <i class="fa-solid fa-chevron-right"></i>
-              </li>
-            </ul>
-
-            <hr class="divider" />
-
-            <!-- Price Range -->
-            <div class="filter-section">
-              <div class="fs-header">
-                <span class="fs-title">Price</span>
-                <i class="fa-solid fa-chevron-up"></i>
-              </div>
-
-              <div class="price-range">
-                <div class="price-track">
-                  <div class="price-fill" :style="rangeFillStyle"></div>
-                </div>
-                <input
-                  type="range" :min="PRICE_MIN" :max="PRICE_MAX"
-                  v-model.number="priceMin" @input="clampMin"
-                  class="range-input"
-                />
-                <input
-                  type="range" :min="PRICE_MIN" :max="PRICE_MAX"
-                  v-model.number="priceMax" @input="clampMax"
-                  class="range-input"
-                />
-              </div>
-
-              <div class="price-labels">
-                <span>${{ priceMin }}</span>
-                <span>${{ priceMax }}</span>
-              </div>
-            </div>
-
-            <hr class="divider" />
-
-            <!-- Colors (UI only — no backend field) -->
-            <div class="filter-section">
-              <div class="fs-header">
-                <span class="fs-title">Colors</span>
-                <i class="fa-solid fa-chevron-up"></i>
-              </div>
-              <div class="color-swatches">
-                <button
-                  v-for="color in colors"
-                  :key="color.value"
-                  type="button"
-                  class="color-swatch"
-                  :class="{ selected: selectedColors.includes(color.value), light: color.light }"
-                  :style="{ background: color.value }"
-                  :aria-label="color.label"
-                  @click="toggleColor(color.value)"
+            <!-- Category -->
+            <div class="filter-block">
+              <button type="button" class="block-header" @click="toggleSection('category')">
+                <span class="block-title">Category</span>
+                <i :class="open.category ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
+              </button>
+              <div v-show="open.category" class="block-body">
+                <label
+                  v-for="cat in showAllCats ? categories : categories.slice(0, 5)"
+                  :key="cat.id"
+                  class="filter-check"
                 >
-                  <i v-if="selectedColors.includes(color.value)" class="fa-solid fa-check"></i>
+                  <input
+                    type="checkbox"
+                    :value="cat.id"
+                    v-model="selectedCategoryIds"
+                    @change="onFilterChange"
+                  />
+                  <span class="check-name">{{ cat.name }}</span>
+                  <span class="check-count">({{ cat.productCount ?? 0 }})</span>
+                </label>
+                <button v-if="categories.length > 5" type="button" class="show-more-btn" @click="showAllCats = !showAllCats">
+                  {{ showAllCats ? 'Show less' : 'Show more' }}
                 </button>
               </div>
             </div>
 
-            <hr class="divider" />
+            <div class="block-divider" />
+
+            <!-- Ratings -->
+            <div class="filter-block">
+              <button type="button" class="block-header" @click="toggleSection('ratings')">
+                <span class="block-title">Ratings</span>
+                <i :class="open.ratings ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
+              </button>
+              <div v-show="open.ratings" class="block-body">
+                <label v-for="r in ratingOpts" :key="r.value" class="filter-radio">
+                  <input
+                    type="radio"
+                    name="rating"
+                    :value="r.value"
+                    v-model="selectedRating"
+                    @change="onFilterChange"
+                  />
+                  <span class="stars-sm">
+                    <i v-for="n in 5" :key="n" :class="starClass(r.value, n)"></i>
+                  </span>
+                  <span class="radio-label">{{ r.label }}</span>
+                  <span class="check-count">({{ r.count }})</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="block-divider" />
+
+            <!-- Brand -->
+            <div class="filter-block">
+              <button type="button" class="block-header" @click="toggleSection('brand')">
+                <span class="block-title">Brand</span>
+                <i :class="open.brand ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
+              </button>
+              <div v-show="open.brand" class="block-body">
+                <label
+                  v-for="brand in showAllBrands ? sellers : sellers.slice(0, 5)"
+                  :key="brand.name"
+                  class="filter-check"
+                >
+                  <input type="checkbox" :value="brand.name" v-model="selectedBrands" />
+                  <span class="check-name">{{ brand.name }}</span>
+                  <span class="check-count">({{ brand.count }})</span>
+                </label>
+                <div v-if="!sellers.length" class="no-data">No brands yet</div>
+                <button v-if="sellers.length > 5" type="button" class="show-more-btn" @click="showAllBrands = !showAllBrands">
+                  {{ showAllBrands ? 'Show less' : 'Show more' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="block-divider" />
+
+            <!-- Price -->
+            <div class="filter-block">
+              <button type="button" class="block-header" @click="toggleSection('price')">
+                <span class="block-title">Price</span>
+                <i :class="open.price ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
+              </button>
+              <div v-show="open.price" class="block-body">
+                <div class="dual-range">
+                  <div class="range-track">
+                    <div class="range-fill" :style="priceFillStyle"></div>
+                  </div>
+                  <input type="range" class="range-thumb" :min="PRICE_MIN" :max="PRICE_MAX"
+                         v-model.number="priceMin" @input="clampPriceMin" @change="onFilterChange" />
+                  <input type="range" class="range-thumb" :min="PRICE_MIN" :max="PRICE_MAX"
+                         v-model.number="priceMax" @input="clampPriceMax" @change="onFilterChange" />
+                </div>
+                <div class="range-inputs-row">
+                  <input type="number" class="range-num" v-model.number="priceMin"
+                         :min="PRICE_MIN" :max="priceMax - 1" @change="onFilterChange" />
+                  <input type="number" class="range-num" v-model.number="priceMax"
+                         :min="priceMin + 1" :max="PRICE_MAX" @change="onFilterChange" />
+                </div>
+              </div>
+            </div>
+
+            <div class="block-divider" />
 
             <!-- Size (UI only) -->
-            <div class="filter-section">
-              <div class="fs-header">
-                <span class="fs-title">Size</span>
-                <i class="fa-solid fa-chevron-up"></i>
-              </div>
-              <div class="size-pills">
-                <button
-                  v-for="size in sizes"
-                  :key="size"
-                  type="button"
-                  class="size-pill"
-                  :class="{ selected: selectedSizes.includes(size) }"
-                  @click="toggleSize(size)"
-                >
-                  {{ size }}
-                </button>
+            <div class="filter-block">
+              <button type="button" class="block-header" @click="toggleSection('size')">
+                <span class="block-title">Size</span>
+                <i :class="open.size ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
+              </button>
+              <div v-show="open.size" class="block-body">
+                <div class="dual-range">
+                  <div class="range-track">
+                    <div class="range-fill" :style="sizeFillStyle"></div>
+                  </div>
+                  <input type="range" class="range-thumb" :min="SIZE_MIN" :max="SIZE_MAX"
+                         v-model.number="sizeMin" @input="clampSizeMin" />
+                  <input type="range" class="range-thumb" :min="SIZE_MIN" :max="SIZE_MAX"
+                         v-model.number="sizeMax" @input="clampSizeMax" />
+                </div>
+                <div class="range-inputs-row">
+                  <input type="number" class="range-num" v-model.number="sizeMin"
+                         :min="SIZE_MIN" :max="sizeMax - 1" />
+                  <input type="number" class="range-num" v-model.number="sizeMax"
+                         :min="sizeMin + 1" :max="SIZE_MAX" />
+                </div>
               </div>
             </div>
-
-            <button type="button" class="apply-btn" @click="applyFilter">
-              Apply Filter
-            </button>
 
           </aside>
 
-          <!-- ══ Catalog ══ -->
+          <!-- ── Catalog ── -->
           <section class="catalog">
 
-            <div class="catalog-header">
-              <h1 class="catalog-title">{{ selectedCategoryName || 'All Products' }}</h1>
-              <div class="catalog-meta">
-                <span class="result-count">
-                  <template v-if="loading">Loading…</template>
-                  <template v-else>
-                    Showing {{ startItem }}–{{ endItem }} of {{ totalElements }} Products
-                  </template>
-                </span>
-                <div class="sort-wrap">
-                  <span class="sort-label">Sort by:</span>
-                  <select v-model="sortBy" class="sort-select" @change="fetchProducts">
-                    <option value="popular">Most Popular</option>
-                    <option value="newest">Newest Arrivals</option>
-                    <option value="price_asc">Price: Low to High</option>
-                    <option value="price_desc">Price: High to Low</option>
-                  </select>
-                </div>
-              </div>
+            <!-- Search bar -->
+            <form class="search-bar" @submit.prevent="runSearch">
+              <i class="fa-solid fa-magnifying-glass search-ico"></i>
+              <input v-model="searchText" type="search" class="search-inp" placeholder="Search products…" />
+              <button type="submit" class="search-btn">Search</button>
+            </form>
 
-              <!-- Search bar -->
-              <form class="search-bar" @submit.prevent="runSearch">
-                <i class="fa-solid fa-magnifying-glass search-ico"></i>
-                <input
-                  v-model="searchText"
-                  type="search"
-                  class="search-inp"
-                  placeholder="Search products…"
-                />
-                <button type="submit" class="search-btn">Search</button>
-              </form>
-            </div>
-
-            <!-- Loading -->
+            <!-- States -->
             <div v-if="loading" class="state-msg">
               <i class="fa-solid fa-spinner fa-spin"></i> Loading products…
             </div>
-
-            <!-- Error -->
             <div v-else-if="error" class="state-msg err">
               <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
             </div>
-
-            <!-- Empty -->
             <div v-else-if="!products.length" class="state-msg">
               <i class="fa-regular fa-folder-open"></i> No products found.
             </div>
 
             <!-- Product Grid -->
             <div v-else class="product-grid">
-              <RouterLink
-                v-for="product in products"
-                :key="product.id"
-                :to="`/product/${product.id}`"
-                class="product-card"
-              >
-                <div class="card-image">
-                  <img
-                    v-if="product.imageUrl"
-                    :src="product.imageUrl"
-                    :alt="product.name"
-                    class="product-img"
-                    loading="lazy"
-                  />
-                  <div v-else class="img-placeholder">
-                    <i class="fa-solid fa-image"></i>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <h3 class="product-name">{{ product.name }}</h3>
-                  <div class="rating-row">
-                    <div class="stars">
-                      <i v-for="n in 5" :key="n" :class="getStarClass(product.averageRating ?? 0, n)"></i>
+              <div v-for="product in filteredProducts" :key="product.id" class="product-card">
+
+                <!-- Image + heart -->
+                <div class="card-img-wrap">
+                  <RouterLink :to="`/product/${product.id}`" class="img-link">
+                    <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.name"
+                         class="product-img" loading="lazy" />
+                    <div v-else class="img-placeholder">
+                      <i class="fa-solid fa-image"></i>
                     </div>
-                    <span class="rating-text">
-                      {{ product.averageRating ? product.averageRating.toFixed(1) : 'No ratings' }}
-                    </span>
+                  </RouterLink>
+                  <button
+                    type="button"
+                    class="heart-btn"
+                    :class="{ active: isFav(product.id) }"
+                    @click.prevent="toggleFav(product)"
+                  >
+                    <i :class="isFav(product.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
+                  </button>
+                </div>
+
+                <!-- Body -->
+                <div class="card-body">
+                  <div class="name-price-row">
+                    <RouterLink :to="`/product/${product.id}`" class="prod-name">{{ product.name }}</RouterLink>
+                    <span class="prod-price">${{ Number(product.price).toFixed(2) }}</span>
                   </div>
-                  <div class="price-row">
-                    <span class="price">${{ Number(product.price).toFixed(2) }}</span>
-                    <span v-if="product.stockQuantity === 0" class="out-badge">Out of stock</span>
+                  <p class="prod-subtitle">
+                    {{ product.sizes && product.sizes.length
+                      ? product.sizes.length + ' types available'
+                      : product.stockQuantity > 0 ? 'In stock' : 'Out of stock' }}
+                  </p>
+                  <div class="rating-row">
+                    <span class="stars">
+                      <i v-for="n in 5" :key="n" :class="starClass(product.averageRating ?? 0, n)"></i>
+                    </span>
+                    <span class="review-count">({{ product.reviewCount ?? 0 }})</span>
+                  </div>
+                  <div class="card-actions">
+                    <button
+                      type="button"
+                      class="btn-cart"
+                      :disabled="product.stockQuantity === 0"
+                      @click.prevent="handleAddToCart(product)"
+                    >
+                      {{ product.stockQuantity === 0 ? 'Out of Stock' : 'Add To Cart' }}
+                    </button>
+                    <button type="button" class="btn-shortlist" @click.prevent="toggleFav(product)">
+                      Add Shortlist
+                    </button>
                   </div>
                 </div>
-              </RouterLink>
+
+              </div>
             </div>
 
             <!-- Pagination -->
             <div v-if="totalPages > 1" class="pagination">
-              <button
-                type="button"
-                class="page-nav"
-                :disabled="currentPage === 1"
-                @click="goToPage(currentPage - 1)"
-              >
+              <button type="button" class="page-nav" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
                 <i class="fa-solid fa-arrow-left"></i> Previous
               </button>
-
               <div class="page-numbers">
                 <template v-for="p in visiblePages" :key="String(p)">
-                  <button
-                    v-if="p !== '...'"
-                    type="button"
-                    class="page-num"
-                    :class="{ active: currentPage === p }"
-                    @click="goToPage(p as number)"
-                  >{{ p }}</button>
+                  <button v-if="p !== '...'" type="button" class="page-num"
+                          :class="{ active: currentPage === p }" @click="goToPage(p as number)">{{ p }}</button>
                   <span v-else class="page-dots">…</span>
                 </template>
               </div>
-
-              <button
-                type="button"
-                class="page-nav"
-                :disabled="currentPage === totalPages"
-                @click="goToPage(currentPage + 1)"
-              >
+              <button type="button" class="page-nav" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">
                 Next <i class="fa-solid fa-arrow-right"></i>
               </button>
             </div>
@@ -266,25 +277,61 @@
     </main>
 
     <AppFooter :footer-columns="footerColumns" :social-links="socialLinks" />
+
+    <!-- Size picker modal -->
+    <Teleport to="body">
+      <div v-if="sizePicker.product" class="modal-overlay" @click.self="sizePicker.product = null">
+        <div class="size-modal">
+          <h3 class="modal-title">Select a Size</h3>
+          <p class="modal-product-name">{{ sizePicker.product.name }}</p>
+          <div class="size-grid">
+            <button
+              v-for="s in sizePicker.product.sizes"
+              :key="s"
+              type="button"
+              :class="['size-opt', { active: sizePicker.selected === s }]"
+              @click="sizePicker.selected = s"
+            >{{ s }}</button>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cart" :disabled="!sizePicker.selected" @click="confirmCart">
+              Add To Cart
+            </button>
+            <button type="button" class="btn-shortlist" @click="sizePicker.product = null">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Toast -->
+    <Teleport to="body">
+      <transition name="toast-slide">
+        <div v-if="toast.visible" class="toast" :class="`toast-${toast.type}`">{{ toast.message }}</div>
+      </transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import { getInventoryProducts } from '@/services/adminInventoryService'
+import { api, isLoggedIn } from '@/services/apiClient'
+import { isWishlisted, toggleWishlist } from '@/services/wishlistService'
+import { useCartSidebar } from '@/composables/useCartSidebar'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
 import { readStorage } from '@/utils/storage'
 
-const API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+const router = useRouter()
+const { openSidebar } = useCartSidebar()
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface ProductDTO {
-  id: number | string
+  id: string
   name: string
   price: number
   stockQuantity: number
@@ -292,15 +339,13 @@ interface ProductDTO {
   categoryId: number | null
   averageRating: number | null
   reviewCount: number | null
+  sizes: string[] | null
+  sellerName: string | null
 }
 
-interface Category { id: number; name: string }
-
-interface PagedResponse<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-}
+interface Category { id: number; name: string; productCount: number }
+interface Seller { name: string; count: number }
+interface PagedResponse<T> { content: T[]; totalElements: number; totalPages: number }
 
 // ── Layout data ────────────────────────────────────────────────────────────
 
@@ -322,61 +367,69 @@ const totalPages    = ref(1)
 const loading       = ref(false)
 const error         = ref('')
 const currentPage   = ref(1)
-const PER_PAGE      = 9
+const PER_PAGE      = 12
 const searchText    = ref('')
 
-// ── Categories ────────────────────────────────────────────────────────────
+// ── Categories + sellers ──────────────────────────────────────────────────
 
-const categories          = ref<Category[]>([])
-const selectedCategoryId  = ref<number | null>(null)
-const selectedCategoryName = ref('')
+const categories         = ref<Category[]>([])
+const sellers            = ref<Seller[]>([])
+const selectedCategoryIds = ref<number[]>([])
+const selectedBrands      = ref<string[]>([])
+const showAllCats         = ref(false)
+const showAllBrands       = ref(false)
+
+// ── Rating filter ─────────────────────────────────────────────────────────
+
+const selectedRating = ref<number | null>(null)
+
+const ratingOpts = [
+  { value: 4.5, label: '4.5 & up', count: 0 },
+  { value: 4.0, label: '4.0 & up', count: 0 },
+  { value: 3.5, label: '3.5 & up', count: 0 },
+  { value: 3.0, label: '3.0 & up', count: 0 },
+]
 
 // ── Price range ───────────────────────────────────────────────────────────
 
 const PRICE_MIN = 0
 const PRICE_MAX = 2000
-const priceMin = ref(0)
-const priceMax = ref(2000)
+const priceMin  = ref(0)
+const priceMax  = ref(2000)
 
-function clampMin() { if (priceMin.value >= priceMax.value) priceMin.value = priceMax.value - 1 }
-function clampMax() { if (priceMax.value <= priceMin.value) priceMax.value = priceMin.value + 1 }
+function clampPriceMin() { if (priceMin.value >= priceMax.value) priceMin.value = priceMax.value - 1 }
+function clampPriceMax() { if (priceMax.value <= priceMin.value) priceMax.value = priceMin.value + 1 }
 
-const rangeFillStyle = computed(() => {
-  const left  = ((priceMin.value - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100
-  const right = ((priceMax.value - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100
-  return { left: `${left}%`, width: `${right - left}%` }
+const priceFillStyle = computed(() => {
+  const l = ((priceMin.value - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100
+  const r = ((priceMax.value - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100
+  return { left: `${l}%`, width: `${r - l}%` }
 })
 
-// ── Colors / Sizes (UI only) ──────────────────────────────────────────────
+// ── Size range (UI only) ──────────────────────────────────────────────────
 
-const colors = [
-  { label: 'Green',  value: '#00C12B', light: false },
-  { label: 'Red',    value: '#F50606', light: false },
-  { label: 'Yellow', value: '#F5DD06', light: true  },
-  { label: 'Orange', value: '#F57906', light: false },
-  { label: 'Cyan',   value: '#06CAF4', light: false },
-  { label: 'Blue',   value: '#063AF4', light: false },
-  { label: 'Purple', value: '#7D06F4', light: false },
-  { label: 'Pink',   value: '#F406CB', light: false },
-  { label: 'White',  value: '#FFFFFF', light: true  },
-  { label: 'Black',  value: '#000000', light: false },
-]
-const selectedColors = ref<string[]>([])
-function toggleColor(val: string) {
-  const i = selectedColors.value.indexOf(val)
-  i === -1 ? selectedColors.value.push(val) : selectedColors.value.splice(i, 1)
-}
+const SIZE_MIN = 0
+const SIZE_MAX = 20
+const sizeMin  = ref(0)
+const sizeMax  = ref(20)
 
-const sizes = ['XX-Small', 'X-Small', 'Small', 'Medium', 'Large', 'X-Large', 'XX-Large', '3X-Large', '4X-Large']
-const selectedSizes = ref<string[]>([])
-function toggleSize(s: string) {
-  const i = selectedSizes.value.indexOf(s)
-  i === -1 ? selectedSizes.value.push(s) : selectedSizes.value.splice(i, 1)
-}
+function clampSizeMin() { if (sizeMin.value >= sizeMax.value) sizeMin.value = sizeMax.value - 1 }
+function clampSizeMax() { if (sizeMax.value <= sizeMin.value) sizeMax.value = sizeMin.value + 1 }
 
-// ── Sort ──────────────────────────────────────────────────────────────────
+const sizeFillStyle = computed(() => {
+  const l = ((sizeMin.value - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)) * 100
+  const r = ((sizeMax.value - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)) * 100
+  return { left: `${l}%`, width: `${r - l}%` }
+})
 
-const sortBy = ref('newest')
+// ── Sections open/close ───────────────────────────────────────────────────
+
+const open = reactive({ category: true, ratings: true, brand: true, price: true, size: true })
+function toggleSection(key: keyof typeof open) { open[key] = !open[key] }
+
+// ── Sort + mobile filter ──────────────────────────────────────────────────
+
+const sortBy    = ref('newest')
 const filterOpen = ref(false)
 
 function sortParams() {
@@ -388,56 +441,18 @@ function sortParams() {
   }
 }
 
-async function loadLocalProductsFallback() {
-  const localProducts = await getInventoryProducts()
-  const query = searchText.value.trim().toLowerCase()
-
-  let filtered = localProducts.filter((product) => {
-    const matchesCategory = selectedCategoryId.value === null || product.categoryId === selectedCategoryId.value
-    const matchesPrice = product.price >= priceMin.value && product.price <= priceMax.value
-    const matchesSearch = !query
-      || product.name.toLowerCase().includes(query)
-      || product.category.toLowerCase().includes(query)
-
-    return matchesCategory && matchesPrice && matchesSearch
-  })
-
-  filtered = [...filtered].sort((a, b) => {
-    if (sortBy.value === 'price_asc') return a.price - b.price
-    if (sortBy.value === 'price_desc') return b.price - a.price
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  })
-
-  const start = (currentPage.value - 1) * PER_PAGE
-  const visible = filtered.slice(start, start + PER_PAGE)
-
-  products.value = visible.map((product) => ({
-    id: product.id,
-    name: product.name,
-    price: product.price,
-    stockQuantity: product.stock,
-    imageUrl: product.imageUrl,
-    categoryId: product.categoryId,
-    averageRating: null,
-    reviewCount: null,
-  }))
-  totalElements.value = filtered.length
-  totalPages.value = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
-  error.value = ''
-}
-
 // ── Pagination ────────────────────────────────────────────────────────────
 
-const startItem = computed(() => totalElements.value ? (currentPage.value - 1) * PER_PAGE + 1 : 0)
-const endItem   = computed(() => Math.min(currentPage.value * PER_PAGE, totalElements.value))
+const pageStart = computed(() => totalElements.value ? (currentPage.value - 1) * PER_PAGE + 1 : 0)
+const pageEnd   = computed(() => Math.min(currentPage.value * PER_PAGE, totalElements.value))
 
 const visiblePages = computed((): (number | string)[] => {
   const t = totalPages.value
   if (t <= 7) return Array.from({ length: t }, (_, i) => i + 1)
-  const cur = currentPage.value
-  if (cur <= 4) return [1, 2, 3, 4, 5, '...', t]
-  if (cur >= t - 3) return [1, '...', t - 4, t - 3, t - 2, t - 1, t]
-  return [1, '...', cur - 1, cur, cur + 1, '...', t]
+  const c = currentPage.value
+  if (c <= 4) return [1, 2, 3, 4, 5, '...', t]
+  if (c >= t - 3) return [1, '...', t - 4, t - 3, t - 2, t - 1, t]
+  return [1, '...', c - 1, c, c + 1, '...', t]
 })
 
 function goToPage(page: number) {
@@ -445,6 +460,79 @@ function goToPage(page: number) {
   currentPage.value = page
   fetchProducts()
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// ── Brand filter (client-side on current page) ────────────────────────────
+
+const filteredProducts = computed(() => {
+  if (!selectedBrands.value.length) return products.value
+  return products.value.filter(p => p.sellerName && selectedBrands.value.includes(p.sellerName))
+})
+
+// ── Star helper ───────────────────────────────────────────────────────────
+
+function starClass(rating: number, pos: number): string {
+  if (rating >= pos)           return 'fa-solid fa-star'
+  if (rating >= pos - 0.5)     return 'fa-solid fa-star-half-stroke'
+  return 'fa-regular fa-star'
+}
+
+// ── Favorites ─────────────────────────────────────────────────────────────
+
+function isFav(productId: string): boolean { return isWishlisted(productId) }
+
+function toggleFav(product: ProductDTO) {
+  if (!isLoggedIn()) { router.push(`/login?redirect=/sell`); return }
+  toggleWishlist(product.id)
+}
+
+// ── Cart ──────────────────────────────────────────────────────────────────
+
+const sizePicker = reactive<{ product: ProductDTO | null; selected: string | null }>({
+  product: null,
+  selected: null,
+})
+
+async function handleAddToCart(product: ProductDTO) {
+  if (!isLoggedIn()) { router.push('/login?redirect=/sell'); return }
+  if (product.sizes && product.sizes.length > 0) {
+    sizePicker.product = product
+    sizePicker.selected = null
+    return
+  }
+  await doAddToCart(product.id, null)
+}
+
+async function confirmCart() {
+  if (!sizePicker.product || !sizePicker.selected) return
+  const id = sizePicker.product.id
+  const size = sizePicker.selected
+  sizePicker.product = null
+  sizePicker.selected = null
+  await doAddToCart(id, size)
+}
+
+async function doAddToCart(productId: string, size: string | null) {
+  try {
+    await api.post('/api/cart/add', { productId, quantity: 1, size: size ?? undefined })
+    showToast('Added to cart!', 'success')
+    openSidebar()
+  } catch (e: any) {
+    showToast(e?.message ?? 'Failed to add to cart', 'error')
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+
+const toast = reactive({ visible: false, message: '', type: 'success' })
+let toastTimer: ReturnType<typeof setTimeout> | null = null
+
+function showToast(message: string, type: 'success' | 'error' = 'success') {
+  if (toastTimer) clearTimeout(toastTimer)
+  toast.message = message
+  toast.type = type
+  toast.visible = true
+  toastTimer = setTimeout(() => { toast.visible = false }, 2500)
 }
 
 // ── Fetch products ────────────────────────────────────────────────────────
@@ -457,61 +545,76 @@ async function fetchProducts() {
   params.set('page', String(currentPage.value - 1))
   params.set('size', String(PER_PAGE))
 
-  if (selectedCategoryId.value !== null) params.set('categoryId', String(selectedCategoryId.value))
-  if (priceMin.value > PRICE_MIN)        params.set('minPrice', String(priceMin.value))
-  if (priceMax.value < PRICE_MAX)        params.set('maxPrice', String(priceMax.value))
-  if (searchText.value.trim())           params.set('name', searchText.value.trim())
+  selectedCategoryIds.value.forEach(id => params.append('categoryId', String(id)))
+  if (priceMin.value > PRICE_MIN) params.set('minPrice', String(priceMin.value))
+  if (priceMax.value < PRICE_MAX) params.set('maxPrice', String(priceMax.value))
+  if (searchText.value.trim())    params.set('name', searchText.value.trim())
+  if (selectedRating.value !== null) params.set('minRating', String(selectedRating.value))
 
-  // search endpoint supports name/categoryId/price filters; plain products endpoint only supports sort
-  const useSearch = selectedCategoryId.value !== null
+  const sortStr = sortParams()
+  const useSearch = selectedCategoryIds.value.length > 0
     || priceMin.value > PRICE_MIN
     || priceMax.value < PRICE_MAX
     || searchText.value.trim() !== ''
+    || selectedRating.value !== null
 
-  const sortStr = sortParams()
   const url = useSearch
-    ? `${API}/api/products/search?${params}&${sortStr}`
-    : `${API}/api/products?${params}&${sortStr}`
+    ? `/api/products/search?${params}&${sortStr}`
+    : `/api/products?${params}&${sortStr}`
 
   try {
-    const res = await fetch(url)
-    if (!res.ok) throw new Error(`Server error ${res.status}`)
-    const data: PagedResponse<ProductDTO> = await res.json()
+    const data = await api.get<PagedResponse<ProductDTO>>(url)
     products.value      = data.content ?? []
     totalElements.value = data.totalElements ?? 0
     totalPages.value    = data.totalPages ?? 1
   } catch {
-    await loadLocalProductsFallback()
+    await loadLocalFallback()
   } finally {
     loading.value = false
   }
 }
 
-// ── Fetch categories ──────────────────────────────────────────────────────
+async function loadLocalFallback() {
+  const local = await getInventoryProducts()
+  const q = searchText.value.trim().toLowerCase()
+  let filtered = local.filter(p => {
+    const matchCat  = !selectedCategoryIds.value.length || selectedCategoryIds.value.includes(p.categoryId as number)
+    const matchPrice = p.price >= priceMin.value && p.price <= priceMax.value
+    const matchSearch = !q || p.name.toLowerCase().includes(q)
+    return matchCat && matchPrice && matchSearch
+  })
+  if (sortBy.value === 'price_asc')  filtered.sort((a, b) => a.price - b.price)
+  if (sortBy.value === 'price_desc') filtered.sort((a, b) => b.price - a.price)
+  const start = (currentPage.value - 1) * PER_PAGE
+  products.value      = filtered.slice(start, start + PER_PAGE).map(p => ({
+    id: p.id, name: p.name, price: p.price, stockQuantity: p.stock,
+    imageUrl: p.imageUrl, categoryId: p.categoryId, averageRating: null,
+    reviewCount: null, sizes: null, sellerName: null,
+  }))
+  totalElements.value = filtered.length
+  totalPages.value    = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
+}
+
+// ── Fetch categories + sellers ────────────────────────────────────────────
 
 async function fetchCategories() {
   try {
-    const res = await fetch(`${API}/api/categories?page=0&size=100`)
-    if (!res.ok) return
-    const data: PagedResponse<Category> = await res.json()
+    const data = await api.get<PagedResponse<Category>>('/api/categories?page=0&size=100')
     categories.value = data.content ?? []
-  } catch {
-    // categories are optional; silently ignore
-  }
+  } catch { /* optional */ }
+}
+
+async function fetchSellers() {
+  try {
+    const data = await api.get<Array<{ name: string; count: number }>>('/api/products/sellers')
+    sellers.value = data ?? []
+  } catch { /* optional */ }
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────
 
-function selectCategory(id: number | null, name: string) {
-  selectedCategoryId.value   = id
-  selectedCategoryName.value = name === 'All Products' ? '' : name
+function onFilterChange() {
   currentPage.value = 1
-  fetchProducts()
-}
-
-function applyFilter() {
-  currentPage.value = 1
-  filterOpen.value = false
   fetchProducts()
 }
 
@@ -520,12 +623,17 @@ function runSearch() {
   fetchProducts()
 }
 
-// ── Stars ─────────────────────────────────────────────────────────────────
-
-function getStarClass(rating: number, pos: number): string {
-  if (rating >= pos)       return 'fa-solid fa-star'
-  if (rating >= pos - 0.5) return 'fa-solid fa-star-half-stroke'
-  return 'fa-regular fa-star'
+function clearAll() {
+  selectedCategoryIds.value = []
+  selectedBrands.value      = []
+  selectedRating.value      = null
+  priceMin.value = PRICE_MIN
+  priceMax.value = PRICE_MAX
+  sizeMin.value  = SIZE_MIN
+  sizeMax.value  = SIZE_MAX
+  searchText.value = ''
+  currentPage.value = 1
+  fetchProducts()
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
@@ -536,7 +644,7 @@ onMounted(async () => {
   navLinks.value      = nav
   footerColumns.value = footer
   socialLinks.value   = social
-  await Promise.all([fetchCategories(), fetchProducts()])
+  await Promise.all([fetchCategories(), fetchSellers(), fetchProducts()])
 })
 </script>
 
@@ -545,36 +653,86 @@ onMounted(async () => {
 
 .shop-page {
   min-height: 100vh;
-  background: #fff;
+  background: #f8f9fa;
   font-family: Helvetica, Arial, sans-serif;
-  color: #000;
+  color: #111;
 }
 
 /* ── Container ── */
-.shop-main { padding: 60px 0 60px; }
+.shop-main { padding: 40px 0 80px; }
+.shop-container { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
 
-.shop-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+/* ── Mobile filter button ── */
+.mob-filter-btn {
+  display: none;
+  align-items: center; gap: 8px;
+  height: 38px; padding: 0 16px;
+  margin-bottom: 14px;
+  border: 1.5px solid #111; border-radius: 6px;
+  background: #fff; color: #111;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.mob-filter-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35); z-index: 490;
 }
 
-/* ── Breadcrumb ── */
-.breadcrumb {
+/* ── Toolbar ── */
+.toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
   margin-bottom: 20px;
-  font-size: 13px;
-  color: #808080;
 }
 
-.bc-link { text-decoration: none; color: #808080; }
-.bc-link:hover { color: #000; }
-.bc-sep { font-size: 10px; }
-.bc-current { color: #000; font-weight: 700; }
+.toolbar-left {
+  display: flex; align-items: center; gap: 12px;
+}
 
-/* ── Two-column layout ── */
+.toolbar-label {
+  font-size: 16px; font-weight: 700; color: #111;
+}
+
+.clear-all-btn {
+  padding: 5px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px; color: #555;
+  cursor: pointer; font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+.clear-all-btn:hover { border-color: #111; color: #111; }
+
+.toolbar-count { font-size: 14px; color: #555; flex: 1; text-align: center; }
+
+.toolbar-right {
+  display: flex; align-items: center; gap: 4px; position: relative;
+}
+
+.sort-select {
+  appearance: none;
+  padding: 6px 28px 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px; font-weight: 700; color: #111;
+  cursor: pointer; font-family: inherit;
+  outline: none;
+}
+
+.sort-chevron {
+  position: absolute; right: 10px;
+  font-size: 10px; color: #555; pointer-events: none;
+}
+
+/* ── Layout ── */
 .shop-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
@@ -586,272 +744,282 @@ onMounted(async () => {
    SIDEBAR
 ════════════════════════════ */
 .sidebar {
-  border: 1px solid #AABBAA;
-  border-radius: 4px;
-  padding: 20px;
   background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
   position: sticky;
-  top: 70px;
-  box-shadow: rgba(0,0,0,0.05) 0 2px 4px;
+  top: 76px;
 }
 
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0;
+.filter-block { padding: 16px 20px; }
+
+.block-header {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; background: none; border: none;
+  padding: 0; cursor: pointer; font-family: inherit;
 }
 
-.sidebar-title { font-size: 18px; font-weight: 700; color: #000; }
-.sidebar-header i { font-size: 16px; color: #808080; }
+.block-title { font-size: 15px; font-weight: 700; color: #111; }
+.block-header > i { font-size: 11px; color: #888; }
 
-.divider {
-  border: none;
-  border-top: 1px solid #AABBAA;
-  margin: 14px 0;
+.block-body { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+
+.block-divider { height: 1px; background: #e5e7eb; margin: 0; }
+
+/* Checkboxes */
+.filter-check {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; font-size: 14px; color: #333;
 }
 
-/* Categories */
-.cat-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.filter-check input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: #1e3a5f;
+  cursor: pointer; flex-shrink: 0;
 }
 
-.cat-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 4px;
-  font-size: 14px;
-  color: #808080;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: color 0.15s;
+.check-name { flex: 1; }
+.check-count { font-size: 12px; color: #888; flex-shrink: 0; }
+
+/* Radio buttons (ratings) */
+.filter-radio {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; font-size: 14px; color: #333;
 }
 
-.cat-item i { font-size: 10px; color: #AABBAA; }
-.cat-item:hover, .cat-item.active { color: #000; font-weight: 700; }
-.cat-item.active i { color: #808080; }
-
-/* Filter sections */
-.filter-section { margin: 0; }
-
-.fs-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
+.filter-radio input[type="radio"] {
+  width: 16px; height: 16px; accent-color: #1e3a5f;
+  cursor: pointer; flex-shrink: 0;
 }
 
-.fs-title { font-size: 16px; font-weight: 700; color: #000; }
-.fs-header > i { font-size: 11px; color: #808080; }
+.stars-sm { display: flex; gap: 2px; }
+.stars-sm i { font-size: 12px; color: #f5a623; }
+.radio-label { font-size: 13px; color: #333; }
 
-/* Price range */
-.price-range {
-  position: relative;
-  height: 24px;
-  margin-bottom: 10px;
+.show-more-btn {
+  background: none; border: none;
+  padding: 0; font-size: 13px;
+  color: #1e3a5f; cursor: pointer;
+  font-family: inherit; font-weight: 600;
+  text-align: left;
+}
+.show-more-btn:hover { text-decoration: underline; }
+
+.no-data { font-size: 13px; color: #aaa; }
+
+/* Dual range sliders */
+.dual-range {
+  position: relative; height: 24px;
+  margin-bottom: 12px;
 }
 
-.price-track {
-  position: absolute;
-  top: 50%; left: 0; right: 0;
-  height: 4px; background: #AABBAA;
+.range-track {
+  position: absolute; top: 50%; left: 0; right: 0;
+  height: 4px; background: #e5e7eb;
   border-radius: 4px; transform: translateY(-50%);
 }
 
-.price-fill {
-  position: absolute;
-  height: 100%;
-  background: #000;
-  border-radius: 4px;
+.range-fill {
+  position: absolute; height: 100%;
+  background: #1e3a5f; border-radius: 4px;
 }
 
-.range-input {
+.range-thumb {
   position: absolute; width: 100%; top: 50%;
   transform: translateY(-50%); height: 4px;
   background: transparent; -webkit-appearance: none; appearance: none;
   pointer-events: none; outline: none;
 }
 
-.range-input::-webkit-slider-thumb {
+.range-thumb::-webkit-slider-thumb {
   -webkit-appearance: none; pointer-events: all;
-  width: 20px; height: 20px; border-radius: 50%;
-  background: #000; cursor: pointer;
-  border: 3px solid #fff; box-shadow: 0 0 0 1.5px #808080;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #1e3a5f; cursor: pointer;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1.5px #1e3a5f;
 }
 
-.range-input::-moz-range-thumb {
-  pointer-events: all; width: 14px; height: 14px; border-radius: 50%;
-  background: #000; cursor: pointer;
-  border: 3px solid #fff; box-shadow: 0 0 0 1.5px #808080;
+.range-thumb::-moz-range-thumb {
+  pointer-events: all; width: 12px; height: 12px;
+  border-radius: 50%; background: #1e3a5f;
+  cursor: pointer; border: 3px solid #fff;
+  box-shadow: 0 0 0 1.5px #1e3a5f;
 }
 
-.price-labels {
-  display: flex; justify-content: space-between;
-  font-size: 14px; font-weight: 700; color: #000; padding: 0 4px;
+.range-inputs-row {
+  display: flex; gap: 8px;
 }
 
-/* Color swatches */
-.color-swatches { display: flex; flex-wrap: wrap; gap: 10px; }
-
-.color-swatch {
-  width: 32px; height: 32px; border-radius: 50%;
-  border: 2px solid transparent; cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center;
-  transition: border-color 0.15s; padding: 0;
+.range-num {
+  flex: 1; padding: 6px 10px;
+  border: 1px solid #e5e7eb; border-radius: 6px;
+  font-size: 13px; color: #111;
+  font-family: inherit; outline: none;
+  background: #fff;
 }
 
-.color-swatch i { font-size: 12px; color: #fff; }
-.color-swatch.light i { color: #333; }
-.color-swatch.selected { border-color: #000; box-shadow: 0 0 0 2px #fff inset; }
-.color-swatch[style*="FFFFFF"], .color-swatch[style*="ffffff"] { border-color: #AABBAA; }
-
-/* Size pills */
-.size-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.size-pill {
-  padding: 6px 12px; border-radius: 4px;
-  border: 1px solid #AABBAA; background: #f5f5f5;
-  font-size: 12px; color: #808080; cursor: pointer;
-  font-family: inherit; transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.size-pill:hover { border-color: #808080; color: #000; }
-.size-pill.selected { background: #000; color: #fff; border-color: #000; }
-
-/* Apply button */
-.apply-btn {
-  width: 100%; margin-top: 16px; padding: 12px;
-  background: #000; color: #fff; border: none;
-  border-radius: 4px; font-size: 14px; font-weight: 700;
-  cursor: pointer; font-family: inherit;
-  transition: background 0.15s;
-}
-.apply-btn:hover { background: #211E1E; }
+.range-num:focus { border-color: #1e3a5f; }
 
 /* ════════════════════════════
    CATALOG
 ════════════════════════════ */
-.catalog-header { margin-bottom: 20px; }
-
-.catalog-title { font-size: 28px; font-weight: 700; margin: 0 0 10px; color: #000; }
-
-.catalog-meta {
-  display: flex; align-items: center;
-  justify-content: space-between; flex-wrap: wrap; gap: 8px;
-}
-
-.result-count { font-size: 13px; color: #808080; }
-
-.sort-wrap { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #808080; }
-
-.sort-select {
-  border: none; background: transparent;
-  font-size: 13px; font-weight: 700; color: #000;
-  cursor: pointer; font-family: inherit; outline: none;
-}
+.catalog {}
 
 /* Search bar */
 .search-bar {
-  display: flex; align-items: center; gap: 0;
-  border: 1px solid #808080; border-radius: 4px;
-  background: #fff; overflow: hidden; margin-top: 14px;
+  display: flex; align-items: center;
+  border: 1px solid #d1d5db; border-radius: 8px;
+  background: #fff; overflow: hidden;
+  margin-bottom: 20px;
 }
-.search-ico {
-  padding: 0 12px 0 14px; color: #808080; font-size: 13px; flex-shrink: 0;
-}
+.search-ico { padding: 0 12px; color: #888; font-size: 13px; }
 .search-inp {
-  flex: 1; height: 44px; border: none; outline: none;
-  font-size: 14px; font-family: inherit; color: #000; background: transparent;
-  min-width: 0;
+  flex: 1; height: 42px; border: none; outline: none;
+  font-size: 14px; font-family: inherit; color: #111;
+  background: transparent; min-width: 0;
 }
-.search-inp::placeholder { color: #808080; }
+.search-inp::placeholder { color: #aaa; }
 .search-btn {
-  height: 44px; padding: 0 20px; border: none; background: #000;
-  color: #fff; font-size: 14px; font-weight: 700;
-  cursor: pointer; font-family: inherit; flex-shrink: 0;
-  transition: background .15s;
+  height: 42px; padding: 0 18px; border: none;
+  background: #1e3a5f; color: #fff;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
 }
-.search-btn:hover { background: #211E1E; }
+.search-btn:hover { background: #152d4d; }
 
-/* State messages */
+/* States */
 .state-msg {
-  padding: 64px 20px;
-  text-align: center;
-  color: #808080;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  padding: 80px 20px; text-align: center;
+  color: #888; font-size: 14px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
 }
-.state-msg.err { color: #DA292E; }
+.state-msg.err { color: #dc2626; }
 
-/* Product grid */
+/* ── Product Grid ── */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
-.product-card { text-decoration: none; color: inherit; display: block; }
-
-/* Product image */
-.card-image {
-  background: #f5f5f5;
-  border-radius: 4px;
-  border: 1px solid #AABBAA;
+.product-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
   overflow: hidden;
-  aspect-ratio: 3 / 4;
-  margin-bottom: 10px;
+  transition: box-shadow 0.2s;
+}
+.product-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+
+/* Image */
+.card-img-wrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #f3f4f6;
+  overflow: hidden;
 }
 
+.img-link { display: block; width: 100%; height: 100%; }
+
 .product-img {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   object-fit: cover;
   transition: transform 0.3s;
 }
-
 .product-card:hover .product-img { transform: scale(1.04); }
 
 .img-placeholder {
   width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
-  color: #AABBAA; font-size: 32px;
-  background: linear-gradient(90deg, #f5f5f5 25%, #ebebeb 50%, #f5f5f5 75%);
-  background-size: 1200px 100%;
+  color: #d1d5db; font-size: 36px;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e9eaec 50%, #f3f4f6 75%);
+  background-size: 600px 100%;
   animation: shimmer 1.6s infinite linear;
 }
 
 @keyframes shimmer {
-  0%   { background-position: -600px 0; }
-  100% { background-position:  600px 0; }
+  0%   { background-position: -300px 0; }
+  100% { background-position:  300px 0; }
 }
 
-.card-body { display: flex; flex-direction: column; gap: 5px; }
+/* Heart button */
+.heart-btn {
+  position: absolute; top: 10px; right: 10px;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #e5e7eb;
+  color: #555;
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  z-index: 1;
+}
+.heart-btn:hover { background: #fff; color: #e53e3e; border-color: #e53e3e; }
+.heart-btn.active { background: #e53e3e; color: #fff; border-color: #e53e3e; }
 
-.product-name {
-  margin: 0; font-size: 14px; font-weight: 700; color: #000;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+/* Card body */
+.card-body { padding: 12px 14px 14px; }
+
+.name-price-row {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 8px;
+  margin-bottom: 4px;
 }
 
-.rating-row { display: flex; align-items: center; gap: 6px; }
+.prod-name {
+  font-size: 14px; font-weight: 700; color: #111;
+  text-decoration: none; line-height: 1.3;
+  overflow: hidden; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  flex: 1;
+}
+.prod-name:hover { color: #1e3a5f; }
+
+.prod-price {
+  font-size: 14px; font-weight: 700; color: #111;
+  white-space: nowrap; flex-shrink: 0;
+}
+
+.prod-subtitle {
+  margin: 0 0 6px;
+  font-size: 12px; color: #888;
+}
+
+.rating-row {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 10px;
+}
+
 .stars { display: flex; gap: 2px; }
 .stars i { font-size: 12px; color: #f5a623; }
-.rating-text { font-size: 12px; color: #808080; }
+.review-count { font-size: 12px; color: #888; }
 
-.price-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.price { font-size: 18px; font-weight: 700; color: #DA292E; }
-.out-badge {
-  font-size: 11px; font-weight: 700; color: #DA292E;
-  background: #fff1f2; border-radius: 4px; padding: 2px 7px;
+/* Action buttons */
+.card-actions { display: flex; gap: 8px; }
+
+.btn-cart {
+  flex: 1; padding: 9px 0;
+  background: #1e3a5f; color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
 }
+.btn-cart:hover:not(:disabled) { background: #152d4d; }
+.btn-cart:disabled { opacity: 0.5; cursor: default; }
+
+.btn-shortlist {
+  flex: 1; padding: 9px 0;
+  background: #fff; color: #1e3a5f;
+  border: 1.5px solid #1e3a5f; border-radius: 8px;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.btn-shortlist:hover { background: #1e3a5f; color: #fff; }
 
 /* ── Pagination ── */
 .pagination {
@@ -862,25 +1030,83 @@ onMounted(async () => {
 
 .page-nav {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 18px; border: 1px solid #AABBAA; border-radius: 4px;
-  background: #fff; font-size: 14px; font-weight: 700; color: #000;
-  cursor: pointer; font-family: inherit; transition: border-color 0.15s, background 0.15s;
+  padding: 8px 18px;
+  border: 1px solid #e5e7eb; border-radius: 8px;
+  background: #fff; font-size: 13px; font-weight: 700; color: #111;
+  cursor: pointer; font-family: inherit;
+  transition: border-color 0.15s;
 }
-
-.page-nav:hover:not(:disabled) { border-color: #000; background: #f5f5f5; }
+.page-nav:hover:not(:disabled) { border-color: #1e3a5f; color: #1e3a5f; }
 .page-nav:disabled { opacity: 0.4; cursor: default; }
 
 .page-numbers { display: flex; align-items: center; gap: 4px; }
 
 .page-num {
-  width: 36px; height: 36px; border-radius: 4px; border: none;
-  background: transparent; font-size: 14px; color: #808080;
-  cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s;
+  width: 36px; height: 36px; border-radius: 8px; border: none;
+  background: transparent; font-size: 13px; color: #555;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.page-num:hover { background: #f3f4f6; color: #111; }
+.page-num.active { background: #1e3a5f; color: #fff; }
+.page-dots { padding: 0 4px; color: #aaa; font-size: 13px; }
+
+/* ════════════════════════════
+   SIZE PICKER MODAL
+════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 900;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
 }
 
-.page-num:hover { background: #f5f5f5; color: #000; }
-.page-num.active { background: #000; color: #fff; }
-.page-dots { padding: 0 4px; color: #AABBAA; font-size: 14px; }
+.size-modal {
+  background: #fff; border-radius: 16px;
+  padding: 28px; width: 340px; max-width: 90vw;
+}
+
+.modal-title {
+  margin: 0 0 6px; font-size: 18px; font-weight: 700; color: #111;
+}
+
+.modal-product-name {
+  margin: 0 0 16px; font-size: 14px; color: #888;
+}
+
+.size-grid {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
+}
+
+.size-opt {
+  padding: 8px 16px; border-radius: 8px;
+  border: 1.5px solid #e5e7eb;
+  background: #f3f4f6; font-size: 13px; color: #333;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.size-opt:hover { border-color: #1e3a5f; color: #1e3a5f; }
+.size-opt.active { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+
+.modal-actions { display: flex; gap: 10px; }
+
+/* ════════════════════════════
+   TOAST
+════════════════════════════ */
+.toast {
+  position: fixed; bottom: 30px; right: 30px;
+  padding: 12px 22px; border-radius: 10px;
+  font-size: 14px; font-weight: 700; color: #fff;
+  z-index: 9999; pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.toast-success { background: #16a34a; }
+.toast-error   { background: #dc2626; }
+
+.toast-slide-enter-active { transition: all 0.25s ease; }
+.toast-slide-leave-active { transition: all 0.25s ease; }
+.toast-slide-enter-from   { opacity: 0; transform: translateY(16px); }
+.toast-slide-leave-to     { opacity: 0; transform: translateY(16px); }
 
 /* ── Responsive ── */
 @media (max-width: 1024px) {
@@ -888,58 +1114,23 @@ onMounted(async () => {
   .product-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ── Mobile filter toggle button ── */
-.mob-filter-btn {
-  display: none;
-}
-.mob-filter-overlay {
-  display: none;
-}
-
 @media (max-width: 768px) {
-  .mob-filter-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    height: 40px;
-    padding: 0 18px;
-    border: 1.5px solid #000;
-    border-radius: 6px;
-    background: #fff;
-    color: #000;
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-bottom: 16px;
-    transition: background 0.15s;
-  }
-  .mob-filter-btn:hover { background: #f5f5f5; }
-
-  .mob-filter-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.35);
-    z-index: 490;
-  }
-
+  .mob-filter-btn { display: inline-flex; }
+  .mob-filter-overlay { display: block; }
   .shop-layout { grid-template-columns: 1fr; }
   .product-grid { grid-template-columns: repeat(2, 1fr); }
+  .toolbar { flex-wrap: wrap; gap: 8px; }
+  .toolbar-count { order: 3; width: 100%; text-align: left; }
 
-  /* Sidebar: hidden by default, slides in from left as overlay */
   .sidebar {
     display: none;
     position: fixed;
     top: 0; left: 0;
-    height: 100dvh;
-    width: 300px;
-    max-width: 88vw;
+    height: 100dvh; width: 300px; max-width: 88vw;
     z-index: 500;
     overflow-y: auto;
     border-radius: 0;
-    border: none;
-    border-right: 1px solid #AABBAA;
+    border-right: 1px solid #e5e7eb;
     box-shadow: 4px 0 24px rgba(0,0,0,0.12);
   }
   .sidebar.mob-open { display: block; }
@@ -947,7 +1138,6 @@ onMounted(async () => {
 
 @media (max-width: 480px) {
   .product-grid { grid-template-columns: repeat(2, 1fr); }
-  .shop-main { padding-top: 60px; }
 }
 
 @media (max-width: 360px) {

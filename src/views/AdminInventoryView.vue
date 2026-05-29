@@ -206,8 +206,12 @@ function stockLabel(stock: number) {
 async function confirmDelete(id: string) {
   const product = products.value.find(p => p.id === id)
   if (!product) return
-  if (window.confirm(`Delete "${product.name}"?`)) {
+  if (!window.confirm(`Delete "${product.name}"?\n\nThis cannot be undone.`)) return
+  try {
     await removeProduct(id)
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Failed to delete product.'
+    window.alert(`❌ ${msg}`)
   }
 }
 

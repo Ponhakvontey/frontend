@@ -51,8 +51,13 @@ export function useAdminInventory() {
   }
 
   async function removeProduct(id: string) {
-    await deleteInventoryProduct(id)
-    products.value = products.value.filter((p) => p.id !== id)
+    try {
+      await deleteInventoryProduct(id)
+      products.value = products.value.filter((p) => p.id !== id)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete product.'
+      throw new Error(msg)
+    }
   }
 
   function setSort(key: InventorySortKey) {
