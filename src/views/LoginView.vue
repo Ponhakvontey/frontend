@@ -13,8 +13,8 @@
         <img :src="logo" alt="Ubuyee" />
       </div>
 
-      <!-- Tab switch -->
-      <div class="tab-row">
+      <!-- Tab switch (hidden on forgot-password) -->
+      <div v-if="mode !== 'forgot-password'" class="tab-row">
         <button
           class="tab-btn"
           :class="{ active: mode === 'login' }"
@@ -59,7 +59,7 @@
           <div class="field" :class="{ 'field--error': loginErrors.password }">
             <div class="label-row">
               <label for="login-password">Password</label>
-              <RouterLink to="/forgot-password" class="forgot-link">Forgot password?</RouterLink>
+              <button type="button" class="forgot-link" @click="switchMode('forgot-password')">Forgot password?</button>
             </div>
             <div class="input-wrap">
               <svg class="input-icon" viewBox="0 0 20 20" fill="none">
@@ -92,6 +92,20 @@
             {{ loginLoading ? 'Signing in…' : 'Sign In' }}
           </button>
 
+          <div class="divider"><span>or</span></div>
+
+          <p v-if="googleError" class="general-err">{{ googleError }}</p>
+
+          <button type="button" class="google-btn" :disabled="googleLoading" @click="handleGoogleSignIn">
+            <svg class="google-icon" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            {{ googleLoading ? 'Signing in…' : 'Continue with Google' }}
+          </button>
+
           <p class="switch-text">
             Don't have an account?
             <button type="button" class="switch-link" @click="switchMode('register')">Sign up</button>
@@ -99,7 +113,7 @@
         </form>
 
         <!-- ── REGISTER FORM ── -->
-        <form v-else key="register" class="auth-form" @submit.prevent="handleRegister">
+        <form v-else-if="mode === 'register'" key="register" class="auth-form" @submit.prevent="handleRegister">
           <!-- Full name -->
           <div class="field" :class="{ 'field--error': regErrors.fullName }">
             <label for="reg-name">Full name</label>
@@ -212,20 +226,87 @@
             {{ regLoading ? 'Creating account…' : 'Create Account' }}
           </button>
 
+          <div class="divider"><span>or</span></div>
+
+          <p v-if="googleError" class="general-err">{{ googleError }}</p>
+
+          <button type="button" class="google-btn" :disabled="googleLoading" @click="handleGoogleSignIn">
+            <svg class="google-icon" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            {{ googleLoading ? 'Signing in…' : 'Continue with Google' }}
+          </button>
+
           <p class="switch-text">
             Already have an account?
             <button type="button" class="switch-link" @click="switchMode('login')">Sign in</button>
           </p>
         </form>
+
+        <!-- ── FORGOT PASSWORD PANEL ── -->
+        <div v-else key="forgot-password" class="auth-form">
+          <button type="button" class="back-btn" @click="switchMode('login')">
+            <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
+              <path d="M12 5l-5 5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Back to Sign In
+          </button>
+
+          <template v-if="!fpSent">
+            <div class="fp-intro">
+              <p class="fp-title">Forgot password?</p>
+              <p class="fp-desc">Enter your email and we'll send you a reset link valid for 15 minutes.</p>
+            </div>
+
+            <div class="field" :class="{ 'field--error': fpError }">
+              <label for="fp-email">Email address</label>
+              <div class="input-wrap">
+                <svg class="input-icon" viewBox="0 0 20 20" fill="none">
+                  <path d="M2.5 6.5l7.5 5 7.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                <input
+                  id="fp-email"
+                  v-model.trim="fpEmail"
+                  type="email"
+                  placeholder="you@example.com"
+                  autocomplete="email"
+                />
+              </div>
+              <span v-if="fpError" class="err-msg">{{ fpError }}</span>
+            </div>
+
+            <button type="button" class="submit-btn" :disabled="fpLoading" @click="handleForgotPassword">
+              {{ fpLoading ? 'Sending…' : 'Send Reset Link' }}
+            </button>
+          </template>
+
+          <template v-else>
+            <div class="fp-success">
+              <div class="fp-success-icon">
+                <svg viewBox="0 0 48 48" fill="none">
+                  <rect width="48" height="48" rx="24" fill="rgba(255,255,255,0.08)"/>
+                  <path d="M10 20l14 10 14-10" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round"/>
+                  <rect x="10" y="14" width="28" height="20" rx="3" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                </svg>
+              </div>
+              <p class="fp-success-text">Check your inbox! If that email is registered, a reset link has been sent. It expires in 15 minutes.</p>
+              <button type="button" class="submit-btn" @click="switchMode('login')">Back to Sign In</button>
+            </div>
+          </template>
+        </div>
       </Transition>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { login, register } from '@/services/authService'
+import { computed, nextTick, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { login, register, forgotPassword } from '@/services/authService'
 import {
   validateConfirmPassword,
   validateEmail,
@@ -234,6 +315,7 @@ import {
 } from '@/utils/validation'
 import logo from '@/assets/home/logo1.png'
 import bgVideo from '@/assets/login_signup/login_signup.mp4'
+import { loginWithGoogle } from '@/services/authService'
 
 // ── Video ──
 const videoRef = ref<HTMLVideoElement | null>(null)
@@ -246,10 +328,21 @@ function replayVideo() {
 }
 
 // ── Mode ──
-const mode = ref<'login' | 'register'>('login')
+const mode = ref<'login' | 'register' | 'forgot-password'>('login')
 
-function switchMode(next: 'login' | 'register') {
+// ── Forgot password state (declared early — switchMode references these) ──
+const fpEmail = ref('')
+const fpError = ref('')
+const fpLoading = ref(false)
+const fpSent = ref(false)
+
+function switchMode(next: 'login' | 'register' | 'forgot-password') {
   mode.value = next
+  if (next === 'forgot-password') {
+    fpEmail.value = ''
+    fpError.value = ''
+    fpSent.value = false
+  }
 }
 
 // ── Router ──
@@ -266,6 +359,7 @@ const loginLoading = ref(false)
 
 async function handleLogin() {
   loginErrors.value = { email: '', password: '', general: '' }
+  await nextTick()
   const identifier = loginEmail.value.trim()
 
   // Validate: if it contains @, treat as email and check format; otherwise just require non-empty
@@ -293,6 +387,44 @@ async function handleLogin() {
   }
 }
 
+// ── Google sign-in ──
+const googleLoading = ref(false)
+const googleError = ref('')
+
+async function handleGoogleSignIn() {
+  googleError.value = ''
+  googleLoading.value = true
+  try {
+    const data = await loginWithGoogle()
+    const isAdminUser = data.roles.includes('ROLE_ADMIN')
+    const dest = isAdminUser
+      ? '/admin'
+      : redirectPath.value.startsWith('/admin') ? '/' : redirectPath.value || '/'
+    router.push(dest)
+  } catch (err: any) {
+    googleError.value = err?.message ?? 'Google sign-in failed. Please try again.'
+  } finally {
+    googleLoading.value = false
+  }
+}
+
+async function handleForgotPassword() {
+  fpError.value = ''
+  if (!fpEmail.value) {
+    fpError.value = 'Email is required.'
+    return
+  }
+  fpLoading.value = true
+  try {
+    await forgotPassword(fpEmail.value)
+    fpSent.value = true
+  } catch {
+    fpSent.value = true // anti-enumeration: show success regardless
+  } finally {
+    fpLoading.value = false
+  }
+}
+
 // ── Register state ──
 const regFullName = ref('')
 const regEmail = ref('')
@@ -313,6 +445,7 @@ const regErrors = ref({
 
 async function handleRegister() {
   regErrors.value = { fullName: '', email: '', password: '', confirmPassword: '', agree: '', general: '' }
+  await nextTick()
   const email = regEmail.value.trim().toLowerCase()
 
   regErrors.value.fullName = validateRequired(regFullName.value, 'Full name')
@@ -467,6 +600,11 @@ async function handleRegister() {
 }
 
 .forgot-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.5);
@@ -638,6 +776,63 @@ async function handleRegister() {
   color: #fff;
 }
 
+/* ── Divider ── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 0;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.divider span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+}
+
+/* ── Google button ── */
+.google-btn {
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background 0.18s, border-color 0.18s;
+  width: 100%;
+}
+
+.google-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.google-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.google-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
 /* ── Transition ── */
 .fade-enter-active,
 .fade-leave-active {
@@ -652,6 +847,68 @@ async function handleRegister() {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(-6px);
+}
+
+/* ── Forgot password ── */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s;
+  margin-bottom: 4px;
+}
+
+.back-btn:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.fp-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fp-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.fp-desc {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.5;
+}
+
+.fp-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.fp-success-icon {
+  display: flex;
+  justify-content: center;
+}
+
+.fp-success-text {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
 }
 
 @media (max-width: 460px) {

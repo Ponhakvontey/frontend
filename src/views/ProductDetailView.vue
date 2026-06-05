@@ -260,6 +260,11 @@ async function loadProduct(id: string) {
     const imgs = dto.imageUrls?.filter(Boolean) ?? []
     activeImg.value = imgs[0] ?? dto.imageUrl ?? ''
     isFavorite.value = isWishlisted(dto.id)
+    if (isLoggedIn()) {
+      api.get<{ favorite: boolean }>(`/api/favorites/check/${dto.id}`)
+        .then(res => { isFavorite.value = res.favorite })
+        .catch(() => {})
+    }
 
     const relRes = await fetch(`${API}/api/products/${id}/related`)
     if (relRes.ok) {

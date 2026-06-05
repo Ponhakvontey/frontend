@@ -4,58 +4,67 @@
       <h2 class="section-title">NEW ARRIVALS</h2>
 
       <div class="product-grid">
-        <article v-for="product in products" :key="product.id" class="product-card">
-          <!-- Skeleton image placeholder -->
-          <div class="card-image">
-            <div class="img-skeleton"></div>
-          </div>
+        <template v-if="loading">
+          <article v-for="n in 4" :key="n" class="product-card">
+            <div class="card-image"><div class="img-skeleton"></div></div>
+            <div class="card-body">
+              <div class="skeleton-line w60"></div>
+              <div class="skeleton-line w40"></div>
+            </div>
+          </article>
+        </template>
 
-          <div class="card-body">
-            <h3 class="product-name">{{ product.name }}</h3>
+        <template v-else>
+          <RouterLink
+            v-for="product in products"
+            :key="product.id"
+            :to="`/product/${product.id}`"
+            class="product-card"
+          >
+            <div class="card-image">
+              <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.name" />
+              <div v-else class="img-skeleton"></div>
+            </div>
 
-            <div class="rating-row">
-              <div class="stars">
-                <i v-for="n in 5" :key="n" :class="getStarClass(product.rating, n)"></i>
+            <div class="card-body">
+              <h3 class="product-name">{{ product.name }}</h3>
+              <div class="rating-row">
+                <div class="stars">
+                  <i v-for="n in 5" :key="n" :class="starClass(4.5, n)"></i>
+                </div>
+                <span class="rating-text">4.5/5</span>
               </div>
-              <span class="rating-text">{{ product.rating }}/5</span>
+              <div class="price-row">
+                <span class="price">${{ product.price.toFixed(2) }}</span>
+              </div>
             </div>
-
-            <div class="price-row">
-              <span class="price">${{ product.price }}</span>
-              <template v-if="product.originalPrice">
-                <span class="original-price">${{ product.originalPrice }}</span>
-                <span class="discount-badge">-{{ product.discount }}%</span>
-              </template>
-            </div>
-          </div>
-        </article>
+          </RouterLink>
+        </template>
       </div>
 
       <div class="view-all-wrap">
-        <button type="button" class="view-all-btn">View All</button>
+        <RouterLink to="/sell" class="view-all-btn">View All</RouterLink>
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-interface Product {
-  id: number
-  name: string
-  rating: number
-  price: number
-  originalPrice?: number
-  discount?: number
-}
+import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import { getInventoryProducts } from '@/services/adminInventoryService'
+import type { InventoryProduct } from '@/types/inventory'
 
-const products: Product[] = [
-  { id: 1, name: 'T-shirt with Tape Details', rating: 4.5, price: 120 },
-  { id: 2, name: 'Skinny Fit Jeans', rating: 3.5, price: 240, originalPrice: 260, discount: 20 },
-  { id: 3, name: 'Checkered Shirt', rating: 4.5, price: 180 },
-  { id: 4, name: 'Sleeve Striped T-shirt', rating: 4.5, price: 130, originalPrice: 160, discount: 30 },
-]
+const products = ref<InventoryProduct[]>([])
+const loading = ref(true)
 
-function getStarClass(rating: number, position: number): string {
+onMounted(async () => {
+  const all = await getInventoryProducts()
+  products.value = all.slice(0, 4)
+  loading.value = false
+})
+
+function starClass(rating: number, position: number): string {
   if (rating >= position) return 'fa-solid fa-star'
   if (rating >= position - 0.5) return 'fa-solid fa-star-half-stroke'
   return 'fa-regular fa-star'
@@ -74,7 +83,6 @@ function getStarClass(rating: number, position: number): string {
   padding: 0 32px;
 }
 
-/* ── Title ── */
 .section-title {
   text-align: center;
   font-size: 36px;
@@ -84,20 +92,21 @@ function getStarClass(rating: number, position: number): string {
   margin: 0 0 48px;
 }
 
-/* ── Grid ── */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
 
-/* ── Card ── */
 .product-card {
   background: #fff;
   border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
 .product-card:hover {
@@ -105,13 +114,18 @@ function getStarClass(rating: number, position: number): string {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.09);
 }
 
-/* ── Skeleton image ── */
 .card-image {
   background: #f3f3f3;
   border-radius: 12px;
   overflow: hidden;
   aspect-ratio: 3 / 4;
   margin: 12px 12px 0;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 @keyframes shimmer {
@@ -122,17 +136,23 @@ function getStarClass(rating: number, position: number): string {
 .img-skeleton {
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    #ececec 25%,
-    #e0e0e0 50%,
-    #ececec 75%
-  );
+  background: linear-gradient(90deg, #ececec 25%, #e0e0e0 50%, #ececec 75%);
   background-size: 1200px 100%;
   animation: shimmer 1.6s infinite linear;
 }
 
-/* ── Card body ── */
+.skeleton-line {
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #ececec 25%, #e0e0e0 50%, #ececec 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.6s infinite linear;
+  margin-bottom: 8px;
+}
+
+.w60 { width: 60%; }
+.w40 { width: 40%; }
+
 .card-body {
   padding: 14px 12px 16px;
   display: flex;
@@ -150,29 +170,16 @@ function getStarClass(rating: number, position: number): string {
   text-overflow: ellipsis;
 }
 
-/* ── Rating ── */
 .rating-row {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.stars {
-  display: flex;
-  gap: 2px;
-}
+.stars { display: flex; gap: 2px; }
+.stars i { font-size: 13px; color: #f5a623; }
+.rating-text { font-size: 12px; color: #888; }
 
-.stars i {
-  font-size: 13px;
-  color: #f5a623;
-}
-
-.rating-text {
-  font-size: 12px;
-  color: #888;
-}
-
-/* ── Price ── */
 .price-row {
   display: flex;
   align-items: center;
@@ -186,22 +193,6 @@ function getStarClass(rating: number, position: number): string {
   color: #111;
 }
 
-.original-price {
-  font-size: 15px;
-  color: #aaa;
-  text-decoration: line-through;
-}
-
-.discount-badge {
-  font-size: 11px;
-  font-weight: 600;
-  color: #e85c6e;
-  background: rgba(232, 92, 110, 0.1);
-  border-radius: 4px;
-  padding: 2px 7px;
-}
-
-/* ── View All ── */
 .view-all-wrap {
   display: flex;
   justify-content: center;
@@ -218,29 +209,21 @@ function getStarClass(rating: number, position: number): string {
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
+  text-decoration: none;
   transition: border-color 0.18s, color 0.18s;
 }
 
 .view-all-btn:hover {
-  border-color: var(--clr-plum);
-  color: var(--clr-plum);
+  border-color: #111;
+  color: #111;
 }
 
-/* ── Responsive ── */
 @media (max-width: 1024px) {
-  .product-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .product-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 560px) {
-  .product-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .section-title {
-    font-size: 26px;
-  }
+  .product-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .section-title { font-size: 26px; }
 }
 </style>

@@ -9,6 +9,7 @@
  *   POST /api/auth/logout   (cookie sent automatically) → { message }
  */
 import { api, saveUser, clearTokens, type AuthUser } from '@/services/apiClient'
+import { signInWithGoogle as firebaseSignInWithGoogle } from '@/utils/firebase'
 
 // ─── Request / Response shapes (mirror backend DTOs) ────────────────────────
 
@@ -54,6 +55,29 @@ export async function login(payload: LoginPayload): Promise<JwtResponse> {
 
 export async function register(payload: RegisterPayload): Promise<{ message: string }> {
   return api.post('/api/auth/register', payload)
+}
+
+export async function loginWithGoogle(): Promise<JwtResponse> {
+  const idToken = await firebaseSignInWithGoogle()
+  const data = await api.post<JwtResponse>('/api/auth/google', { idToken })
+
+  saveUser({
+    id: data.id,
+    username: data.username,
+    email: data.email,
+    roles: data.roles,
+    expiresAt: data.expiresAt,
+  })
+
+  return data
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  await api.post('/api/auth/forgot-password', { email })
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await api.post('/api/auth/reset-password', { token, newPassword })
 }
 
 export async function logout(): Promise<void> {

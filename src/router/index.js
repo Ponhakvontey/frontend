@@ -27,7 +27,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'home', component: HomeView },
-    { path: '/login', name: 'login', component: LoginView },
+    { path: '/login', name: 'login', component: LoginView, beforeEnter: () => isLoggedIn() ? '/' : true },
     { path: '/register', name: 'register', component: RegisterView },
     { path: '/card', redirect: '/cart' },
     { path: '/cart', name: 'cart', component: CardView, meta: { requiresAuth: true } },
@@ -52,8 +52,8 @@ const router = createRouter({
     { path: '/admin/inventory/:id/edit', name: 'admin-product-edit', component: AdminProductFormView, meta: { requiresAdmin: true } },
     { path: '/admin/categories', name: 'admin-categories', component: AdminCategoriesView, meta: { requiresAdmin: true } },
 
-    { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView },
-    { path: '/verify-identity', name: 'verify-identity', component: VerifyIdentityView },
+    { path: '/forgot-password', redirect: '/login' },
+    { path: '/verify-identity', redirect: '/login' },
     { path: '/reset-password', name: 'reset-password', component: ResetPasswordView },
 
     { path: '/:pathMatch(.*)*', redirect: '/' },
