@@ -80,37 +80,12 @@ export function isAdmin(): boolean {
   return getUser()?.roles?.includes('ROLE_ADMIN') ?? false
 }
 
-// ─── CSRF ────────────────────────────────────────────────────────────────────
-
-/**
- * Reads the XSRF-TOKEN cookie that Spring Security sets.
- * Only works when the frontend is same-origin with the backend (Vite proxy in dev,
- * or co-hosted in production). The cookie is not httpOnly so JS can read it.
- */
-function getCsrfToken(): string | null {
-  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/)
-  return match ? decodeURIComponent(match[1]) : null
-}
-
-/** Methods that change server state and must include a CSRF token. */
-const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
-
 // ─── Core request ───────────────────────────────────────────────────────────
 
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const method = (options.method ?? 'GET').toUpperCase()
-
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
-  }
-
-  // Attach CSRF token on every mutating request
-  if (MUTATING_METHODS.has(method)) {
-    const csrf = getCsrfToken()
-    if (csrf) {
-      headers['X-XSRF-TOKEN'] = csrf
-    }
   }
 
   const res = await fetch(`${BASE}${path}`, {
