@@ -496,7 +496,7 @@ function startPolling(id: string) {
     return
   }
 
-  const base = import.meta.env.VITE_API_BASE_URL ?? ''
+  const base = import.meta.env.VITE_API_BASE_URL || 'https://ecommerce-api-production-d555.up.railway.app'
   const url = `${base}/api/payment/stream/${encodeURIComponent(id)}`
   sseSource = new EventSource(url, { withCredentials: true })
 
