@@ -567,12 +567,12 @@ function buildShippingInfo() {
   const phone  = contactPhone.value || profile.value.phone || ''
   return {
     firstName: parts[0] || 'User',
-    lastName:  parts.slice(1).join(' ') || '',
+    lastName:  parts.slice(1).join(' ') || '-',
     address:   profile.value.address || profile.value.city || 'Phnom Penh',
     city:      profile.value.city || 'Phnom Penh',
     state:     'KH',
     zipCode:   '12000',
-    phone,
+    phone:     phone || '000',
   }
 }
 
