@@ -109,6 +109,7 @@ interface InvoiceOrder {
   total: number
   shippingAddress: string
   username: string
+  status?: string
   items: Array<{ id: number; name: string; image: string; quantity: number; price: number }>
 }
 

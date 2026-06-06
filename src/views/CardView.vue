@@ -496,8 +496,8 @@ function startPolling(id: string) {
     return
   }
 
-  const BASE = import.meta.env.VITE_API_BASE_URL ?? ''
-  const url = `/api/payment/stream/${encodeURIComponent(id)}`
+  const base = import.meta.env.VITE_API_BASE_URL ?? ''
+  const url = `${base}/api/payment/stream/${encodeURIComponent(id)}`
   sseSource = new EventSource(url, { withCredentials: true })
 
   sseSource.addEventListener('payment-status', (event: MessageEvent) => {
