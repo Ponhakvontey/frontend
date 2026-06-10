@@ -55,13 +55,14 @@ export function addToWishlist(productId: number | string): string[] {
 
 export function removeFromWishlist(productId: number | string): string[] {
   const id = normalizeId(productId)
-  const next = getWishlistIds().filter((item) => item !== id)
+  const previous = getWishlistIds()
+  const next = previous.filter((item) => item !== id)
   writeStorage(WISHLIST_KEY, next)
   window.dispatchEvent(new Event('wishlist:changed'))
 
   if (isLoggedIn()) {
     api.delete<void>(`/api/favorites/${id}`).catch(() => {
-      writeStorage(WISHLIST_KEY, existing)
+      writeStorage(WISHLIST_KEY, previous)
       window.dispatchEvent(new Event('wishlist:changed'))
     })
   }

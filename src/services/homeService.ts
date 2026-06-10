@@ -50,7 +50,7 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function getTrendingProducts(): Promise<Product[]> {
-  const products = await getInventoryProducts()
+  const { products } = await getInventoryProducts()
   return products.map(inventoryToProduct)
 }
 

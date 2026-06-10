@@ -577,7 +577,7 @@ async function fetchProducts() {
 }
 
 async function loadLocalFallback() {
-  const local = await getInventoryProducts()
+  const { products: local } = await getInventoryProducts()
   const q = searchText.value.trim().toLowerCase()
   let filtered = local.filter(p => {
     const matchCat  = !selectedCategoryIds.value.length || selectedCategoryIds.value.includes(p.categoryId as number)
