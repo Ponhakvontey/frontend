@@ -72,7 +72,9 @@ export function useCartSidebar() {
     try {
       await api.put('/api/cart/update', { productId, quantity, size: size ?? undefined })
       await fetchCart()
-    } catch { /* ignore */ }
+    } catch (err: unknown) {
+      state.error = err instanceof Error ? err.message : 'Failed to update cart.'
+    }
   }
 
   async function removeItem(productId: string, size: string | null) {
@@ -80,7 +82,9 @@ export function useCartSidebar() {
     try {
       await api.delete(`/api/cart/remove/${productId}${sizeParam}`)
       await fetchCart()
-    } catch { /* ignore */ }
+    } catch (err: unknown) {
+      state.error = err instanceof Error ? err.message : 'Failed to remove item.'
+    }
   }
 
   return { state, openSidebar, closeSidebar, updateQuantity, removeItem, refreshCart: fetchCart }

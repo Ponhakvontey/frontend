@@ -348,7 +348,10 @@ function switchMode(next: 'login' | 'register' | 'forgot-password') {
 // ── Router ──
 const router = useRouter()
 const route = useRoute()
-const redirectPath = computed(() => route.query.redirect?.toString() || '/')
+const redirectPath = computed(() => {
+  const raw = route.query.redirect?.toString() ?? '/'
+  return raw.startsWith('/') && !raw.startsWith('//') ? raw : '/'
+})
 
 // ── Login state ──
 const loginEmail = ref('')
@@ -911,10 +914,14 @@ async function handleRegister() {
   line-height: 1.6;
 }
 
+@media (max-width: 640px) {
+  .auth-page { padding: 60px 12px 40px; }
+}
+
 @media (max-width: 460px) {
   .auth-card {
-    padding: 28px 20px 24px;
-    border-radius: 16px;
+    padding: 28px 16px 24px;
+    border-radius: 12px;
   }
 }
 </style>

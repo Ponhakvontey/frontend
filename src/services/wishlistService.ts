@@ -45,7 +45,10 @@ export function addToWishlist(productId: number | string): string[] {
   window.dispatchEvent(new Event('wishlist:changed'))
 
   if (isLoggedIn()) {
-    api.post<void>(`/api/favorites/${id}`, {}).catch(() => {})
+    api.post<void>(`/api/favorites/${id}`, {}).catch(() => {
+      writeStorage(WISHLIST_KEY, existing)
+      window.dispatchEvent(new Event('wishlist:changed'))
+    })
   }
   return next
 }
@@ -57,7 +60,10 @@ export function removeFromWishlist(productId: number | string): string[] {
   window.dispatchEvent(new Event('wishlist:changed'))
 
   if (isLoggedIn()) {
-    api.delete<void>(`/api/favorites/${id}`).catch(() => {})
+    api.delete<void>(`/api/favorites/${id}`).catch(() => {
+      writeStorage(WISHLIST_KEY, existing)
+      window.dispatchEvent(new Event('wishlist:changed'))
+    })
   }
   return next
 }

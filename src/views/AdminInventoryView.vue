@@ -62,6 +62,12 @@
           </div>
         </div>
 
+        <!-- Offline fallback banner -->
+        <div v-if="offlineBanner" class="offline-banner">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          API unavailable — showing locally cached data. Changes will be saved locally only.
+        </div>
+
         <!-- Table -->
         <div class="card">
           <div v-if="loading" class="empty"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>
@@ -162,7 +168,7 @@ import { useAdminInventory } from '@/composables/useAdminInventory'
 import type { InventoryFilterKey, InventorySortKey } from '@/types/inventory'
 
 const {
-  loading, error, products, search, filter,
+  loading, error, offlineBanner, products, search, filter,
   sortKey, sortDirection, visibleProducts,
   fetchProducts, removeProduct, setSort,
 } = useAdminInventory()
@@ -358,6 +364,14 @@ tbody td { padding: 12px 16px; font-size: 13px; color: #334155; vertical-align: 
 /* Footer */
 .table-footer { padding: 13px 16px; border-top: 1px solid #f1f5f9; }
 .muted { font-size: 12px; color: #94a3b8; }
+
+/* Offline banner */
+.offline-banner {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; margin-bottom: 14px;
+  border-radius: 8px; font-size: 13px; font-weight: 600;
+  background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+}
 
 @media (max-width: 768px) {
   .admin-page { grid-template-columns: 1fr !important; }

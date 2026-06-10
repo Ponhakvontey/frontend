@@ -22,6 +22,9 @@ interface BackendProduct {
   category?: string | null
   categoryId?: number | string | null
   sellerName?: string | null
+  imagePosition?: string | null
+  averageRating?: number | null
+  reviewCount?: number | null
   createdAt?: string | null
   updatedAt?: string | null
 }
@@ -77,6 +80,9 @@ function toInventoryProduct(product: BackendProduct): InventoryProduct {
     category: product.categoryName ?? product.category ?? 'Clothing',
     categoryId: toCategoryId(product.categoryId),
     sellerName: product.sellerName ?? 'Ubuyee Studio',
+    imagePosition: product.imagePosition ?? null,
+    averageRating: product.averageRating ?? null,
+    reviewCount: product.reviewCount ?? null,
     createdAt: product.createdAt ?? now,
     updatedAt: product.updatedAt ?? now,
   }
@@ -98,6 +104,7 @@ function toPayload(input: InventoryProductInput) {
     imageUrls: validUrls,
     sizes: input.sizes ?? [],
     categoryId: input.categoryId ? Number(input.categoryId) : null,
+    imagePosition: input.imagePosition ?? null,
   }
 }
 
@@ -115,6 +122,9 @@ function createLocalProduct(input: InventoryProductInput) {
     categoryId: input.categoryId,
     category: 'Clothing',
     sellerName: 'Ubuyee Studio',
+    imagePosition: null,
+    averageRating: null,
+    reviewCount: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }
@@ -155,17 +165,18 @@ function deleteLocalProduct(id: string) {
   saveInventoryProducts(products.filter((product) => product.id !== id))
 }
 
-export async function getInventoryProducts() {
+export async function getInventoryProducts(): Promise<{ products: InventoryProduct[]; offline: boolean }> {
   if (USE_API) {
     try {
       const response = await api.get<PagedResponse<BackendProduct> | BackendProduct[]>(PRODUCT_LIST_PATH)
-      return readProductsFromResponse(response)
+      return { products: readProductsFromResponse(response), offline: false }
     } catch (error) {
       console.warn('Product API unavailable. Falling back to local inventory data.', error)
+      return { products: ensureInventorySeeded(), offline: true }
     }
   }
 
-  return ensureInventorySeeded()
+  return { products: ensureInventorySeeded(), offline: false }
 }
 
 export async function getInventoryProduct(id: string) {

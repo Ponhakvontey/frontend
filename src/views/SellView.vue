@@ -204,7 +204,8 @@
                 <div class="card-img-wrap">
                   <RouterLink :to="`/product/${product.id}`" class="img-link">
                     <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.name"
-                         class="product-img" loading="lazy" />
+                         class="product-img" loading="lazy"
+                         :style="{ objectPosition: product.imagePosition || 'center top' }" />
                     <div v-else class="img-placeholder">
                       <i class="fa-solid fa-image"></i>
                     </div>
@@ -336,6 +337,7 @@ interface ProductDTO {
   price: number
   stockQuantity: number
   imageUrl: string | null
+  imagePosition: string | null
   categoryId: number | null
   averageRating: number | null
   reviewCount: number | null
@@ -588,7 +590,8 @@ async function loadLocalFallback() {
   const start = (currentPage.value - 1) * PER_PAGE
   products.value      = filtered.slice(start, start + PER_PAGE).map(p => ({
     id: p.id, name: p.name, price: p.price, stockQuantity: p.stock,
-    imageUrl: p.imageUrl, categoryId: p.categoryId, averageRating: null,
+    imageUrl: p.imageUrl, imagePosition: p.imagePosition ?? null,
+    categoryId: p.categoryId, averageRating: null,
     reviewCount: null, sizes: null, sellerName: null,
   }))
   totalElements.value = filtered.length

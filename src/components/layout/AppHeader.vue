@@ -43,14 +43,26 @@
           {{ link.label }}
           <i class="fa-solid fa-chevron-right mob-chevron"></i>
         </RouterLink>
+
+        <div class="mob-divider" />
+
+        <RouterLink to="/profile" class="mob-link" @click="menuOpen = false">
+          <span><i class="fa-solid fa-user" style="margin-right:10px;"></i>Account</span>
+          <i class="fa-solid fa-chevron-right mob-chevron"></i>
+        </RouterLink>
+
+        <button v-if="loggedIn" type="button" class="mob-link mob-logout" @click="handleLogout">
+          <span><i class="fa-solid fa-right-from-bracket" style="margin-right:10px;"></i>Sign Out</span>
+        </button>
       </div>
     </Transition>
   </Teleport>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { clearTokens, getUser } from '@/services/apiClient'
 import NavMenu from '@/components/layout/NavMenu.vue'
 import NavActions from '@/components/layout/NavActions.vue'
 import { uiAssets } from '@/data/home'
@@ -59,9 +71,19 @@ import type { NavLink } from '@/types/home'
 withDefaults(defineProps<{ navLinks: NavLink[]; cartCount?: number }>(), { cartCount: 0 })
 
 const route = useRoute()
+const router = useRouter()
 const isHeaderHidden = ref(false)
 const menuOpen = ref(false)
 let lastScrollY = 0
+
+const loggedIn = computed(() => !!getUser())
+
+async function handleLogout() {
+  menuOpen.value = false
+  try { await fetch(`${import.meta.env.VITE_API_BASE_URL ?? ''}/api/auth/logout`, { method: 'POST', credentials: 'include' }) } catch { /* ignore */ }
+  clearTokens()
+  router.push('/login')
+}
 
 // Close drawer when navigating
 watch(() => route.path, () => { menuOpen.value = false })
@@ -214,6 +236,27 @@ onBeforeUnmount(() => window.removeEventListener('scroll', handleScroll))
 }
 .mob-link:hover { background: #f8f8f8; }
 .mob-chevron { font-size: 10px; color: #AABBAA; }
+
+.mob-divider { height: 1px; background: #f0f0f0; margin: 8px 0; }
+
+.mob-logout {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #DA292E;
+  cursor: pointer;
+  font-family: Helvetica, Arial, sans-serif;
+  text-align: left;
+  transition: background 0.15s;
+}
+.mob-logout:hover { background: #fff1f2; }
 
 /* ── Transitions ── */
 .mob-fade-enter-active, .mob-fade-leave-active { transition: opacity 0.25s ease; }

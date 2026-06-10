@@ -8,6 +8,7 @@ import type { InventoryFilterKey, InventoryProduct, InventorySortKey } from '@/t
 export function useAdminInventory() {
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const offlineBanner = ref(false)
   const products = ref<InventoryProduct[]>([])
   const search = ref('')
   const filter = ref<InventoryFilterKey>('all')
@@ -41,8 +42,11 @@ export function useAdminInventory() {
   async function fetchProducts() {
     loading.value = true
     error.value = null
+    offlineBanner.value = false
     try {
-      products.value = await getInventoryProducts()
+      const result = await getInventoryProducts()
+      products.value = result.products
+      offlineBanner.value = result.offline
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'Failed to load products'
     } finally {
@@ -70,7 +74,7 @@ export function useAdminInventory() {
   }
 
   return {
-    loading, error, products, search, filter,
+    loading, error, offlineBanner, products, search, filter,
     sortKey, sortDirection, visibleProducts,
     fetchProducts, removeProduct, setSort,
   }

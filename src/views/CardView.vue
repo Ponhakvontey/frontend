@@ -31,6 +31,10 @@
                     <strong class="addr-name">{{ profile.fullName || '—' }}</strong>
                     <p class="addr-line">{{ profile.city || profile.address || '—' }}</p>
                     <p class="addr-line">{{ profile.phone || '' }}</p>
+                    <p v-if="!profile.address && !profile.city" class="addr-missing">
+                      <i class="fa-solid fa-circle-info"></i>
+                      No address saved — add one in your profile for accurate delivery.
+                    </p>
                   </div>
                   <button class="text-btn" @click="goToProfile">
                     Change Address <i class="fa-solid fa-chevron-right"></i>
@@ -95,9 +99,10 @@
                 <!-- ABA PAY -->
                 <label class="method-row" :class="{ selected: selectedMethod === 'aba' }">
                   <input
-                    type="checkbox"
+                    type="radio"
+                    name="payment-method"
                     :checked="selectedMethod === 'aba'"
-                    @change="selectedMethod = selectedMethod === 'aba' ? '' : 'aba'"
+                    @change="selectedMethod = 'aba'"
                     class="method-check"
                   />
                   <img :src="abaLogo" alt="ABA Pay" class="aba-img" />
@@ -110,9 +115,10 @@
                 <!-- Credit / Debit Card -->
                 <label class="method-row" :class="{ selected: selectedMethod === 'card' }">
                   <input
-                    type="checkbox"
+                    type="radio"
+                    name="payment-method"
                     :checked="selectedMethod === 'card'"
-                    @change="selectedMethod = selectedMethod === 'card' ? '' : 'card'"
+                    @change="selectedMethod = 'card'"
                     class="method-check"
                   />
                   <div class="card-icon-box">
@@ -242,66 +248,13 @@
         <div class="modal card-modal">
 
           <div class="modal-head">
-            <h3 class="card-modal-title">Credit/Debit Card</h3>
-            <div class="modal-timer">
-              <i class="fa-solid fa-spinner fa-spin timer-spin"></i>
-              <span :class="{ 'timer-warn': cardTimer <= 30 }">{{ formatTime(cardTimer) }}</span>
-            </div>
+            <h3 class="card-modal-title">Pay with Stripe</h3>
             <button class="modal-x" @click="closeModal">×</button>
           </div>
 
-          <div class="card-form">
-            <div class="field-wrap">
-              <label class="field-label">Card number</label>
-              <div class="card-input-row">
-                <input
-                  v-model="cardNumber"
-                  type="text"
-                  placeholder="Card number"
-                  class="card-input"
-                  maxlength="19"
-                  @input="formatCardNumber"
-                />
-                <div class="inline-card-logos">
-                  <img src="https://cdn.simpleicons.org/visa" alt="Visa" class="brand-img" />
-                  <img src="https://cdn.simpleicons.org/mastercard" alt="Mastercard" class="brand-img" />
-                  <i class="fa-brands fa-cc-amex"></i>
-                  <i class="fa-brands fa-cc-jcb"></i>
-                </div>
-              </div>
-            </div>
-
-            <div class="card-fields-row">
-              <div class="field-wrap">
-                <label class="field-label">Expiry date</label>
-                <input
-                  v-model="expiryDate"
-                  type="text"
-                  placeholder="MM / YY"
-                  class="card-input"
-                  maxlength="7"
-                />
-              </div>
-              <div class="field-wrap">
-                <label class="field-label">CVV</label>
-                <div class="card-input-row">
-                  <input
-                    v-model="cvv"
-                    type="password"
-                    placeholder="000"
-                    class="card-input"
-                    maxlength="4"
-                  />
-                  <i class="fa-regular fa-credit-card cvv-icon"></i>
-                </div>
-              </div>
-            </div>
-
-            <p class="security-note">
-              Encrypted storage and processing of credit/debit card payments is handled by our
-              trusted payment solution <a href="#" class="payway-link">Stripe</a>.
-            </p>
-          </div>
+          <p class="security-note">
+            You'll be securely redirected to Stripe to complete your payment with your card.
+          </p>
 
           <div class="card-totals">
             <div class="ctotal-row">
@@ -372,12 +325,7 @@ let timerInterval: ReturnType<typeof setInterval> | null = null
 
 // ── Card modal state ──────────────────────────────────────────────────────────
 const showCardModal = ref(false)
-const cardNumber    = ref('')
-const expiryDate    = ref('')
-const cvv           = ref('')
-const cardTimer     = ref(180)
 const stripeLoading = ref(false)
-let cardTimerInterval: ReturnType<typeof setInterval> | null = null
 
 // ── UI state ──────────────────────────────────────────────────────────────────
 const checkoutLoading = ref(false)
@@ -432,7 +380,9 @@ async function increaseQty(lineId: string) {
   try {
     await api.put('/api/cart/update', { productId, quantity: item.quantity + 1, size: size ?? undefined })
     await loadCart()
-  } catch { /* ignore */ }
+  } catch (err: unknown) {
+    checkoutError.value = err instanceof Error ? err.message : 'Failed to update quantity.'
+  }
 }
 
 async function decreaseQty(lineId: string) {
@@ -442,7 +392,9 @@ async function decreaseQty(lineId: string) {
   try {
     await api.put('/api/cart/update', { productId, quantity: item.quantity - 1, size: size ?? undefined })
     await loadCart()
-  } catch { /* ignore */ }
+  } catch (err: unknown) {
+    checkoutError.value = err instanceof Error ? err.message : 'Failed to update quantity.'
+  }
 }
 
 async function removeItem(lineId: string) {
@@ -451,7 +403,9 @@ async function removeItem(lineId: string) {
   try {
     await api.delete(`/api/cart/remove/${productId}${sizeParam}`)
     await loadCart()
-  } catch { /* ignore */ }
+  } catch (err: unknown) {
+    checkoutError.value = err instanceof Error ? err.message : 'Failed to remove item.'
+  }
 }
 
 // ── Contact helpers ───────────────────────────────────────────────────────────
@@ -471,10 +425,6 @@ function formatTime(secs: number) {
 function stopAbaTimers() {
   if (sseSource)     { sseSource.close();            sseSource     = null }
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null }
-}
-
-function stopCardTimer() {
-  if (cardTimerInterval) { clearInterval(cardTimerInterval); cardTimerInterval = null }
 }
 
 function startAbaTimer(secs: number) {
@@ -526,21 +476,9 @@ function startPolling(id: string) {
   }
 }
 
-function startCardTimer() {
-  cardTimer.value = 180
-  cardTimerInterval = setInterval(() => {
-    cardTimer.value--
-    if (cardTimer.value <= 0) {
-      stopCardTimer()
-      closeModal()
-    }
-  }, 1000)
-}
-
 // ── Modal helpers ─────────────────────────────────────────────────────────────
 function closeModal() {
   stopAbaTimers()
-  stopCardTimer()
   showAbaModal.value  = false
   showCardModal.value = false
 }
@@ -579,6 +517,11 @@ function buildShippingInfo() {
 // ── Checkout handler ──────────────────────────────────────────────────────────
 async function handleCheckout() {
   if (!selectedMethod.value || checkoutLoading.value) return
+
+  if (!profile.value.fullName) {
+    checkoutError.value = 'Please add your full name in your profile before checking out.'
+    return
+  }
   checkoutLoading.value = true
   checkoutError.value   = ''
 
@@ -602,9 +545,7 @@ async function handleCheckout() {
       startPolling(res.transactionId)
 
     } else {
-      // Card: show form first, actual payment on submit
       showCardModal.value = true
-      startCardTimer()
     }
 
   } catch (err: unknown) {
@@ -641,21 +582,15 @@ async function simulate() {
   finally { simulating.value = false }
 }
 
-// ── Card number formatter ─────────────────────────────────────────────────────
-function formatCardNumber() {
-  cardNumber.value = cardNumber.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19)
-}
-
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  const [nav, footer, social] = await Promise.all([getNavLinks(), getFooterColumns(), getSocialLinks(), loadCart()])
+  const [nav, footer, social] = await Promise.all([getNavLinks(), getFooterColumns(), getSocialLinks(), loadCart(), loadProfile()])
   navLinks.value      = nav
   footerColumns.value = footer
   socialLinks.value   = social
-  await loadProfile()
 })
 
-onUnmounted(() => { stopAbaTimers(); stopCardTimer() })
+onUnmounted(() => { stopAbaTimers() })
 </script>
 
 <style scoped>
@@ -728,6 +663,7 @@ onUnmounted(() => { stopAbaTimers(); stopCardTimer() })
 .addr-details { flex: 1; }
 .addr-name { display: block; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
 .addr-line { margin: 0 0 2px; font-size: 13px; color: #333; }
+.addr-missing { margin: 6px 0 0; font-size: 12px; color: #d97706; display: flex; align-items: center; gap: 5px; }
 
 .text-btn {
   white-space: nowrap; background: none; border: none; cursor: pointer;
@@ -1055,12 +991,19 @@ onUnmounted(() => { stopAbaTimers(); stopCardTimer() })
 }
 
 @media (max-width: 640px) {
-  .container { padding: 0 16px; }
-  .cart-item { grid-template-columns: 80px 1fr; }
-  .item-price { grid-column: 1 / -1; text-align: right; }
+  .container { padding: 0 12px; }
+  .section-block { padding: 16px; }
+  .section-title { font-size: 15px; }
+  .cart-item { grid-template-columns: 72px 1fr; gap: 10px; }
+  .item-img-wrap { width: 72px; height: 72px; }
+  .item-price { grid-column: 1 / -1; text-align: right; font-size: 14px; }
   .card-fields-row { grid-template-columns: 1fr; }
   .contact-row { flex-direction: column; }
   .addr-row { flex-wrap: wrap; gap: 8px; }
-  .section-title { font-size: 16px; }
+  .addr-details { font-size: 13px; }
+  .text-btn { font-size: 12px; }
+  .order-summary { padding: 16px; }
+  .summary-title { font-size: 16px; }
+  .checkout-btn { height: 48px; font-size: 15px; }
 }
 </style>

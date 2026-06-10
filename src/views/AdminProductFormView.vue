@@ -114,12 +114,36 @@
                 class="img-url-input"
               />
 
-              <div class="preview-box">
-                <img v-if="url" :src="url" :alt="`Product image ${idx + 1}`" />
+              <div
+                class="preview-box"
+                :class="{ 'focal-active': idx === 0 && url }"
+                :title="idx === 0 && url ? 'Click to set focal point' : undefined"
+                @click="idx === 0 && url ? setFocalPoint($event) : undefined"
+              >
+                <img
+                  v-if="url"
+                  :src="url"
+                  :alt="`Product image ${idx + 1}`"
+                  :style="idx === 0 ? { objectPosition: form.imagePosition || 'center center' } : {}"
+                />
                 <div v-else class="preview-placeholder">
                   <i class="fa-solid fa-image"></i>
                   <span>No image</span>
                 </div>
+                <!-- Focal point crosshair (primary image only) -->
+                <template v-if="idx === 0 && url && form.imagePosition">
+                  <div
+                    class="focal-dot"
+                    :style="{ left: form.imagePosition.split(' ')[0], top: form.imagePosition.split(' ')[1] }"
+                  />
+                </template>
+                <div v-if="idx === 0 && url" class="focal-hint">
+                  <i class="fa-solid fa-crosshairs"></i> Click to set focal point
+                </div>
+              </div>
+              <div v-if="idx === 0 && form.imagePosition" class="focal-reset">
+                <span class="focal-pos-label">Focal: {{ form.imagePosition }}</span>
+                <button type="button" class="focal-reset-btn" @click="form.imagePosition = null">Reset</button>
               </div>
             </div>
 
@@ -174,6 +198,7 @@ const form = reactive<InventoryProductInput>({
   imageUrls: [''],
   sizes: [],
   categoryId: null,
+  imagePosition: null,
 })
 
 function addImage() { form.imageUrls.push('') }
@@ -188,6 +213,14 @@ function updateImage(idx: number, val: string) {
 }
 
 const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+
+function setFocalPoint(event: MouseEvent) {
+  const el = event.currentTarget as HTMLElement
+  const rect = el.getBoundingClientRect()
+  const x = Math.round((event.clientX - rect.left) / rect.width * 100)
+  const y = Math.round((event.clientY - rect.top) / rect.height * 100)
+  form.imagePosition = `${x}% ${y}%`
+}
 
 function toggleSize(size: string) {
   const idx = form.sizes.indexOf(size)
@@ -216,9 +249,10 @@ onMounted(async () => {
   form.stock       = product.stock
   form.imageUrl    = product.imageUrl
   form.imageUrls   = product.imageUrls?.length ? [...product.imageUrls] : [product.imageUrl ?? '']
-  form.sizes       = product.sizes ? [...product.sizes] : []
-  form.categoryId  = product.categoryId
-  sellerName.value = product.sellerName
+  form.sizes         = product.sizes ? [...product.sizes] : []
+  form.categoryId    = product.categoryId
+  form.imagePosition = product.imagePosition ?? null
+  sellerName.value   = product.sellerName
 })
 
 async function saveProduct() {
@@ -328,13 +362,55 @@ textarea { resize: vertical; padding: 10px 12px; }
   border: 1px dashed #e2e8f0; border-radius: 10px;
   overflow: hidden; background: #f8fafc; aspect-ratio: 4/3;
   display: flex; align-items: center; justify-content: center;
+  position: relative;
 }
-.preview-box img { width: 100%; height: 100%; object-fit: cover; }
+.preview-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .preview-placeholder {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   color: #cbd5e1; font-size: 12px;
 }
 .preview-placeholder i { font-size: 28px; }
+
+.focal-active { cursor: crosshair; }
+
+.focal-dot {
+  position: absolute;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: rgba(0, 120, 255, 0.85);
+  box-shadow: 0 0 0 2px rgba(0, 120, 255, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.focal-hint {
+  position: absolute;
+  bottom: 6px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.focal-active:hover .focal-hint { opacity: 1; }
+
+.focal-reset {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: -4px; padding: 4px 2px;
+}
+.focal-pos-label { font-size: 11px; color: #64748b; font-weight: 500; }
+.focal-reset-btn {
+  font-size: 11px; color: #ef4444; background: none;
+  border: none; cursor: pointer; padding: 0; font-family: Helvetica, Arial, sans-serif;
+  font-weight: 600;
+}
+.focal-reset-btn:hover { text-decoration: underline; }
 
 /* Multi-image manager */
 .img-entry {

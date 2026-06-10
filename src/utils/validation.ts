@@ -46,7 +46,7 @@ export function isValidZipCode(zipCode: string) {
 
 export function isValidCardNumber(cardNumber: string) {
   const digits = cardNumber.replace(/\s/g, '')
-  return /^\d{16}$/.test(digits)
+  return /^\d{15,16}$/.test(digits)
 }
 
 export function isValidExpiry(expiry: string) {

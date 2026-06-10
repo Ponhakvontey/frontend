@@ -390,8 +390,16 @@ onMounted(async () => {
 .shop-btn:hover { background: #211E1E; }
 
 @media (max-width: 700px) {
-  .order-top { flex-direction: column; }
-  .order-right { align-items: flex-start; }
   .orders-main { padding: 60px 0 40px; }
+  .container { padding: 0 12px; }
+  .orders-head h1 { font-size: 22px; }
+  .order-top { flex-direction: column; gap: 12px; }
+  .order-right { align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+  .order-right strong { font-size: 18px; }
+  .order-card { padding: 14px; }
+  .order-footer { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .order-actions { margin-left: 0; flex-wrap: wrap; }
+  .action-btn { font-size: 11px; height: 32px; padding: 0 10px; }
+  .ship-addr { display: none; }
 }
 </style>

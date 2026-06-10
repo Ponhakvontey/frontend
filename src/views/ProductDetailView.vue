@@ -118,7 +118,7 @@
                     <i class="fa-solid fa-minus"></i>
                   </button>
                   <span class="qty-val">{{ qty }}</span>
-                  <button type="button" class="qty-btn" @click="qty++">
+                  <button type="button" class="qty-btn" @click="qty < product.stockQuantity && qty++">
                     <i class="fa-solid fa-plus"></i>
                   </button>
                 </div>
@@ -144,6 +144,84 @@
 
               <p v-if="cartMsg" class="cart-msg" :class="cartMsgType">{{ cartMsg }}</p>
 
+            </div>
+          </section>
+
+          <!-- ── Comments & Reviews ── -->
+          <section class="comments-section">
+            <h2 class="comments-title">Reviews</h2>
+
+            <!-- Submit form -->
+            <div class="comment-form">
+              <div class="star-picker">
+                <button
+                  v-for="n in 5" :key="n"
+                  type="button"
+                  class="star-pick-btn"
+                  @click="newRating = newRating === n ? null : n"
+                >
+                  <i :class="newRating && newRating >= n ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
+                </button>
+                <span class="star-pick-label">{{ newRating ? `${newRating}/5` : 'No rating' }}</span>
+              </div>
+              <textarea
+                v-model="newComment"
+                class="comment-textarea"
+                placeholder="Share your thoughts about this product…"
+                maxlength="1000"
+                rows="3"
+              />
+              <div class="comment-form-footer">
+                <span class="char-count">{{ newComment.length }}/1000</span>
+                <button
+                  type="button"
+                  class="submit-comment-btn"
+                  :disabled="!newComment.trim() || commentSubmitting"
+                  @click="submitComment"
+                >
+                  {{ commentSubmitting ? 'Posting…' : 'Post Review' }}
+                </button>
+              </div>
+              <p v-if="commentError" class="comment-error">{{ commentError }}</p>
+            </div>
+
+            <!-- Comment list -->
+            <div v-if="commentsLoading" class="comments-loading">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+            </div>
+            <div v-else-if="!comments.length" class="no-comments">
+              No reviews yet. Be the first!
+            </div>
+            <div v-else class="comments-list">
+              <article v-for="c in comments" :key="c.id" class="comment-card">
+                <div class="comment-header">
+                  <img v-if="c.userProfilePicture" :src="c.userProfilePicture" class="comment-avatar" :alt="c.username" />
+                  <span v-else class="comment-avatar-initials">{{ c.username?.[0]?.toUpperCase() ?? '?' }}</span>
+                  <div class="comment-meta">
+                    <strong class="comment-username">{{ c.username }}</strong>
+                    <span class="comment-date">{{ fmtCommentDate(c.createdAt) }}</span>
+                  </div>
+                  <div v-if="c.rating" class="comment-stars">
+                    <i v-for="n in 5" :key="n" :class="n <= c.rating ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
+                  </div>
+                </div>
+                <p class="comment-body">{{ c.content }}</p>
+
+                <!-- Replies -->
+                <div v-if="c.replies?.length" class="replies">
+                  <article v-for="r in c.replies" :key="r.id" class="reply-card">
+                    <div class="comment-header">
+                      <img v-if="r.userProfilePicture" :src="r.userProfilePicture" class="comment-avatar sm" :alt="r.username" />
+                      <span v-else class="comment-avatar-initials sm">{{ r.username?.[0]?.toUpperCase() ?? '?' }}</span>
+                      <div class="comment-meta">
+                        <strong class="comment-username">{{ r.username }}</strong>
+                        <span class="comment-date">{{ fmtCommentDate(r.createdAt) }}</span>
+                      </div>
+                    </div>
+                    <p class="comment-body">{{ r.content }}</p>
+                  </article>
+                </div>
+              </article>
             </div>
           </section>
 
@@ -185,8 +263,6 @@ import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
 import { api, isLoggedIn } from '@/services/apiClient'
 import { isWishlisted, toggleWishlist } from '@/services/wishlistService'
 import { useCartSidebar } from '@/composables/useCartSidebar'
-
-const API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -252,25 +328,21 @@ async function loadProduct(id: string) {
   cartMsg.value = ''
 
   try {
-    const res = await fetch(`${API}/api/products/${id}`)
-    if (res.status === 404) { error.value = 'Product not found.'; return }
-    if (!res.ok) throw new Error(`Server error ${res.status}`)
-    const dto: ProductDTO = await res.json()
+    const dto = await api.get<ProductDTO>(`/api/products/${id}`)
     product.value = dto
     const imgs = dto.imageUrls?.filter(Boolean) ?? []
     activeImg.value = imgs[0] ?? dto.imageUrl ?? ''
     isFavorite.value = isWishlisted(dto.id)
     if (isLoggedIn()) {
       api.get<{ favorite: boolean }>(`/api/favorites/check/${dto.id}`)
-        .then(res => { isFavorite.value = res.favorite })
+        .then(r => { isFavorite.value = r.favorite })
         .catch(() => {})
     }
 
-    const relRes = await fetch(`${API}/api/products/${id}/related`)
-    if (relRes.ok) {
-      const relData: ProductDTO[] = await relRes.json()
+    try {
+      const relData = await api.get<ProductDTO[]>(`/api/products/${id}/related`)
       related.value = relData.slice(0, 4)
-    }
+    } catch { /* related products are non-critical */ }
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Failed to load product.'
   } finally {
@@ -278,7 +350,60 @@ async function loadProduct(id: string) {
   }
 }
 
-watch(() => route.params.id, (id) => { if (id) loadProduct(String(id)) })
+// ── Comments ──────────────────────────────────────────────────────────────────
+
+interface CommentDTO {
+  id: number
+  content: string
+  userId: number
+  username: string
+  userProfilePicture: string | null
+  rating: number | null
+  createdAt: string
+  replies: CommentDTO[]
+}
+
+const comments         = ref<CommentDTO[]>([])
+const commentsLoading  = ref(false)
+const newComment       = ref('')
+const newRating        = ref<number | null>(null)
+const commentSubmitting = ref(false)
+const commentError     = ref('')
+
+async function loadComments(id: string) {
+  commentsLoading.value = true
+  try {
+    comments.value = await api.get<CommentDTO[]>(`/api/products/${id}/comments`)
+  } catch { comments.value = [] }
+  finally { commentsLoading.value = false }
+}
+
+watch(() => route.params.id, (id) => { if (id) { loadProduct(String(id)); loadComments(String(id)) } }, { immediate: true })
+
+async function submitComment() {
+  if (!product.value || !newComment.value.trim()) return
+  if (!isLoggedIn()) { router.push(`/login?redirect=/product/${product.value.id}`); return }
+  commentSubmitting.value = true
+  commentError.value = ''
+  try {
+    const created = await api.post<CommentDTO>(`/api/products/${product.value.id}/comments`, {
+      content: newComment.value.trim(),
+      rating: newRating.value ?? undefined,
+    })
+    comments.value.unshift(created)
+    newComment.value = ''
+    newRating.value  = null
+  } catch (e: unknown) {
+    commentError.value = e instanceof Error ? e.message : 'Failed to post review.'
+  } finally {
+    commentSubmitting.value = false
+  }
+}
+
+function fmtCommentDate(iso: string) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 
@@ -353,8 +478,7 @@ onMounted(async () => {
   navLinks.value      = nav
   footerColumns.value = footer
   socialLinks.value   = social
-  refreshCart() // populate nav badge from API (non-blocking)
-  await loadProduct(String(route.params.id))
+  refreshCart()
 })
 </script>
 
@@ -605,6 +729,130 @@ onMounted(async () => {
 .cart-msg { margin: 10px 0 0; font-size: 13px; font-weight: 600; }
 .cart-msg.ok { color: #16a34a; }
 .cart-msg.err { color: #DA292E; }
+
+/* ── Comments ── */
+.comments-section {
+  border-top: 1px solid #AABBAA;
+  padding-top: 40px;
+  margin-bottom: 40px;
+}
+.comments-title { margin: 0 0 24px; font-size: 20px; font-weight: 700; color: #000; }
+
+.comment-form { margin-bottom: 32px; }
+
+.star-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.star-pick-btn {
+  border: none; background: transparent; cursor: pointer;
+  padding: 2px; font-size: 20px; color: #f5a623;
+  transition: transform 0.1s;
+}
+.star-pick-btn:hover { transform: scale(1.2); }
+.star-pick-label { font-size: 12px; color: #808080; margin-left: 6px; }
+
+.comment-textarea {
+  width: 100%;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: Helvetica, Arial, sans-serif;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.comment-textarea:focus { border-color: #000; }
+
+.comment-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.char-count { font-size: 12px; color: #aaa; }
+
+.submit-comment-btn {
+  height: 38px;
+  padding: 0 20px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: Helvetica, Arial, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.submit-comment-btn:hover:not(:disabled) { background: #333; }
+.submit-comment-btn:disabled { background: #aaa; cursor: default; }
+
+.comment-error { margin: 8px 0 0; font-size: 12px; color: #DA292E; }
+.login-to-review { font-size: 14px; color: #555; margin-bottom: 24px; }
+.login-to-review a { color: #000; font-weight: 600; }
+
+.comments-loading { padding: 24px 0; text-align: center; color: #808080; font-size: 20px; }
+.no-comments { padding: 24px 0; text-align: center; color: #808080; font-size: 14px; }
+
+.comments-list { display: flex; flex-direction: column; gap: 20px; }
+
+.comment-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  padding: 16px;
+  background: #fafafa;
+}
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.comment-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.comment-avatar.sm { width: 28px; height: 28px; }
+.comment-avatar-initials {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #111;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.comment-avatar-initials.sm { width: 28px; height: 28px; font-size: 12px; }
+.comment-meta { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+.comment-username { font-size: 14px; font-weight: 700; color: #000; }
+.comment-date { font-size: 12px; color: #aaa; }
+.comment-stars { display: flex; gap: 2px; margin-left: auto; }
+.comment-stars i { font-size: 13px; color: #f5a623; }
+.comment-body { margin: 0; font-size: 14px; color: #333; line-height: 1.6; }
+
+.replies {
+  margin-top: 12px;
+  padding-left: 16px;
+  border-left: 2px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.reply-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #f0f0f0;
+}
 
 /* ── Related ── */
 .related { border-top: 1px solid #AABBAA; padding-top: 48px; }

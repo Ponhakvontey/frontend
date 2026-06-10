@@ -10,6 +10,9 @@ export interface InventoryProduct {
   categoryId: number | null
   category: string
   sellerName: string
+  imagePosition: string | null
+  averageRating: number | null
+  reviewCount: number | null
   createdAt: string
   updatedAt: string
 }
@@ -23,6 +26,7 @@ export interface InventoryProductInput {
   imageUrls: string[]
   sizes: string[]
   categoryId: number | null
+  imagePosition: string | null
 }
 
 export type InventoryFilterKey = 'all' | 'in-stock' | 'low-stock' | 'out-of-stock'

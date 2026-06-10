@@ -22,17 +22,18 @@
             class="product-card"
           >
             <div class="card-image">
-              <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.name" />
+              <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.name"
+                   :style="{ objectPosition: product.imagePosition || 'center top' }" />
               <div v-else class="img-skeleton"></div>
             </div>
 
             <div class="card-body">
               <h3 class="product-name">{{ product.name }}</h3>
-              <div class="rating-row">
+              <div v-if="product.averageRating" class="rating-row">
                 <div class="stars">
-                  <i v-for="n in 5" :key="n" :class="starClass(4.5, n)"></i>
+                  <i v-for="n in 5" :key="n" :class="starClass(product.averageRating, n)"></i>
                 </div>
-                <span class="rating-text">4.5/5</span>
+                <span class="rating-text">{{ product.averageRating.toFixed(1) }}/5</span>
               </div>
               <div class="price-row">
                 <span class="price">${{ product.price.toFixed(2) }}</span>
@@ -59,8 +60,7 @@ const products = ref<InventoryProduct[]>([])
 const loading = ref(true)
 
 onMounted(async () => {
-  const all = await getInventoryProducts()
-  // Show next 4 after new arrivals; fall back to first 4 if fewer than 5 products
+  const { products: all } = await getInventoryProducts()
   products.value = all.length > 4 ? all.slice(4, 8) : all.slice(0, 4)
   loading.value = false
 })
