@@ -314,14 +314,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { getFooterColumns, getNavLinks, getSocialLinks } from '@/services/homeService'
 import { getInventoryProducts } from '@/services/adminInventoryService'
 import { api, isLoggedIn } from '@/services/apiClient'
-import { isWishlisted, toggleWishlist } from '@/services/wishlistService'
+import { fetchFavorites, getWishlistIds, toggleWishlist } from '@/services/wishlistService'
 import { useCartSidebar } from '@/composables/useCartSidebar'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
 import { readStorage } from '@/utils/storage'
@@ -481,7 +481,11 @@ function starClass(rating: number, pos: number): string {
 
 // ── Favorites ─────────────────────────────────────────────────────────────
 
-function isFav(productId: string): boolean { return isWishlisted(productId) }
+const wishlistIds = ref<string[]>([])
+
+function syncWishlistIds() { wishlistIds.value = isLoggedIn() ? getWishlistIds() : [] }
+
+function isFav(productId: string): boolean { return wishlistIds.value.includes(String(productId)) }
 
 function toggleFav(product: ProductDTO) {
   if (!isLoggedIn()) { router.push(`/login?redirect=/sell`); return }
@@ -648,6 +652,13 @@ onMounted(async () => {
   footerColumns.value = footer
   socialLinks.value   = social
   await Promise.all([fetchCategories(), fetchSellers(), fetchProducts()])
+  if (isLoggedIn()) await fetchFavorites()
+  syncWishlistIds()
+  window.addEventListener('wishlist:changed', syncWishlistIds)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('wishlist:changed', syncWishlistIds)
 })
 </script>
 
@@ -662,7 +673,7 @@ onMounted(async () => {
 }
 
 /* ── Container ── */
-.shop-main { padding: 40px 0 80px; }
+.shop-main { padding: 70px 0 80px; }
 .shop-container { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
 
 /* ── Mobile filter button ── */

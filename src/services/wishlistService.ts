@@ -30,6 +30,7 @@ export function getWishlistIds(): string[] {
 }
 
 export function isWishlisted(productId: number | string): boolean {
+  if (!isLoggedIn()) return false
   return getWishlistIds().includes(normalizeId(productId))
 }
 

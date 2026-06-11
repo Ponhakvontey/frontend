@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import type { Product } from '@/types/home'
 import { isLoggedIn } from '@/services/apiClient'
@@ -46,7 +46,16 @@ function toggleFavorite() {
   favorite.value = isWishlisted(props.product.id)
 }
 
-onMounted(() => { favorite.value = isWishlisted(props.product.id) })
+function syncFav() { favorite.value = isWishlisted(props.product.id) }
+
+onMounted(() => {
+  syncFav()
+  window.addEventListener('wishlist:changed', syncFav)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('wishlist:changed', syncFav)
+})
 </script>
 
 <style scoped>

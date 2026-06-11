@@ -88,10 +88,12 @@
 
               <p class="divider">OR JOIN WITH</p>
 
+              <p v-if="googleError" class="form-error">{{ googleError }}</p>
+
               <div class="social-row">
-                <button type="button" class="social-btn">
+                <button type="button" class="social-btn" :disabled="googleLoading" @click="handleGoogleSignIn">
                   <img :src="googleIcon" alt="" class="icon" />
-                  <span>Google</span>
+                  <span>{{ googleLoading ? 'Signing in…' : 'Google' }}</span>
                 </button>
               </div>
 
@@ -114,7 +116,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { register } from '@/services/authService'
+import { loginWithGoogle, register } from '@/services/authService'
 import { validateConfirmPassword, validateEmail, validatePassword, validateRequired } from '@/utils/validation'
 import confirmIcon from '../assets/confirm.png'
 import emailIcon from '../assets/message.png'
@@ -146,6 +148,22 @@ function clearErrors() {
     confirmPassword: '',
     agree: '',
     general: '',
+  }
+}
+
+const googleLoading = ref(false)
+const googleError = ref('')
+
+async function handleGoogleSignIn() {
+  googleError.value = ''
+  googleLoading.value = true
+  try {
+    const data = await loginWithGoogle()
+    router.push(data.roles.includes('ROLE_ADMIN') ? '/admin' : '/')
+  } catch (err: unknown) {
+    googleError.value = err instanceof Error ? err.message : 'Google sign-in failed. Please try again.'
+  } finally {
+    googleLoading.value = false
   }
 }
 

@@ -28,7 +28,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView },
     { path: '/login', name: 'login', component: LoginView, beforeEnter: () => isLoggedIn() ? '/' : true },
-    { path: '/register', name: 'register', component: RegisterView },
+    { path: '/register', name: 'register', component: RegisterView, beforeEnter: () => isLoggedIn() ? '/' : true },
     { path: '/card', redirect: '/cart' },
     { path: '/cart', name: 'cart', component: CardView, meta: { requiresAuth: true } },
     { path: '/checkout', redirect: '/cart' },
