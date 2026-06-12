@@ -106,14 +106,28 @@
                 </button>
               </div>
 
-              <input
-                :value="url"
-                @input="updateImage(idx, ($event.target as HTMLInputElement).value)"
-                type="url"
-                placeholder="https://…"
-                class="img-url-input"
-              />
+              <!-- URL input + upload button -->
+              <div class="img-input-row">
+                <input
+                  :value="url"
+                  @input="updateImage(idx, ($event.target as HTMLInputElement).value)"
+                  type="url"
+                  placeholder="https://…"
+                  class="img-url-input"
+                />
+                <button
+                  type="button"
+                  class="upload-btn"
+                  :disabled="uploadingIdx === idx"
+                  :title="'Upload from computer'"
+                  @click="triggerPick(idx)"
+                >
+                  <i v-if="uploadingIdx === idx" class="fa-solid fa-spinner fa-spin"></i>
+                  <i v-else class="fa-solid fa-cloud-arrow-up"></i>
+                </button>
+              </div>
 
+              <!-- Preview -->
               <div
                 class="preview-box"
                 :class="{ 'focal-active': idx === 0 && url }"
@@ -130,7 +144,6 @@
                   <i class="fa-solid fa-image"></i>
                   <span>No image</span>
                 </div>
-                <!-- Focal point crosshair (primary image only) -->
                 <template v-if="idx === 0 && url && form.imagePosition">
                   <div
                     class="focal-dot"
@@ -141,11 +154,23 @@
                   <i class="fa-solid fa-crosshairs"></i> Click to set focal point
                 </div>
               </div>
+
               <div v-if="idx === 0 && form.imagePosition" class="focal-reset">
                 <span class="focal-pos-label">Focal: {{ form.imagePosition }}</span>
                 <button type="button" class="focal-reset-btn" @click="form.imagePosition = null">Reset</button>
               </div>
+
+              <p v-if="uploadErrors[idx]" class="upload-error">{{ uploadErrors[idx] }}</p>
             </div>
+
+            <!-- Hidden file input -->
+            <input
+              ref="filePickerRef"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              @change="onFilePicked"
+            />
 
             <!-- Add image button -->
             <button type="button" class="add-img-btn" @click="addImage">
@@ -175,6 +200,40 @@ import AdminFooter from '@/components/admin/layout/AdminFooter.vue'
 import { api } from '@/services/apiClient'
 import { createInventoryProduct, getInventoryProduct, updateInventoryProduct } from '@/services/adminInventoryService'
 import type { InventoryProductInput } from '@/types/inventory'
+
+// ── Image upload ──────────────────────────────────────────────────────────────
+const filePickerRef  = ref<HTMLInputElement | null>(null)
+const uploadingIdx   = ref<number | null>(null)
+const uploadErrors   = reactive<Record<number, string>>({})
+let   pickingIdx     = 0
+
+function triggerPick(idx: number) {
+  pickingIdx = idx
+  uploadErrors[idx] = ''
+  filePickerRef.value?.click()
+}
+
+async function onFilePicked(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  await uploadFile(pickingIdx, file)
+  if (filePickerRef.value) filePickerRef.value.value = ''
+}
+
+async function uploadFile(idx: number, file: File) {
+  uploadingIdx.value = idx
+  uploadErrors[idx] = ''
+  try {
+    const form = new FormData()
+    form.append('file', file)
+    const res = await api.postForm<{ imageUrl: string }>('/api/upload', form)
+    updateImage(idx, res.imageUrl)
+  } catch (err: unknown) {
+    uploadErrors[idx] = err instanceof Error ? err.message : 'Upload failed.'
+  } finally {
+    uploadingIdx.value = null
+  }
+}
 
 interface Category { id: number; name: string }
 interface PagedResponse<T> { content: T[] }
@@ -424,9 +483,23 @@ textarea { resize: vertical; padding: 10px 12px; }
   font-size: 12px; font-weight: 700; color: #64748b;
 }
 
-.img-url-input {
-  height: 36px !important;
+.img-input-row {
+  display: flex; gap: 6px; align-items: center;
 }
+.img-url-input {
+  flex: 1; height: 36px !important;
+}
+.upload-btn {
+  flex-shrink: 0; width: 36px; height: 36px;
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  background: #fff; color: #475569;
+  font-size: 14px; cursor: pointer; display: grid; place-items: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.upload-btn:hover:not(:disabled) { background: #f1f5f9; color: #000; border-color: #000; }
+.upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.upload-error { margin: 0; font-size: 12px; color: #dc2626; }
 
 .remove-img-btn {
   width: 24px; height: 24px; border-radius: 6px;

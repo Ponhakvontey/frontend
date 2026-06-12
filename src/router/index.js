@@ -22,6 +22,8 @@ import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import VerifyIdentityView from '../views/VerifyIdentityView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
 import TrackOrderView from '../views/TrackOrderView.vue'
+import VerifyEmailView from '../views/VerifyEmailView.vue'
+import NotFoundView from '../views/NotFoundView.vue'
 import { isAdmin, isLoggedIn } from '@/services/apiClient'
 
 const router = createRouter({
@@ -30,6 +32,7 @@ const router = createRouter({
     { path: '/', name: 'home', component: HomeView },
     { path: '/login', name: 'login', component: LoginView, beforeEnter: () => isLoggedIn() ? '/' : true },
     { path: '/register', name: 'register', component: RegisterView, beforeEnter: () => isLoggedIn() ? '/' : true },
+    { path: '/verify-email', name: 'verify-email', component: VerifyEmailView },
     { path: '/card', redirect: '/cart' },
     { path: '/cart', name: 'cart', component: CardView, meta: { requiresAuth: true } },
     { path: '/checkout', redirect: '/cart' },
@@ -58,7 +61,7 @@ const router = createRouter({
     { path: '/verify-identity', redirect: '/login' },
     { path: '/reset-password', name: 'reset-password', component: ResetPasswordView },
 
-    { path: '/:pathMatch(.*)*', redirect: '/' },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView },
   ],
 })
 

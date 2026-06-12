@@ -84,7 +84,9 @@
               <p v-if="errors.agree" class="field-error">{{ errors.agree }}</p>
               <p v-if="errors.general" class="form-error">{{ errors.general }}</p>
 
-              <button class="create-btn" type="submit">Create Account</button>
+              <button class="create-btn" type="submit" :disabled="sendingOtp">
+                {{ sendingOtp ? 'Sending code…' : 'Create Account' }}
+              </button>
 
               <p class="divider">OR JOIN WITH</p>
 
@@ -111,12 +113,13 @@
       © 2024 SCHOLAR COMMERCE INC. • ALL RIGHTS RESERVED • SECURE ENCRYPTED REGISTRATION
     </p>
   </div>
+
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { loginWithGoogle, register } from '@/services/authService'
+import { loginWithGoogle, sendOtp } from '@/services/authService'
 import { validateConfirmPassword, validateEmail, validatePassword, validateRequired } from '@/utils/validation'
 import confirmIcon from '../assets/confirm.png'
 import emailIcon from '../assets/message.png'
@@ -124,6 +127,36 @@ import googleIcon from '../assets/google.png'
 import logo from '@/assets/home/logo1.png'
 import passwordIcon from '../assets/password.png'
 import peopleIcon from '../assets/people.png'
+
+// Known disposable / temp-mail domains
+const DISPOSABLE_DOMAINS = new Set([
+  'mailinator.com', 'guerrillamail.com', '10minutemail.com', 'temp-mail.org',
+  'yopmail.com', 'throwam.com', 'fakeinbox.com', 'dispostable.com',
+  'trashmail.com', 'dodgit.com', 'mailnesia.com', 'tempinbox.com',
+  'maildrop.cc', 'getnada.com', 'sharklasers.com', 'spam4.me',
+  'trashmail.at', 'trashmail.io', 'getairmail.com', 'discard.email',
+  'mailsac.com', 'guerrillamailblock.com', 'grr.la', 'tempmail.com',
+  'throwaway.email', 'spamgourmet.com', 'wegwerfmail.de',
+  // Extended list
+  'synsky.com', 'trbvm.com', 'tempr.email', 'cryptogmail.com',
+  'harakirimail.com', 'spamfree24.org', 'meltmail.com', 'filzmail.com',
+  'fakemail.net', 'mailexpire.com', 'mailfreeonline.com', 'mailscrap.com',
+  'mailtemp.info', 'netmails.net', 'pookmail.com', 'spamavert.com',
+  'temporaryemail.net', 'emailondeck.com', 'mailguard.me', 'spamgourmet.net',
+  'spamgourmet.org', 'spamhole.com', 'sogetthis.com', 'sendspamhere.com',
+  'jetable.fr.nf', 'lortemail.dk', 'zoemail.net', 'mailnull.com',
+  'tempinbox.com', 'spamex.com', 'trashmail.net', 'trashmail.me',
+  'tmailinator.com', 'crazymailing.com', 'mailnew.com', 'inoutmail.de',
+  'binkmail.com', 'bobmail.info', 'chammy.info', 'devnullmail.com',
+  'letthemeatspam.com', 'mail-temporaire.fr', 'mt2009.com', 'nobody.com',
+  'nospam.ze.tc', 'spamgourmet.com', 'supergreatmail.com', 'tmail.com',
+  'trashdevil.com', 'uggsrock.com', 'willselfdestruct.com', 'xoxy.net',
+])
+
+function isDisposableEmail(e: string): boolean {
+  const domain = e.split('@')[1]?.toLowerCase() ?? ''
+  return DISPOSABLE_DOMAINS.has(domain)
+}
 
 const fullName = ref('')
 const email = ref('')
@@ -139,16 +172,10 @@ const errors = ref({
   agree: '',
   general: '',
 })
+const sendingOtp = ref(false)
 
 function clearErrors() {
-  errors.value = {
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    agree: '',
-    general: '',
-  }
+  errors.value = { fullName: '', email: '', password: '', confirmPassword: '', agree: '', general: '' }
 }
 
 const googleLoading = ref(false)
@@ -177,18 +204,26 @@ async function handleRegister() {
   errors.value.confirmPassword = validateConfirmPassword(password.value, confirmPassword.value)
   if (!agree.value) errors.value.agree = 'You must agree to continue.'
 
+  if (!errors.value.email && isDisposableEmail(normalizedEmail)) {
+    errors.value.email = 'Disposable email addresses are not allowed. Please use a real email (e.g. Gmail, Yahoo, Outlook).'
+  }
+
   if (Object.values(errors.value).some(Boolean)) return
 
+  sendingOtp.value = true
   try {
-    await register({
-      username: normalizedEmail,
+    await sendOtp(normalizedEmail)
+    sessionStorage.setItem('pending_reg', JSON.stringify({
       email: normalizedEmail,
+      username: normalizedEmail,
       password: password.value,
       fullName: fullName.value.trim(),
-    })
-    router.push('/login')
+    }))
+    router.push('/verify-email')
   } catch (e: unknown) {
-    errors.value.general = e instanceof Error ? e.message : 'Registration failed. Please try again.'
+    errors.value.general = e instanceof Error ? e.message : 'Failed to send verification code. Please try again.'
+  } finally {
+    sendingOtp.value = false
   }
 }
 </script>

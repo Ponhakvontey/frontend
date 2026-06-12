@@ -12,6 +12,9 @@
             <h1><i class="fa-solid fa-users title-icon"></i> User Management</h1>
             <p>Manage accounts, roles, and access control across your platform.</p>
           </div>
+          <button type="button" class="refresh-btn" :disabled="loading" @click="fetchUsers">
+            <i class="fa-solid fa-rotate-right" :class="{ 'fa-spin': loading }"></i> Refresh
+          </button>
         </section>
 
         <!-- Error -->
@@ -368,7 +371,27 @@ function updateUser(updated: BackendUser) {
 /* ── Header ── */
 .page-header {
   margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
 }
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.refresh-btn:hover:not(:disabled) { background: #f8fafc; color: #0f172a; }
+.refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .page-header h1 {
   margin: 0 0 6px;

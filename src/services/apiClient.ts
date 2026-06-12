@@ -1,19 +1,7 @@
-/**
- * Thin fetch wrapper that:
- * 1. Prefixes every request with VITE_API_BASE_URL (empty in dev — Vite proxy handles routing)
- * 2. Sends credentials (httpOnly auth cookie) with every request
- * 3. Sends X-XSRF-TOKEN header on mutating requests (CSRF protection)
- * 4. Throws on non-2xx; 401 → auto-clears session and redirects to login
- */
 
-// In development the Vite proxy forwards /api/* to localhost:8080, so BASE is empty.
-// In production set VITE_API_BASE_URL to the backend origin (e.g. https://api.ubuyee.com).
+
+// In development the Vite proxy forwards /api/* to localhost:808// In production set VITE_API_BASE_URL to the backend origin (e.g. https://api.ubuyee.com).
 const BASE = import.meta.env.VITE_API_BASE_URL ?? ''
-
-// ─── User metadata ───────────────────────────────────────────────────────────
-// The JWT lives in an httpOnly cookie set by the server — JS cannot read it.
-// We store only non-sensitive UI metadata (name, email, roles, expiry hint) here.
-
 const USER_KEY = 'authUser'
 
 export interface AuthUser {
@@ -126,6 +114,32 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
   return res.json() as Promise<T>
 }
 
+async function requestForm<T>(path: string, form: FormData, method = 'POST'): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method,
+    body: form,
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401 && getUser()) {
+      clearUser()
+      window.location.href = '/login'
+      return new Promise(() => {})
+    }
+    let message = `Request failed (${res.status})`
+    try {
+      const body = await res.json()
+      if (body?.message) message = body.message
+      else if (body?.error) message = body.error
+    } catch { /* ignore */ }
+    throw new Error(message)
+  }
+
+  if (res.status === 204) return undefined as T
+  return res.json() as Promise<T>
+}
+
 // Convenience wrappers
 export const api = {
   get: <T>(path: string) => request<T>(path),
@@ -136,4 +150,5 @@ export const api = {
   patch: <T>(path: string, body: unknown) =>
     request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  postForm: <T>(path: string, form: FormData) => requestForm<T>(path, form),
 }

@@ -6,9 +6,9 @@
     />
     <main>
       <HeroSection v-if="hero" :content="hero" />
-      <NewArrivalsSection />
-      <TopSellingSection />
-      <DressStyleSection />
+      <div v-scroll-reveal="'up'"><NewArrivalsSection /></div>
+      <div v-scroll-reveal="'up'"><TopSellingSection /></div>
+      <div v-scroll-reveal="'fade'"><DressStyleSection /></div>
     </main>
 
     <AppFooter :footer-columns="footerColumns" :social-links="socialLinks" />

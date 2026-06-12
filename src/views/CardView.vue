@@ -215,28 +215,30 @@
             <button class="modal-x" @click="closeModal">×</button>
           </div>
 
-          <div class="aba-amount">
-            <span class="amount-num">{{ amountToPay.toFixed(2) }}</span>
-            <span class="amount-usd">USD</span>
-          </div>
-
-          <div class="qr-wrap">
-            <div class="qr-frame">
-              <span class="qr-corner tl"></span>
-              <span class="qr-corner tr"></span>
-              <span class="qr-corner bl"></span>
-              <span class="qr-corner br"></span>
-              <img v-if="qrImage" :src="qrImage" class="qr-img" alt="QR code" />
-              <div v-else class="qr-ph"><i class="fa-solid fa-spinner fa-spin" style="font-size:32px;color:#AABBAA;"></i></div>
+          <div class="aba-modal-body">
+            <div class="aba-amount">
+              <span class="amount-num">{{ amountToPay.toFixed(2) }}</span>
+              <span class="amount-usd">USD</span>
             </div>
-            <p class="scan-label">Scan to pay</p>
-          </div>
 
-          <!-- Sandbox simulate button (dev only) -->
-          <button v-if="isDev" class="sim-btn" :disabled="simulating" @click="simulate">
-            <i class="fa-solid fa-flask"></i>
-            {{ simulating ? 'Simulating…' : 'Simulate Payment (Dev)' }}
-          </button>
+            <div class="qr-wrap">
+              <div class="qr-frame">
+                <span class="qr-corner tl"></span>
+                <span class="qr-corner tr"></span>
+                <span class="qr-corner bl"></span>
+                <span class="qr-corner br"></span>
+                <img v-if="qrImage" :src="qrImage" class="qr-img" alt="QR code" />
+                <div v-else class="qr-ph"><i class="fa-solid fa-spinner fa-spin" style="font-size:32px;color:#AABBAA;"></i></div>
+              </div>
+              <p class="scan-label">Scan to pay</p>
+            </div>
+
+            <!-- Sandbox simulate button (dev only) -->
+            <button v-if="isDev" class="sim-btn" :disabled="simulating" @click="simulate">
+              <i class="fa-solid fa-flask"></i>
+              {{ simulating ? 'Simulating…' : 'Simulate Payment (Dev)' }}
+            </button>
+          </div>
 
         </div>
       </div>
@@ -760,7 +762,10 @@ onUnmounted(() => { stopAbaTimers() })
 /* ABA logo image */
 .aba-img {
   width: 52px; height: 34px;
-  object-fit: contain; border-radius: 6px; flex-shrink: 0;
+  object-fit: contain; flex-shrink: 0;
+  background: #C1121F;
+  border-radius: 6px;
+  padding: 4px 6px;
 }
 
 /* Card icon box */
@@ -876,11 +881,36 @@ onUnmounted(() => { stopAbaTimers() })
 .modal-x:hover { color: #000; }
 
 /* ── ABA PAY modal ── */
-.aba-badge { display: flex; align-items: center; gap: 8px; }
+.aba-modal {
+  padding: 0;
+  overflow: hidden;
+}
+
+.aba-modal .modal-head {
+  background: linear-gradient(135deg, #C1121F 0%, #9B0E18 100%);
+  margin: 0;
+  padding: 16px 20px;
+  border-radius: 12px 12px 0 0;
+}
+
+.aba-modal .modal-timer { color: rgba(255,255,255,0.85); }
+.aba-modal .timer-spin  { color: #fff; }
+.aba-modal .timer-warn  { color: #ffd0d0; }
+.aba-modal .modal-x     { color: rgba(255,255,255,0.7); }
+.aba-modal .modal-x:hover { color: #fff; }
+
+.aba-badge {
+  display: flex; align-items: center; gap: 10px;
+}
 
 .aba-img-sm {
-  width: 48px; height: 30px;
-  object-fit: contain; border-radius: 5px;
+  width: 54px; height: 32px;
+  object-fit: contain; border-radius: 6px;
+  background: rgba(255,255,255,0.15); padding: 3px 5px;
+}
+
+.aba-modal-body {
+  padding: 20px 24px 24px;
 }
 
 .aba-amount {

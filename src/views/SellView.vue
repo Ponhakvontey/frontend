@@ -96,31 +96,6 @@
 
             <div class="block-divider" />
 
-            <!-- Brand -->
-            <div class="filter-block">
-              <button type="button" class="block-header" @click="toggleSection('brand')">
-                <span class="block-title">Brand</span>
-                <i :class="open.brand ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
-              </button>
-              <div v-show="open.brand" class="block-body">
-                <label
-                  v-for="brand in showAllBrands ? sellers : sellers.slice(0, 5)"
-                  :key="brand.name"
-                  class="filter-check"
-                >
-                  <input type="checkbox" :value="brand.name" v-model="selectedBrands" />
-                  <span class="check-name">{{ brand.name }}</span>
-                  <span class="check-count">({{ brand.count }})</span>
-                </label>
-                <div v-if="!sellers.length" class="no-data">No brands yet</div>
-                <button v-if="sellers.length > 5" type="button" class="show-more-btn" @click="showAllBrands = !showAllBrands">
-                  {{ showAllBrands ? 'Show less' : 'Show more' }}
-                </button>
-              </div>
-            </div>
-
-            <div class="block-divider" />
-
             <!-- Price -->
             <div class="filter-block">
               <button type="button" class="block-header" @click="toggleSection('price')">
@@ -128,15 +103,13 @@
                 <i :class="open.price ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
               </button>
               <div v-show="open.price" class="block-body">
-                <div class="dual-range">
-                  <div class="range-track">
-                    <div class="range-fill" :style="priceFillStyle"></div>
-                  </div>
-                  <input type="range" class="range-thumb" :min="PRICE_MIN" :max="PRICE_MAX"
-                         v-model.number="priceMin" @input="clampPriceMin" @change="onFilterChange" />
-                  <input type="range" class="range-thumb" :min="PRICE_MIN" :max="PRICE_MAX"
-                         v-model.number="priceMax" @input="clampPriceMax" @change="onFilterChange" />
-                </div>
+                <DualRangeSlider
+                  :model-value="[priceMin, priceMax]"
+                  :min="PRICE_MIN" :max="PRICE_MAX"
+                  :show-tooltip="true"
+                  :tooltip-content="priceTooltip"
+                  @update:model-value="onPriceSlider"
+                />
                 <div class="range-inputs-row">
                   <input type="number" class="range-num" v-model.number="priceMin"
                          :min="PRICE_MIN" :max="priceMax - 1" @change="onFilterChange" />
@@ -146,32 +119,6 @@
               </div>
             </div>
 
-            <div class="block-divider" />
-
-            <!-- Size (UI only) -->
-            <div class="filter-block">
-              <button type="button" class="block-header" @click="toggleSection('size')">
-                <span class="block-title">Size</span>
-                <i :class="open.size ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
-              </button>
-              <div v-show="open.size" class="block-body">
-                <div class="dual-range">
-                  <div class="range-track">
-                    <div class="range-fill" :style="sizeFillStyle"></div>
-                  </div>
-                  <input type="range" class="range-thumb" :min="SIZE_MIN" :max="SIZE_MAX"
-                         v-model.number="sizeMin" @input="clampSizeMin" />
-                  <input type="range" class="range-thumb" :min="SIZE_MIN" :max="SIZE_MAX"
-                         v-model.number="sizeMax" @input="clampSizeMax" />
-                </div>
-                <div class="range-inputs-row">
-                  <input type="number" class="range-num" v-model.number="sizeMin"
-                         :min="SIZE_MIN" :max="sizeMax - 1" />
-                  <input type="number" class="range-num" v-model.number="sizeMax"
-                         :min="sizeMin + 1" :max="SIZE_MAX" />
-                </div>
-              </div>
-            </div>
 
           </aside>
 
@@ -198,7 +145,7 @@
 
             <!-- Product Grid -->
             <div v-else class="product-grid">
-              <div v-for="product in filteredProducts" :key="product.id" class="product-card">
+              <div v-for="product in products" :key="product.id" v-scroll-reveal="'zoom'" class="product-card">
 
                 <!-- Image + heart -->
                 <div class="card-img-wrap">
@@ -325,6 +272,7 @@ import { fetchFavorites, getWishlistIds, toggleWishlist } from '@/services/wishl
 import { useCartSidebar } from '@/composables/useCartSidebar'
 import type { FooterColumn, NavLink, SocialLink } from '@/types/home'
 import { readStorage } from '@/utils/storage'
+import DualRangeSlider from '@/components/ui/DualRangeSlider.vue'
 
 const router = useRouter()
 const { openSidebar } = useCartSidebar()
@@ -377,9 +325,7 @@ const searchText    = ref('')
 const categories         = ref<Category[]>([])
 const sellers            = ref<Seller[]>([])
 const selectedCategoryIds = ref<number[]>([])
-const selectedBrands      = ref<string[]>([])
 const showAllCats         = ref(false)
-const showAllBrands       = ref(false)
 
 // ── Rating filter ─────────────────────────────────────────────────────────
 
@@ -399,34 +345,17 @@ const PRICE_MAX = 2000
 const priceMin  = ref(0)
 const priceMax  = ref(2000)
 
-function clampPriceMin() { if (priceMin.value >= priceMax.value) priceMin.value = priceMax.value - 1 }
-function clampPriceMax() { if (priceMax.value <= priceMin.value) priceMax.value = priceMin.value + 1 }
+function priceTooltip(v: number) { return '$' + v }
+function onPriceSlider([lo, hi]: [number, number]) {
+  priceMin.value = lo
+  priceMax.value = hi
+  onFilterChange()
+}
 
-const priceFillStyle = computed(() => {
-  const l = ((priceMin.value - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100
-  const r = ((priceMax.value - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100
-  return { left: `${l}%`, width: `${r - l}%` }
-})
-
-// ── Size range (UI only) ──────────────────────────────────────────────────
-
-const SIZE_MIN = 0
-const SIZE_MAX = 20
-const sizeMin  = ref(0)
-const sizeMax  = ref(20)
-
-function clampSizeMin() { if (sizeMin.value >= sizeMax.value) sizeMin.value = sizeMax.value - 1 }
-function clampSizeMax() { if (sizeMax.value <= sizeMin.value) sizeMax.value = sizeMin.value + 1 }
-
-const sizeFillStyle = computed(() => {
-  const l = ((sizeMin.value - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)) * 100
-  const r = ((sizeMax.value - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)) * 100
-  return { left: `${l}%`, width: `${r - l}%` }
-})
 
 // ── Sections open/close ───────────────────────────────────────────────────
 
-const open = reactive({ category: true, ratings: true, brand: true, price: true, size: true })
+const open = reactive({ category: true, ratings: true, price: true })
 function toggleSection(key: keyof typeof open) { open[key] = !open[key] }
 
 // ── Sort + mobile filter ──────────────────────────────────────────────────
@@ -463,13 +392,6 @@ function goToPage(page: number) {
   fetchProducts()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
-
-// ── Brand filter (client-side on current page) ────────────────────────────
-
-const filteredProducts = computed(() => {
-  if (!selectedBrands.value.length) return products.value
-  return products.value.filter(p => p.sellerName && selectedBrands.value.includes(p.sellerName))
-})
 
 // ── Star helper ───────────────────────────────────────────────────────────
 
@@ -632,12 +554,9 @@ function runSearch() {
 
 function clearAll() {
   selectedCategoryIds.value = []
-  selectedBrands.value      = []
   selectedRating.value      = null
   priceMin.value = PRICE_MIN
   priceMax.value = PRICE_MAX
-  sizeMin.value  = SIZE_MIN
-  sizeMax.value  = SIZE_MAX
   searchText.value = ''
   currentPage.value = 1
   fetchProducts()
@@ -820,45 +739,6 @@ onUnmounted(() => {
 .show-more-btn:hover { text-decoration: underline; }
 
 .no-data { font-size: 13px; color: #aaa; }
-
-/* Dual range sliders */
-.dual-range {
-  position: relative; height: 24px;
-  margin-bottom: 12px;
-}
-
-.range-track {
-  position: absolute; top: 50%; left: 0; right: 0;
-  height: 4px; background: #e5e7eb;
-  border-radius: 4px; transform: translateY(-50%);
-}
-
-.range-fill {
-  position: absolute; height: 100%;
-  background: #1e3a5f; border-radius: 4px;
-}
-
-.range-thumb {
-  position: absolute; width: 100%; top: 50%;
-  transform: translateY(-50%); height: 4px;
-  background: transparent; -webkit-appearance: none; appearance: none;
-  pointer-events: none; outline: none;
-}
-
-.range-thumb::-webkit-slider-thumb {
-  -webkit-appearance: none; pointer-events: all;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: #1e3a5f; cursor: pointer;
-  border: 3px solid #fff;
-  box-shadow: 0 0 0 1.5px #1e3a5f;
-}
-
-.range-thumb::-moz-range-thumb {
-  pointer-events: all; width: 12px; height: 12px;
-  border-radius: 50%; background: #1e3a5f;
-  cursor: pointer; border: 3px solid #fff;
-  box-shadow: 0 0 0 1.5px #1e3a5f;
-}
 
 .range-inputs-row {
   display: flex; gap: 8px;

@@ -306,7 +306,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { login, register, forgotPassword } from '@/services/authService'
+import { login, sendOtp, forgotPassword } from '@/services/authService'
 import {
   validateConfirmPassword,
   validateEmail,
@@ -446,6 +446,20 @@ const regErrors = ref({
   general: '',
 })
 
+const DISPOSABLE_DOMAINS = new Set([
+  'mailinator.com','guerrillamail.com','10minutemail.com','temp-mail.org',
+  'yopmail.com','throwam.com','fakeinbox.com','dispostable.com','trashmail.com',
+  'dodgit.com','mailnesia.com','tempinbox.com','maildrop.cc','getnada.com',
+  'sharklasers.com','spam4.me','trashmail.at','trashmail.io','getairmail.com',
+  'discard.email','mailsac.com','guerrillamailblock.com','grr.la','tempmail.com',
+  'throwaway.email','spamgourmet.com','wegwerfmail.de','synsky.com','trbvm.com',
+  'tempr.email','harakirimail.com','spamfree24.org','meltmail.com','filzmail.com',
+  'fakemail.net','mailexpire.com','mailfreeonline.com','mailscrap.com',
+  'mailtemp.info','netmails.net','pookmail.com','spamavert.com',
+  'temporaryemail.net','emailondeck.com','mailguard.me','spamgourmet.net',
+  'trashmail.net','trashmail.me','tmailinator.com','mailnull.com',
+])
+
 async function handleRegister() {
   regErrors.value = { fullName: '', email: '', password: '', confirmPassword: '', agree: '', general: '' }
   await nextTick()
@@ -457,20 +471,21 @@ async function handleRegister() {
   regErrors.value.confirmPassword = validateConfirmPassword(regPassword.value, regConfirm.value)
   if (!regAgree.value) regErrors.value.agree = 'You must agree to continue.'
 
+  if (!regErrors.value.email && DISPOSABLE_DOMAINS.has(email.split('@')[1]?.toLowerCase() ?? '')) {
+    regErrors.value.email = 'Disposable email addresses are not allowed. Please use a real email.'
+  }
+
   if (Object.values(regErrors.value).some(Boolean)) return
 
   regLoading.value = true
   try {
-    // Backend username = email; fullName is sent separately
-    await register({
-      username: email,
-      email,
-      password: regPassword.value,
-      fullName: regFullName.value.trim(),
-    })
-    switchMode('login')
+    await sendOtp(email)
+    sessionStorage.setItem('pending_reg', JSON.stringify({
+      email, username: email, password: regPassword.value, fullName: regFullName.value.trim(),
+    }))
+    router.push('/verify-email')
   } catch (err: any) {
-    regErrors.value.general = err?.message ?? 'Registration failed. Please try again.'
+    regErrors.value.general = err?.message ?? 'Failed to send verification code. Please try again.'
   } finally {
     regLoading.value = false
   }

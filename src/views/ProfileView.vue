@@ -28,12 +28,34 @@
             <h2 class="panel-title">Personal Information</h2>
 
             <div class="avatar-area">
-              <div class="avatar">
+              <button type="button" class="avatar-btn" :disabled="avatarUploading || avatarRemoving" @click="fileInputRef?.click()">
                 <img v-if="profilePicture" :src="profilePicture" alt="Profile picture" class="avatar-img" />
                 <span v-else class="avatar-initials">{{ avatarInitials }}</span>
-              </div>
-              <div v-if="profilePicture" class="avatar-meta">
-                <p class="avatar-hint">Photo from your Google account.</p>
+                <span class="avatar-overlay">
+                  <i v-if="avatarUploading" class="fa-solid fa-spinner fa-spin"></i>
+                  <i v-else class="fa-solid fa-camera"></i>
+                </span>
+              </button>
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+                @change="handleAvatarUpload"
+              />
+              <div class="avatar-meta">
+                <button
+                  v-if="profilePicture"
+                  type="button"
+                  class="remove-avatar-btn"
+                  :disabled="avatarRemoving || avatarUploading"
+                  @click="handleRemoveAvatar"
+                >
+                  <i v-if="avatarRemoving" class="fa-solid fa-spinner fa-spin"></i>
+                  <i v-else class="fa-solid fa-trash"></i>
+                  {{ avatarRemoving ? 'Removing…' : 'Remove photo' }}
+                </button>
+                <p v-if="avatarError" class="avatar-error">{{ avatarError }}</p>
               </div>
             </div>
 
@@ -337,6 +359,42 @@ const avatarInitials = computed(() => {
   const l = profile.lastName?.[0]?.toUpperCase() ?? ''
   return f + l || '?'
 })
+
+const fileInputRef    = ref<HTMLInputElement | null>(null)
+const avatarUploading = ref(false)
+const avatarRemoving  = ref(false)
+const avatarError     = ref('')
+
+async function handleRemoveAvatar() {
+  avatarError.value = ''
+  avatarRemoving.value = true
+  try {
+    const updated = await api.delete<UserProfileDTO>('/api/users/profile/picture')
+    applyDTO(updated)
+  } catch (err: unknown) {
+    avatarError.value = err instanceof Error ? err.message : 'Failed to remove photo.'
+  } finally {
+    avatarRemoving.value = false
+  }
+}
+
+async function handleAvatarUpload(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  avatarError.value = ''
+  avatarUploading.value = true
+  try {
+    const form = new FormData()
+    form.append('file', file)
+    const updated = await api.postForm<UserProfileDTO>('/api/users/profile/picture', form)
+    applyDTO(updated)
+  } catch (err: unknown) {
+    avatarError.value = err instanceof Error ? err.message : 'Failed to upload photo.'
+  } finally {
+    avatarUploading.value = false
+    if (fileInputRef.value) fileInputRef.value.value = ''
+  }
+}
 
 const profileSaving  = ref(false)
 const profileMsg     = ref('')
@@ -714,18 +772,22 @@ onBeforeUnmount(() => {
 /* ── Avatar ── */
 .avatar-area { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
 
-.avatar {
+.avatar-btn {
   flex-shrink: 0;
+  position: relative;
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #f5f5f5;
   border: 1px solid #AABBAA;
+  background: #f5f5f5;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 }
+.avatar-btn:disabled { cursor: not-allowed; }
 
 .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -742,8 +804,36 @@ onBeforeUnmount(() => {
   letter-spacing: 0.04em;
 }
 
-.avatar-meta { display: flex; flex-direction: column; gap: 4px; }
-.avatar-hint { margin: 0; font-size: 12px; color: #808080; }
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.avatar-btn:hover .avatar-overlay,
+.avatar-btn:disabled .avatar-overlay { opacity: 1; }
+
+.avatar-meta  { display: flex; flex-direction: column; gap: 6px; }
+.avatar-error { margin: 0; font-size: 12px; color: #DA292E; }
+
+.remove-avatar-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 12px;
+  border: 1px solid #fca5a5; border-radius: 6px;
+  background: #fff; color: #DA292E;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: Helvetica, Arial, sans-serif;
+  transition: background 0.15s;
+}
+.remove-avatar-btn:hover:not(:disabled) { background: #fff1f2; }
+.remove-avatar-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Fields ── */
 .field-row {

@@ -54,7 +54,7 @@
 <div class="payment-icons">
           <span class="pay-badge"><img src="https://cdn.simpleicons.org/visa" alt="Visa" class="pay-img" /></span>
           <span class="pay-badge"><img src="https://cdn.simpleicons.org/mastercard" alt="Mastercard" class="pay-img" /></span>
-          <span class="pay-badge"><img :src="abaLogo" alt="ABA Pay" class="pay-img" /></span>
+          <span class="pay-badge aba-pay-badge"><img :src="abaLogo" alt="ABA Pay" class="pay-img" /></span>
           <span class="pay-badge"><i class="fa-brands fa-cc-paypal"></i></span>
           <span class="pay-badge"><i class="fa-brands fa-cc-apple-pay"></i></span>
           <span class="pay-badge google-pay">G Pay</span>
@@ -235,6 +235,11 @@ function getFooterPath(slug: string): string {
   height: 22px;
   width: auto;
   display: block;
+}
+
+.pay-badge.aba-pay-badge {
+  background: #C1121F;
+  border-color: #C1121F;
 }
 
 .pay-badge.google-pay {

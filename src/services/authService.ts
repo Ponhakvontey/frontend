@@ -72,6 +72,14 @@ export async function loginWithGoogle(): Promise<JwtResponse> {
   return data
 }
 
+export async function sendOtp(email: string): Promise<void> {
+  await api.post('/api/auth/otp/send', { email })
+}
+
+export async function verifyOtp(email: string, code: string): Promise<void> {
+  await api.post('/api/auth/otp/verify', { email, code })
+}
+
 export async function forgotPassword(email: string): Promise<void> {
   await api.post('/api/auth/forgot-password', { email })
 }
