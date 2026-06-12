@@ -38,7 +38,7 @@ async function fetchCart() {
   state.loading = true
   state.error = ''
   try {
-    const data = await api.get<any>('/api/cart')
+    const data = await api.getSilent<any>('/api/cart')
     state.items = (data.items ?? []).map((i: any) => ({
       id: i.id,
       productId: i.productId,
@@ -52,7 +52,8 @@ async function fetchCart() {
     }))
     state.totalAmount = Number(data.totalAmount ?? 0)
   } catch {
-    state.error = 'Failed to load cart.'
+    state.items = []
+    state.totalAmount = 0
   } finally {
     state.loading = false
   }
