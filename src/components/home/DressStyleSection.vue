@@ -6,7 +6,7 @@
       <div class="style-outer">
         <div class="style-grid">
           <div v-for="style in styles" :key="style.id" class="style-card" :class="style.span">
-            <div class="img-skeleton"></div>
+            <img :src="style.img" :alt="style.label" class="style-img" />
             <span class="style-label">{{ style.label }}</span>
           </div>
         </div>
@@ -16,11 +16,14 @@
 </template>
 
 <script setup lang="ts">
+const BASE = 'https://images.pexels.com/photos'
+const Q    = 'auto=compress&cs=tinysrgb&w=800&h=500&fit=crop'
+
 const styles = [
-  { id: 1, label: 'Casual', span: 'span-small' },
-  { id: 2, label: 'Formal', span: 'span-large' },
-  { id: 3, label: 'Party',  span: 'span-large' },
-  { id: 4, label: 'Gym',    span: 'span-small' },
+  { id: 1, label: 'Casual', span: 'span-small', img: `${BASE}/5314599/pexels-photo-5314599.jpeg?${Q}` },
+  { id: 2, label: 'Formal', span: 'span-large', img: `${BASE}/8244875/pexels-photo-8244875.jpeg?${Q}` },
+  { id: 3, label: 'Party',  span: 'span-large', img: `${BASE}/16894090/pexels-photo-16894090.jpeg?${Q}` },
+  { id: 4, label: 'Gym',    span: 'span-small', img: `${BASE}/1717098/pexels-photo-1717098.jpeg?${Q}` },
 ]
 </script>
 
@@ -76,23 +79,17 @@ const styles = [
   cursor: pointer;
 }
 
-.style-card:hover .img-skeleton {
-  filter: brightness(0.92);
+.style-card:hover .style-img {
+  transform: scale(1.04);
 }
 
-/* ── Skeleton ── */
-@keyframes shimmer {
-  0%   { background-position: -600px 0; }
-  100% { background-position:  600px 0; }
-}
-
-.img-skeleton {
+.style-img {
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #e8e8e8 25%, #dadada 50%, #e8e8e8 75%);
-  background-size: 1200px 100%;
-  animation: shimmer 1.6s infinite linear;
-  transition: filter 0.2s;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: transform 0.35s ease;
 }
 
 /* ── Label ── */
@@ -102,9 +99,10 @@ const styles = [
   left: 20px;
   font-size: 18px;
   font-weight: 700;
-  color: #111;
+  color: #fff;
   letter-spacing: -0.01em;
   pointer-events: none;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.55);
 }
 
 /* ── Responsive ── */

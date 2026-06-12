@@ -21,6 +21,7 @@ import ProfileView from '../views/ProfileView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import VerifyIdentityView from '../views/VerifyIdentityView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
+import TrackOrderView from '../views/TrackOrderView.vue'
 import { isAdmin, isLoggedIn } from '@/services/apiClient'
 
 const router = createRouter({
@@ -42,6 +43,7 @@ const router = createRouter({
     { path: '/wishlist', name: 'wishlist', component: WishlistView, meta: { requiresAuth: true } },
     { path: '/invoice/:orderNumber', name: 'invoice', component: InvoiceView, meta: { requiresAuth: true } },
     { path: '/order-history', name: 'order-history', component: OrderHistoryView, meta: { requiresAuth: true } },
+    { path: '/track-order/:orderId?', name: 'track-order', component: TrackOrderView, meta: { requiresAuth: true } },
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
 
     { path: '/admin', name: 'admin', component: AdminDashboardView, meta: { requiresAdmin: true } },
