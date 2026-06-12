@@ -334,7 +334,7 @@ async function loadProduct(id: string) {
     activeImg.value = imgs[0] ?? dto.imageUrl ?? ''
     isFavorite.value = isWishlisted(dto.id)
     if (isLoggedIn()) {
-      api.get<{ favorite: boolean }>(`/api/favorites/check/${dto.id}`)
+      api.getSilent<{ favorite: boolean }>(`/api/favorites/check/${dto.id}`)
         .then(r => { isFavorite.value = r.favorite })
         .catch(() => {})
     }

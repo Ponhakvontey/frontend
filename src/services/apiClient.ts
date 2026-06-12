@@ -70,7 +70,7 @@ export function isAdmin(): boolean {
 
 // ─── Core request ───────────────────────────────────────────────────────────
 
-export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+export async function request<T>(path: string, options: RequestInit = {}, silent = false): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -84,7 +84,8 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
 
   if (!res.ok) {
     // 401 while we believe we're logged in → session expired or invalidated
-    if (res.status === 401 && getUser()) {
+    // silent=true: just throw so the caller's catch() handles it without forcing logout
+    if (res.status === 401 && getUser() && !silent) {
       clearUser()
       window.location.href = '/login'
       // Return a never-resolved promise so callers don't process stale data
@@ -143,6 +144,7 @@ async function requestForm<T>(path: string, form: FormData, method = 'POST'): Pr
 // Convenience wrappers
 export const api = {
   get: <T>(path: string) => request<T>(path),
+  getSilent: <T>(path: string) => request<T>(path, {}, true),
   post: <T>(path: string, body: unknown) =>
     request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
   put: <T>(path: string, body: unknown) =>
