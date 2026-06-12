@@ -857,8 +857,8 @@ onUnmounted(() => {
 
 .name-price-row {
   display: flex; align-items: flex-start;
-  justify-content: space-between; gap: 8px;
-  margin-bottom: 4px;
+  justify-content: space-between; gap: 4px;
+  margin-bottom: 4px; flex-wrap: wrap;
 }
 
 .prod-name {
@@ -890,28 +890,28 @@ onUnmounted(() => {
 .review-count { font-size: 12px; color: #888; }
 
 /* Action buttons */
-.card-actions { display: flex; gap: 8px; }
+.card-actions { display: flex; gap: 6px; }
 
 .btn-cart {
-  flex: 1; padding: 9px 0;
+  flex: 1; padding: 9px 4px;
   background: #1e3a5f; color: #fff;
   border: none; border-radius: 8px;
-  font-size: 13px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   cursor: pointer; font-family: inherit;
   transition: background 0.15s;
-  white-space: nowrap;
+  white-space: normal; text-align: center; line-height: 1.2;
 }
 .btn-cart:hover:not(:disabled) { background: #152d4d; }
 .btn-cart:disabled { opacity: 0.5; cursor: default; }
 
 .btn-shortlist {
-  flex: 1; padding: 9px 0;
+  flex: 1; padding: 9px 4px;
   background: #fff; color: #1e3a5f;
   border: 1.5px solid #1e3a5f; border-radius: 8px;
-  font-size: 13px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   cursor: pointer; font-family: inherit;
   transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
+  white-space: normal; text-align: center; line-height: 1.2;
 }
 .btn-shortlist:hover { background: #1e3a5f; color: #fff; }
 
